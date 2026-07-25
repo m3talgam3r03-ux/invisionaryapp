@@ -4,7 +4,7 @@ App mobile cross-platform (iOS + Android) per una rete commerciale di **networke
 
 Tre sezioni principali — **Network/CRM**, **Trading**, **Formazione** (+ **Community**) — e tre ruoli utente: `admin`, `leader`, `collaborator`.
 
-> **Stato attuale: Milestone 6 — Calcolatori.** Oltre a scaffold, auth, CRM, rinnovi e formazione: calcolatore di lottaggio (position sizing) e interesse composto, interamente lato client. Setup del database in [`supabase/README.md`](supabase/README.md).
+> **Fase 0 completa (milestone 1–7).** Scaffold, autenticazione e ruoli, CRM + import, rinnovi + avvisi push, formazione, calcolatori e pannello admin. Setup del database in [`supabase/README.md`](supabase/README.md).
 
 ---
 
@@ -125,6 +125,6 @@ Setup completo del progetto Supabase (creazione, migrazione SQL, seed) in
 4. ✅ **Rinnovi + avvisi push**
 5. ✅ **Formazione** (corsi/lezioni con player YouTube, avanzamento, calendario, vista rete)
 6. ✅ **Calcolatori** (lottaggio, interesse composto — lato client)
-7. ⏳ Pannello admin
+7. ✅ **Pannello admin** (gestione utenti, ruoli, gerarchia)
 
 _Fasi successive (da confermare): agente AI (RAG), integrazione MT5 read-only, feedback con foto, sistema di rank a carte._
