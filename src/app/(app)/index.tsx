@@ -30,9 +30,13 @@ export default function Dashboard() {
     <Screen scroll>
       {/* Intestazione con emblema, saluto e badge ruolo */}
       <View style={styles.header}>
-        <View style={[styles.eyeRing, { borderColor: colors.gold }]}>
+        <Pressable
+          onPress={() => router.push('/agente')}
+          accessibilityRole="button"
+          style={[styles.eyeRing, { borderColor: colors.gold }]}
+        >
           <View style={[styles.pupil, { backgroundColor: colors.accent }]} />
-        </View>
+        </Pressable>
         <View style={{ flex: 1, gap: spacing.xs }}>
           <ThemedText variant="title">Ciao, {firstName}</ThemedText>
           {profile && (
@@ -73,6 +77,15 @@ export default function Dashboard() {
           </ThemedText>
         </Card>
       )}
+
+      {/* Agente AI (feature di punta) */}
+      <Card style={{ gap: spacing.sm }}>
+        <ThemedText variant="heading">Agente AI</ThemedText>
+        <ThemedText tone="muted" variant="caption">
+          Chiedi all'assistente: risposte basate sui contenuti della piattaforma.
+        </ThemedText>
+        <Button title="Apri l'agente" onPress={() => router.push('/agente')} />
+      </Card>
 
       {/* Azione rapida: scadenzario rinnovi (CRM) */}
       <Card style={{ gap: spacing.sm }}>
