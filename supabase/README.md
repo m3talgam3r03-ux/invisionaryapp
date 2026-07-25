@@ -12,12 +12,12 @@ Metti URL e anon key nel file `.env` alla radice del progetto (vedi `.env.exampl
 
 ## 2. Applica la migrazione
 
-Apri **SQL Editor** su Supabase Studio, incolla il contenuto di
-[`migrations/0001_init.sql`](migrations/0001_init.sql) ed esegui.
+Apri **SQL Editor** su Supabase Studio ed esegui le migrazioni **in ordine**:
 
-Crea: `profiles` (+ ruoli, gerarchia, trigger di auto-creazione e anti-escalation),
-le RLS esplicite per ogni tabella, e le tabelle predisposte `trading_accounts`,
-`trades`, `feedback_posts`.
+1. [`migrations/0001_init.sql`](migrations/0001_init.sql) — `profiles` (+ ruoli, gerarchia,
+   trigger di auto-creazione e anti-escalation), RLS esplicite e tabelle predisposte
+   (`trading_accounts`, `trades`, `feedback_posts`).
+2. [`migrations/0002_clients.sql`](migrations/0002_clients.sql) — tabella CRM `clients` con RLS.
 
 > In alternativa con Supabase CLI: `supabase link` poi `supabase db push`.
 

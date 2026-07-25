@@ -4,7 +4,7 @@ App mobile cross-platform (iOS + Android) per una rete commerciale di **networke
 
 Tre sezioni principali — **Network/CRM**, **Trading**, **Formazione** (+ **Community**) — e tre ruoli utente: `admin`, `leader`, `collaborator`.
 
-> **Stato attuale: Milestone 2 — Auth + ruoli.** Oltre allo scaffold: autenticazione Supabase, tabella `profiles` con RLS, routing condizionale per ruolo (admin/leader/collaboratore) e 3 utenti demo. Setup del database in [`supabase/README.md`](supabase/README.md).
+> **Stato attuale: Milestone 3 — CRM + import.** Oltre a scaffold e auth: CRUD clienti con RLS per ruolo e import CSV/Excel con mappatura colonne e anteprima. Setup del database in [`supabase/README.md`](supabase/README.md).
 
 ---
 
@@ -101,7 +101,7 @@ Setup completo del progetto Supabase (creazione, migrazione SQL, seed) in
 [`supabase/README.md`](supabase/README.md). In sintesi:
 
 1. Crea un progetto Supabase in **regione EU** e metti URL + anon key in `.env`.
-2. Applica [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) dal SQL Editor.
+2. Applica le migrazioni dal SQL Editor, in ordine: [`0001_init.sql`](supabase/migrations/0001_init.sql) (profiles + RLS) e [`0002_clients.sql`](supabase/migrations/0002_clients.sql) (CRM).
 3. (Consigliato) disattiva la conferma email per la demo.
 4. Esegui il seed dei 3 utenti demo:
 
@@ -121,7 +121,7 @@ Setup completo del progetto Supabase (creazione, migrazione SQL, seed) in
 
 1. ✅ **Scaffold**
 2. ✅ **Auth + ruoli** (Supabase Auth, `profiles`, RLS, routing per ruolo, 3 utenti demo)
-3. ⏳ CRM + import CSV/Excel
+3. ✅ **CRM + import CSV/Excel**
 4. ⏳ Rinnovi + avvisi push
 5. ⏳ Formazione (corsi/lezioni/calendario)
 6. ⏳ Calcolatori (lottaggio, interesse composto)
