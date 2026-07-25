@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button, Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
@@ -74,16 +74,35 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Anteprima dei quattro pilastri (attivi nelle milestone successive) */}
+      {/* I quattro pilastri: Network è attivo (CRM), gli altri arrivano nelle prossime milestone */}
       <View style={styles.pillars}>
-        {PILLARS.map((p) => (
-          <Card key={p.key} style={styles.pillarCard}>
-            <ThemedText style={[styles.suit, { color: RED_SUITS.has(p.suit) ? colors.accent : colors.text }]}>
-              {p.suit}
-            </ThemedText>
-            <ThemedText variant="label">{p.label}</ThemedText>
-          </Card>
-        ))}
+        {PILLARS.map((p) => {
+          const active = p.key === 'network';
+          const card = (
+            <Card style={styles.pillarCard}>
+              <ThemedText style={[styles.suit, { color: RED_SUITS.has(p.suit) ? colors.accent : colors.text }]}>
+                {p.suit}
+              </ThemedText>
+              <ThemedText variant="label">{p.label}</ThemedText>
+              <ThemedText tone={active ? 'accent' : 'muted'} variant="caption">
+                {active ? 'Apri →' : 'In arrivo'}
+              </ThemedText>
+            </Card>
+          );
+          return active ? (
+            <Pressable
+              key={p.key}
+              style={styles.pillarItem}
+              onPress={() => router.push('/clients')}
+            >
+              {card}
+            </Pressable>
+          ) : (
+            <View key={p.key} style={styles.pillarItem}>
+              {card}
+            </View>
+          );
+        })}
       </View>
 
       <Button title="Esci" variant="secondary" onPress={() => void signOut()} />
@@ -128,9 +147,11 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     justifyContent: 'center',
   },
-  pillarCard: {
+  pillarItem: {
     flexBasis: '46%',
     flexGrow: 1,
+  },
+  pillarCard: {
     alignItems: 'center',
     gap: spacing.sm,
   },
