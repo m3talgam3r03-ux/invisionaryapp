@@ -4,7 +4,7 @@ App mobile cross-platform (iOS + Android) per una rete commerciale di **networke
 
 Tre sezioni principali — **Network/CRM**, **Trading**, **Formazione** (+ **Community**) — e tre ruoli utente: `admin`, `leader`, `collaborator`.
 
-> **Stato attuale: Milestone 1 — Scaffold.** Base del progetto pronta: Expo + TypeScript, Expo Router, client Supabase, tema dark-first con i design token del brand, struttura cartelle pulita.
+> **Stato attuale: Milestone 2 — Auth + ruoli.** Oltre allo scaffold: autenticazione Supabase, tabella `profiles` con RLS, routing condizionale per ruolo (admin/leader/collaboratore) e 3 utenti demo. Setup del database in [`supabase/README.md`](supabase/README.md).
 
 ---
 
@@ -95,10 +95,32 @@ src/
 
 Contenuti di trading/formazione a **scopo educativo**, non consulenza finanziaria. Nessuna promessa di rendimento. I dati clienti del CRM sono dati personali (GDPR): storage in EU, con export/cancellazione previsti.
 
+## Autenticazione e database
+
+Setup completo del progetto Supabase (creazione, migrazione SQL, seed) in
+[`supabase/README.md`](supabase/README.md). In sintesi:
+
+1. Crea un progetto Supabase in **regione EU** e metti URL + anon key in `.env`.
+2. Applica [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) dal SQL Editor.
+3. (Consigliato) disattiva la conferma email per la demo.
+4. Esegui il seed dei 3 utenti demo:
+
+   ```bash
+   node scripts/seed-demo-users.mjs
+   ```
+
+**Utenti demo** (password comune `Invisionary!23`):
+
+| Ruolo | Email |
+| --- | --- |
+| admin | `admin@invisionary.demo` |
+| leader | `leader@invisionary.demo` |
+| collaborator | `collab@invisionary.demo` |
+
 ## Roadmap (milestone)
 
-1. ✅ **Scaffold** (questa milestone)
-2. ⏳ Auth + ruoli (Supabase Auth, `profiles`, routing per ruolo)
+1. ✅ **Scaffold**
+2. ✅ **Auth + ruoli** (Supabase Auth, `profiles`, RLS, routing per ruolo, 3 utenti demo)
 3. ⏳ CRM + import CSV/Excel
 4. ⏳ Rinnovi + avvisi push
 5. ⏳ Formazione (corsi/lezioni/calendario)
