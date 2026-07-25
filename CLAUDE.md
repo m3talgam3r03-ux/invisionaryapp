@@ -13,7 +13,7 @@ App mobile cross-platform (iOS + Android, App Store + Google Play) per una rete 
 3. ✅ **CRM `clients`** + import CSV/Excel (SheetJS/papaparse, mappatura colonne + anteprima). Migrazione `0002_clients.sql`.
 4. ✅ **Rinnovi `renewals`** + Edge Function cron per push X giorni prima della scadenza. Migrazione `0003_renewals.sql`; function `supabase/functions/renewal-reminders`.
 5. ✅ **Formazione** `courses`/`lessons` (player YouTube), `lesson_progress`, calendario `events`, vista avanzamento rete (leader/admin). Migrazione `0004_formazione.sql` + seed demo.
-6. Calcolatori (lottaggio, interesse composto) — tutto lato client.
+6. ✅ **Calcolatori** (lottaggio, interesse composto) — tutto lato client (`src/lib/calculators.ts`).
 7. Pannello admin (utenti, ruoli, autorizzazioni).
 
 Fasi successive **solo dopo richiesta esplicita**: agente AI (Anthropic + RAG con pgvector), MT5 read-only via MetaApi (investor password), feedback con foto, sistema di rank a carte.
