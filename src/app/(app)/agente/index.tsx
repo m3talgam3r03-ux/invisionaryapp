@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -12,7 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ui';
+import { useAuth } from '@/context/auth';
 import { askAgent, type ChatMessage } from '@/lib/ai';
+import { createConversation, getLatestConversationId, loadMessages, saveMessage } from '@/lib/conversations';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { radius, spacing, typography, useTheme } from '@/theme';
 
@@ -29,10 +32,50 @@ const nextId = () => `${Date.now()}-${counter++}`;
 
 export default function Agente() {
   const { colors } = useTheme();
+  const { profile } = useAuth();
+  const router = useRouter();
+  const isAdmin = profile?.role === 'admin';
+
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [initializing, setInitializing] = useState(isSupabaseConfigured);
+  const [convId, setConvId] = useState<string | null>(null);
   const listRef = useRef<FlatList<UIMessage>>(null);
+
+  // Carica l'ultima conversazione (se il backend è configurato).
+  useEffect(() => {
+    let active = true;
+    if (!isSupabaseConfigured) {
+      setInitializing(false);
+      return;
+    }
+    (async () => {
+      try {
+        const id = await getLatestConversationId();
+        if (id) {
+          const stored = await loadMessages(id);
+          if (active) {
+            setConvId(id);
+            setMessages(stored.map((m) => ({ id: m.id, role: m.role, content: m.content })));
+          }
+        }
+      } catch {
+        // caricamento cronologia best-effort
+      } finally {
+        if (active) setInitializing(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function newConversation() {
+    setConvId(null);
+    setMessages([]);
+    setInput('');
+  }
 
   async function send() {
     const text = input.trim();
@@ -45,12 +88,34 @@ export default function Agente() {
     setMessages((prev) => [...prev, { id: nextId(), role: 'user', content: text }]);
     setInput('');
     setSending(true);
+
+    let cid = convId;
+    try {
+      if (isSupabaseConfigured) {
+        if (!cid) {
+          cid = await createConversation();
+          setConvId(cid);
+        }
+        await saveMessage(cid, 'user', text);
+      }
+    } catch {
+      // persistenza best-effort: non blocca la chat
+    }
+
     try {
       const reply = await askAgent(text, history);
+      const content = reply.answer || '—';
       setMessages((prev) => [
         ...prev,
-        { id: nextId(), role: 'assistant', content: reply.answer || '—', sources: reply.sources },
+        { id: nextId(), role: 'assistant', content, sources: reply.sources },
       ]);
+      if (isSupabaseConfigured && cid) {
+        try {
+          await saveMessage(cid, 'assistant', content);
+        } catch {
+          /* best-effort */
+        }
+      }
     } catch (e) {
       setMessages((prev) => [
         ...prev,
@@ -70,22 +135,43 @@ export default function Agente() {
 
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={[styles.toolbar, { borderBottomColor: colors.border }]}>
+        <Pressable onPress={newConversation} accessibilityRole="button">
+          <ThemedText tone="accent" variant="caption">
+            ＋ Nuova conversazione
+          </ThemedText>
+        </Pressable>
+        {isAdmin && (
+          <Pressable onPress={() => router.push('/agente/documenti')} accessibilityRole="button">
+            <ThemedText tone="muted" variant="caption">
+              Base di conoscenza ›
+            </ThemedText>
+          </Pressable>
+        )}
+      </View>
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 96 : 0}
       >
-        <FlatList
-          ref={listRef}
-          data={messages}
-          keyExtractor={(m) => m.id}
-          contentContainerStyle={{ padding: spacing.lg, flexGrow: 1, gap: spacing.sm }}
-          renderItem={({ item }) => <Bubble message={item} />}
-          ListEmptyComponent={<Welcome />}
-          ListFooterComponent={sending ? <Typing /> : null}
-          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-          keyboardDismissMode="interactive"
-        />
+        {initializing ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color={colors.textMuted} />
+          </View>
+        ) : (
+          <FlatList
+            ref={listRef}
+            data={messages}
+            keyExtractor={(m) => m.id}
+            contentContainerStyle={{ padding: spacing.lg, flexGrow: 1, gap: spacing.sm }}
+            renderItem={({ item }) => <Bubble message={item} />}
+            ListEmptyComponent={<Welcome />}
+            ListFooterComponent={sending ? <Typing /> : null}
+            onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+            keyboardDismissMode="interactive"
+          />
+        )}
 
         <View style={[styles.inputBar, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
           <TextInput
@@ -192,6 +278,14 @@ function Welcome() {
 }
 
 const styles = StyleSheet.create({
+  toolbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',

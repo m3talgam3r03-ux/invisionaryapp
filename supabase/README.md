@@ -120,7 +120,5 @@ La chiave Anthropic vive **solo** nell'Edge Function, mai nel client.
    supabase functions deploy ai-ingest
    ```
 
-4. Popola la base di conoscenza (solo admin) chiamando `ai-ingest` con `{ "source": "...", "text": "..." }`;
-   l'app interroga l'agente tramite [`src/lib/ai.ts`](../src/lib/ai.ts) (`askAgent`).
-
-La UI di chat dell'agente è lo step successivo.
+4. Applica anche [`0006_ai_conversations.sql`](migrations/0006_ai_conversations.sql) (persistenza chat, privata per utente).
+5. Popola la base di conoscenza **dall'app**: come admin apri **Agente AI → Base di conoscenza** e incolla i contenuti (usa la function `ai-ingest`). L'app interroga l'agente tramite [`src/lib/ai.ts`](../src/lib/ai.ts) (`askAgent`) dalla schermata di chat, con cronologia salvata.

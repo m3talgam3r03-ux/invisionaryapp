@@ -90,3 +90,11 @@ export type EventItem = {
   created_by: string | null;
   created_at: string;
 };
+
+/** Riga della tabella `documents` (base di conoscenza RAG). */
+export type Document = {
+  id: string;
+  source: string | null;
+  content: string;
+  created_at: string;
+};

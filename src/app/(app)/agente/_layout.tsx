@@ -14,6 +14,7 @@ export default function AgenteLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: 'Agente AI' }} />
+      <Stack.Screen name="documenti" options={{ title: 'Base di conoscenza' }} />
     </Stack>
   );
 }
