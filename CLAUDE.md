@@ -16,7 +16,7 @@ App mobile cross-platform (iOS + Android, App Store + Google Play) per una rete 
 6. ✅ **Calcolatori** (lottaggio, interesse composto) — tutto lato client (`src/lib/calculators.ts`).
 7. ✅ **Pannello admin** (utenti, ruoli, gerarchia). Route `(app)/admin`; data layer `src/lib/admin.ts`.
 
-Fasi successive **solo dopo richiesta esplicita**: agente AI (Anthropic + RAG con pgvector), MT5 read-only via MetaApi (investor password), feedback con foto, sistema di rank a carte.
+Fase successiva in corso: 🟡 **Agente AI (RAG)** — backend pronto (`0005_rag.sql` con pgvector, Edge Function `ai-chat`/`ai-ingest`, embedding Voyage `voyage-3.5` 1024d, generazione con Claude `claude-opus-4-8`; chiave Anthropic solo lato server). UI chat = step successivo. Poi, **solo dopo richiesta esplicita**: MT5 read-only via MetaApi (investor password), feedback con foto, sistema di rank a carte.
 
 ## Stack (usare questo)
 

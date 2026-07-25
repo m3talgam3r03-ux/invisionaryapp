@@ -95,3 +95,32 @@ supabase functions invoke renewal-reminders --no-verify-jwt
 > La logica: rinnovi `active` con `reminder_sent_at` NULL la cui scadenza è entro
 > `alert_days_before` giorni → push all'owner → `reminder_sent_at` valorizzato (niente doppioni).
 > Modificare scadenza o stato di un rinnovo azzera `reminder_sent_at` per un nuovo ciclo.
+
+## Agente AI — RAG (fase successiva)
+
+Architettura: **embedding domanda (Voyage AI) → retrieval su pgvector → generazione con Claude**.
+La chiave Anthropic vive **solo** nell'Edge Function, mai nel client.
+
+> Embedding con **Voyage** (`voyage-3.5`, 1024 dim): Anthropic non fornisce un'API di
+> embedding e raccomanda Voyage. È sostituibile con un altro provider allineando modello e
+> dimensione a `vector(1024)` in [`0005_rag.sql`](migrations/0005_rag.sql).
+
+1. Applica la migrazione [`0005_rag.sql`](migrations/0005_rag.sql) (abilita `pgvector`, crea
+   `documents` + la funzione `match_documents`).
+2. Imposta i secret delle function (chiavi segrete, mai nel repo):
+
+   ```bash
+   supabase secrets set ANTHROPIC_API_KEY=sk-ant-... VOYAGE_API_KEY=pa-...
+   ```
+
+3. Fai il deploy delle Edge Function:
+
+   ```bash
+   supabase functions deploy ai-chat
+   supabase functions deploy ai-ingest
+   ```
+
+4. Popola la base di conoscenza (solo admin) chiamando `ai-ingest` con `{ "source": "...", "text": "..." }`;
+   l'app interroga l'agente tramite [`src/lib/ai.ts`](../src/lib/ai.ts) (`askAgent`).
+
+La UI di chat dell'agente è lo step successivo.
