@@ -105,6 +105,15 @@ export default function Dashboard() {
         <Button title="Apri calcolatori" variant="secondary" onPress={() => router.push('/calcolatori')} />
       </Card>
 
+      {/* Rank a carte */}
+      <Card style={{ gap: spacing.sm }}>
+        <ThemedText variant="heading">Rank & classifica</ThemedText>
+        <ThemedText tone="muted" variant="caption">
+          Il tuo avanzamento nella rete: diventa un Asso.
+        </ThemedText>
+        <Button title="Vedi il tuo rank" variant="secondary" onPress={() => router.push('/rank')} />
+      </Card>
+
       {/* I quattro pilastri: Network è attivo (CRM), gli altri arrivano nelle prossime milestone */}
       <View style={styles.pillars}>
         {PILLARS.map((p) => {
