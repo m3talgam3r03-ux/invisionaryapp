@@ -11,7 +11,7 @@ App mobile cross-platform (iOS + Android, App Store + Google Play) per una rete 
 1. ✅ **Scaffold** — Expo + TS + Expo Router, client Supabase, tema dark-first, struttura pulita.
 2. ✅ **Auth + ruoli** (Supabase Auth, `profiles` + RLS, routing per ruolo, 3 utenti demo). Setup DB: `supabase/README.md`.
 3. ✅ **CRM `clients`** + import CSV/Excel (SheetJS/papaparse, mappatura colonne + anteprima). Migrazione `0002_clients.sql`.
-4. Rinnovi `renewals` + Edge Function cron per push X giorni prima della scadenza.
+4. ✅ **Rinnovi `renewals`** + Edge Function cron per push X giorni prima della scadenza. Migrazione `0003_renewals.sql`; function `supabase/functions/renewal-reminders`.
 5. Formazione `courses`/`lessons` (player YouTube), `lesson_progress`, calendario `events`.
 6. Calcolatori (lottaggio, interesse composto) — tutto lato client.
 7. Pannello admin (utenti, ruoli, autorizzazioni).
