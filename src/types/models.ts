@@ -58,3 +58,35 @@ export type RenewalInput = {
   alert_days_before?: number;
   status?: RenewalStatus;
 };
+
+// --- Formazione -------------------------------------------------------------
+
+/** Riga della tabella `courses`. */
+export type Course = {
+  id: string;
+  titolo: string;
+  descrizione: string | null;
+  ordine: number;
+  created_at: string;
+};
+
+/** Riga della tabella `lessons`. */
+export type Lesson = {
+  id: string;
+  course_id: string;
+  titolo: string;
+  youtube_id: string;
+  ordine: number;
+  created_at: string;
+};
+
+/** Riga della tabella `events` (calendario formazione). Rinominato per non confliggere con il DOM Event. */
+export type EventItem = {
+  id: string;
+  titolo: string;
+  descrizione: string | null;
+  start_at: string;
+  end_at: string | null;
+  created_by: string | null;
+  created_at: string;
+};

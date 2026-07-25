@@ -86,7 +86,9 @@ export default function Dashboard() {
       {/* I quattro pilastri: Network è attivo (CRM), gli altri arrivano nelle prossime milestone */}
       <View style={styles.pillars}>
         {PILLARS.map((p) => {
-          const active = p.key === 'network';
+          const href =
+            p.key === 'network' ? '/clients' : p.key === 'formazione' ? '/formazione' : null;
+          const active = href !== null;
           const card = (
             <Card style={styles.pillarCard}>
               <ThemedText style={[styles.suit, { color: RED_SUITS.has(p.suit) ? colors.accent : colors.text }]}>
@@ -102,7 +104,7 @@ export default function Dashboard() {
             <Pressable
               key={p.key}
               style={styles.pillarItem}
-              onPress={() => router.push('/clients')}
+              onPress={() => href && router.push(href)}
             >
               {card}
             </Pressable>
