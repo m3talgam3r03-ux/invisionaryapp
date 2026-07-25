@@ -83,6 +83,15 @@ export default function Dashboard() {
         <Button title="Apri scadenzario" variant="secondary" onPress={() => router.push('/renewals')} />
       </Card>
 
+      {/* Azione rapida: calcolatori */}
+      <Card style={{ gap: spacing.sm }}>
+        <ThemedText variant="heading">Calcolatori</ThemedText>
+        <ThemedText tone="muted" variant="caption">
+          Lottaggio e interesse composto — strumenti a scopo educativo.
+        </ThemedText>
+        <Button title="Apri calcolatori" variant="secondary" onPress={() => router.push('/calcolatori')} />
+      </Card>
+
       {/* I quattro pilastri: Network è attivo (CRM), gli altri arrivano nelle prossime milestone */}
       <View style={styles.pillars}>
         {PILLARS.map((p) => {
