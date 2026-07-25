@@ -18,7 +18,9 @@ App mobile cross-platform (iOS + Android, App Store + Google Play) per una **ret
 
 ✅ **Agente AI (RAG)** completo: `0005_rag.sql` (pgvector) + `0006_ai_conversations.sql` (chat persistente, RLS privata); Edge Function `ai-chat`/`ai-ingest` (embedding Voyage `voyage-3.5` 1024d, generazione Claude `claude-opus-4-8`, chiave Anthropic solo lato server); UI chat `(app)/agente` con cronologia salvata + UI admin "Base di conoscenza".
 
-Fasi **solo dopo richiesta esplicita**: MT5 read-only via MetaApi (investor password), feedback con foto, sistema di rank a carte.
+✅ **Rank a carte** (2→Asso): punteggio trasparente (lezioni/clienti/rinnovi), classifica di rete (RLS), crest oro. `src/lib/rank.ts` + `src/lib/leaderboard.ts`, route `(app)/rank`.
+
+Fasi restanti **solo dopo richiesta esplicita**: MT5 read-only via MetaApi (investor password), feedback con foto.
 
 ## Stack (usare questo)
 
