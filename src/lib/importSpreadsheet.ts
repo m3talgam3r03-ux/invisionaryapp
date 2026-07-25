@@ -82,7 +82,7 @@ export function guessMapping(headers: string[]): ColumnMapping {
   const patterns: Record<ClientFieldKey, RegExp> = {
     nome: /nome|name|cliente|nominativo|ragione/,
     contatto: /contatt|email|mail|telefono|tel|phone|cell|recapito/,
-    prodotto: /prodott|product|polizza|servizio|piano/,
+    prodotto: /prodott|product|abbonamento|pacchetto|servizio|piano/,
     note: /note|notes|osserv|commento/,
   };
   const mapping = {} as ColumnMapping;

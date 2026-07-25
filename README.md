@@ -1,6 +1,6 @@
 # Invisionary — Winning Dream Team
 
-App mobile cross-platform (iOS + Android) per una rete commerciale di **networker, assicuratori e trader**, con formazione ed educazione finanziaria integrate.
+App mobile cross-platform (iOS + Android) per una **rete di network marketing (networker) e trader**, con formazione ed educazione finanziaria integrate.
 
 Tre sezioni principali — **Network/CRM**, **Trading**, **Formazione** (+ **Community**) — e tre ruoli utente: `admin`, `leader`, `collaborator`.
 

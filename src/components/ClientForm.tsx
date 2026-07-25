@@ -54,7 +54,7 @@ export function ClientForm({ initial, submitLabel, loading, onSubmit }: ClientFo
         label="Prodotto"
         value={prodotto ?? ''}
         onChangeText={setProdotto}
-        placeholder="es. Polizza vita"
+        placeholder="es. prodotto o servizio"
       />
       <TextField
         label="Note"

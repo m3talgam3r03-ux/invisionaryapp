@@ -1,6 +1,6 @@
 # Invisionary — contesto per Claude Code
 
-App mobile cross-platform (iOS + Android, App Store + Google Play) per una rete commerciale di **networker, assicuratori e trader**, con formazione ed educazione finanziaria. Sezioni: **Network/CRM · Trading · Formazione · Community**. Ruoli: `admin`, `leader`, `collaborator` (gerarchia a un solo livello: leader → collaboratori).
+App mobile cross-platform (iOS + Android, App Store + Google Play) per una **rete di network marketing (networker) e trader**, con formazione ed educazione finanziaria. NON è un'app assicurativa. Sezioni: **Network/CRM · Trading · Formazione · Community**. Ruoli: `admin`, `leader`, `collaborator` (gerarchia a un solo livello: leader → collaboratori).
 
 ## ⛔ Regola d'oro
 

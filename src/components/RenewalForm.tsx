@@ -56,7 +56,7 @@ export function RenewalForm({ initial, submitLabel, loading, onSubmit }: Renewal
           setClientName(nome);
         }}
       />
-      <TextField label="Prodotto" value={prodotto} onChangeText={setProdotto} placeholder="es. Polizza auto" />
+      <TextField label="Prodotto" value={prodotto} onChangeText={setProdotto} placeholder="es. abbonamento o pacchetto" />
       <TextField
         label="Scadenza (AAAA-MM-GG)"
         value={scadenza}
