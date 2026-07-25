@@ -3,6 +3,7 @@ import 'react-native-url-polyfill/auto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 
 /**
  * Client Supabase (Postgres + Auth + Storage + Realtime).
@@ -23,12 +24,20 @@ export const isSupabaseConfigured =
  * Usiamo fallback validi quando non configurato così l'import non lancia eccezioni
  * (createClient richiede un URL valido). La UI mostra comunque lo stato "non configurato".
  */
+/**
+ * Storage per la sessione auth:
+ * - su native usiamo AsyncStorage;
+ * - su web lasciamo lo storage predefinito di supabase-js (localStorage nel browser,
+ *   memoria durante il rendering statico lato server) per NON accedere a `window` in SSR.
+ */
+const authStorage = Platform.OS === 'web' ? undefined : AsyncStorage;
+
 export const supabase = createClient(
   isSupabaseConfigured ? SUPABASE_URL : 'http://localhost:54321',
   isSupabaseConfigured ? SUPABASE_ANON_KEY : 'anon-key-placeholder',
   {
     auth: {
-      storage: AsyncStorage,
+      storage: authStorage,
       autoRefreshToken: true,
       persistSession: true,
       // Su mobile non gestiamo la sessione tramite URL del browser.
