@@ -18,6 +18,7 @@ Apri **SQL Editor** su Supabase Studio ed esegui le migrazioni **in ordine**:
    trigger di auto-creazione e anti-escalation), RLS esplicite e tabelle predisposte
    (`trading_accounts`, `trades`, `feedback_posts`).
 2. [`migrations/0002_clients.sql`](migrations/0002_clients.sql) — tabella CRM `clients` con RLS.
+3. [`migrations/0003_renewals.sql`](migrations/0003_renewals.sql) — `renewals` (scadenzario) e `push_tokens`, con RLS.
 
 > In alternativa con Supabase CLI: `supabase link` poi `supabase db push`.
 
@@ -53,3 +54,44 @@ Crea (password comune `Invisionary!23`):
 
 Le funzioni `is_admin()` / `can_read_member()` sono `SECURITY DEFINER` per evitare
 la ricorsione nelle policy.
+
+## Notifiche push e reminder rinnovi (Milestone 4)
+
+Gli avvisi di scadenza sono inviati dalla Edge Function
+[`functions/renewal-reminders`](functions/renewal-reminders/index.ts), schedulata via cron.
+
+**Prerequisiti push:** i token Expo si ottengono solo su **dispositivo fisico** e con un
+**progetto EAS** (`npx eas init`). L'app registra automaticamente il token in `push_tokens`
+al login; su web/emulatore la registrazione viene saltata.
+
+**Deploy della function** (richiede Supabase CLI + `supabase link`):
+
+```bash
+supabase functions deploy renewal-reminders
+```
+
+`SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` sono già disponibili nell'ambiente della function.
+
+**Schedulazione (cron):** dal Dashboard → *Edge Functions → renewal-reminders → Schedules*
+imposta un cron giornaliero (es. `0 8 * * *`). In alternativa, via SQL (pg_cron + pg_net):
+
+```sql
+select cron.schedule(
+  'renewal-reminders-daily',
+  '0 8 * * *',
+  $$ select net.http_post(
+       url := 'https://<PROJECT-REF>.functions.supabase.co/renewal-reminders',
+       headers := jsonb_build_object('Authorization', 'Bearer <SERVICE_ROLE_KEY>')
+     ); $$
+);
+```
+
+**Test manuale:**
+
+```bash
+supabase functions invoke renewal-reminders --no-verify-jwt
+```
+
+> La logica: rinnovi `active` con `reminder_sent_at` NULL la cui scadenza è entro
+> `alert_days_before` giorni → push all'owner → `reminder_sent_at` valorizzato (niente doppioni).
+> Modificare scadenza o stato di un rinnovo azzera `reminder_sent_at` per un nuovo ciclo.

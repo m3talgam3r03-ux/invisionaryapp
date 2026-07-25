@@ -74,6 +74,15 @@ export default function Dashboard() {
         </Card>
       )}
 
+      {/* Azione rapida: scadenzario rinnovi (CRM) */}
+      <Card style={{ gap: spacing.sm }}>
+        <ThemedText variant="heading">Scadenzario rinnovi</ThemedText>
+        <ThemedText tone="muted" variant="caption">
+          Tieni d'occhio le scadenze e ricevi un avviso prima del rinnovo.
+        </ThemedText>
+        <Button title="Apri scadenzario" variant="secondary" onPress={() => router.push('/renewals')} />
+      </Card>
+
       {/* I quattro pilastri: Network è attivo (CRM), gli altri arrivano nelle prossime milestone */}
       <View style={styles.pillars}>
         {PILLARS.map((p) => {
