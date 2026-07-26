@@ -122,3 +122,30 @@ La chiave Anthropic vive **solo** nell'Edge Function, mai nel client.
 
 4. Applica anche [`0006_ai_conversations.sql`](migrations/0006_ai_conversations.sql) (persistenza chat, privata per utente).
 5. Popola la base di conoscenza **dall'app**: come admin apri **Agente AI → Base di conoscenza** e incolla i contenuti (usa la function `ai-ingest`). L'app interroga l'agente tramite [`src/lib/ai.ts`](../src/lib/ai.ts) (`askAgent`) dalla schermata di chat, con cronologia salvata.
+
+## Trading MT5 (MetaApi, read-only)
+
+Integrazione **in sola lettura** via [MetaApi.cloud](https://metaapi.cloud): l'utente collega il
+conto con la **investor password** (mai la master). La password passa dalla Edge Function a MetaApi
+e **non** viene salvata (si memorizza solo il `metaapi_account_id`).
+
+1. Applica la migrazione [`0008_trading.sql`](migrations/0008_trading.sql) (estende `trading_accounts` e `trades`).
+2. Crea un account su MetaApi e imposta il token come secret:
+
+   ```bash
+   supabase secrets set METAAPI_TOKEN=...
+   ```
+
+3. Deploy delle function:
+
+   ```bash
+   supabase functions deploy mt5-connect
+   supabase functions deploy mt5-sync
+   ```
+
+4. In app (sezione **Trading**, pilastro ♠): «Collega MT5» → login, server, investor password →
+   `mt5-connect` provisiona e fa il deploy dell'account. Dopo qualche istante usa «Sincronizza»
+   (`mt5-sync`): aggiorna saldo/equity e importa i deal in `trades`. Il **rendimento è in percentuale**,
+   mai importi garantiti. Endpoint MetaApi in [`functions/_shared/metaapi.ts`](functions/_shared/metaapi.ts).
+
+> La sincronizzazione periodica si può schedulare come per i reminder rinnovi (pg_cron → `mt5-sync`).

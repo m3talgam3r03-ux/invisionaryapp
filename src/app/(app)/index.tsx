@@ -118,13 +118,15 @@ export default function Dashboard() {
       <View style={styles.pillars}>
         {PILLARS.map((p) => {
           const href =
-            p.key === 'network'
-              ? '/clients'
-              : p.key === 'formazione'
-                ? '/formazione'
-                : p.key === 'community'
-                  ? '/community'
-                  : null;
+            p.key === 'trading'
+              ? '/trading'
+              : p.key === 'network'
+                ? '/clients'
+                : p.key === 'formazione'
+                  ? '/formazione'
+                  : p.key === 'community'
+                    ? '/community'
+                    : null;
           const active = href !== null;
           const card = (
             <Card style={styles.pillarCard}>

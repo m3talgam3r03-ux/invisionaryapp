@@ -108,3 +108,39 @@ export type FeedbackPost = {
   photo_url: string | null;
   created_at: string;
 };
+
+// --- Trading (MT5 read-only) -----------------------------------------------
+
+export type TradingAccount = {
+  id: string;
+  owner_id: string;
+  provider: string | null;
+  login: string | null;
+  server: string | null;
+  platform: string | null;
+  region: string | null;
+  state: string | null;
+  name: string | null;
+  balance: number | null;
+  equity: number | null;
+  currency: string | null;
+  last_synced_at: string | null;
+  created_at: string;
+};
+
+export type Trade = {
+  id: string;
+  account_id: string | null;
+  owner_id: string;
+  external_id: string | null;
+  symbol: string | null;
+  type: string | null;
+  volume: number | null;
+  price: number | null;
+  profit: number | null;
+  commission: number | null;
+  swap: number | null;
+  entry_type: string | null;
+  time: string | null;
+  created_at: string;
+};
