@@ -4,7 +4,7 @@ App mobile cross-platform (iOS + Android) per una **rete di network marketing (n
 
 Tre sezioni principali — **Network/CRM**, **Trading**, **Formazione** (+ **Community**) — e tre ruoli utente: `admin`, `leader`, `collaborator`.
 
-> **Fase 0 completa (milestone 1–7).** Scaffold, autenticazione e ruoli, CRM + import, rinnovi + avvisi push, formazione, calcolatori e pannello admin. Setup del database in [`supabase/README.md`](supabase/README.md).
+> **Fase 0 completa (milestone 1–7)** + estensioni: scaffold, auth e ruoli, CRM + import, rinnovi + avvisi push, formazione, calcolatori e pannello admin — più **agente AI (RAG)**, **rank a carte** con classifica e **Community** (feedback con foto). Setup del database in [`supabase/README.md`](supabase/README.md).
 
 ---
 
@@ -101,7 +101,7 @@ Setup completo del progetto Supabase (creazione, migrazione SQL, seed) in
 [`supabase/README.md`](supabase/README.md). In sintesi:
 
 1. Crea un progetto Supabase in **regione EU** e metti URL + anon key in `.env`.
-2. Applica le migrazioni dal SQL Editor, in ordine: [`0001_init.sql`](supabase/migrations/0001_init.sql) (profiles + RLS), [`0002_clients.sql`](supabase/migrations/0002_clients.sql) (CRM), [`0003_renewals.sql`](supabase/migrations/0003_renewals.sql) (rinnovi + push) e [`0004_formazione.sql`](supabase/migrations/0004_formazione.sql) (formazione). Facoltativo: il seed dimostrativo [`seed/formazione_demo.sql`](supabase/seed/formazione_demo.sql).
+2. Applica **in ordine** tutte le migrazioni in [`supabase/migrations/`](supabase/migrations) (da `0001` a `0007`: auth/RLS, CRM, rinnovi, formazione, RAG, chat AI, Community). Facoltativo: il seed dimostrativo [`seed/formazione_demo.sql`](supabase/seed/formazione_demo.sql).
 3. (Consigliato) disattiva la conferma email per la demo.
 4. Esegui il seed dei 3 utenti demo:
 

@@ -20,7 +20,9 @@ App mobile cross-platform (iOS + Android, App Store + Google Play) per una **ret
 
 ✅ **Rank a carte** (2→Asso): punteggio trasparente (lezioni/clienti/rinnovi), classifica di rete (RLS), crest oro. `src/lib/rank.ts` + `src/lib/leaderboard.ts`, route `(app)/rank`.
 
-Fasi restanti **solo dopo richiesta esplicita**: MT5 read-only via MetaApi (investor password), feedback con foto.
+✅ **Community** (feedback con foto su Supabase Storage): `0007_feedback.sql` (bucket `feedback` + RLS), route `(app)/community`, upload via `expo-image-picker` + `base64-arraybuffer`.
+
+Fase restante **solo dopo richiesta esplicita**: MT5 read-only via MetaApi (investor password).
 
 ## Stack (usare questo)
 
