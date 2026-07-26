@@ -22,7 +22,9 @@ App mobile cross-platform (iOS + Android, App Store + Google Play) per una **ret
 
 ✅ **Community** (feedback con foto su Supabase Storage): `0007_feedback.sql` (bucket `feedback` + RLS), route `(app)/community`, upload via `expo-image-picker` + `base64-arraybuffer`.
 
-Fase restante **solo dopo richiesta esplicita**: MT5 read-only via MetaApi (investor password).
+✅ **MT5 read-only** (MetaApi): connessione con investor password (mai salvata), sync deal/saldo via Edge Function `mt5-connect`/`mt5-sync` (secret `METAAPI_TOKEN`), performance in %, classifica trader. `0008_trading.sql`, route `(app)/trading`.
+
+**Tutte le fasi del brief sono implementate.** Resta la messa in produzione: progetto Supabase (EU) + migrazioni `0001→0008` + secret + deploy delle Edge Function, poi test end-to-end.
 
 ## Stack (usare questo)
 
