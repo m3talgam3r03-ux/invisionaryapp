@@ -4,7 +4,7 @@ App mobile cross-platform (iOS + Android) per una **rete di network marketing (n
 
 Tre sezioni principali — **Network/CRM**, **Trading**, **Formazione** (+ **Community**) — e tre ruoli utente: `admin`, `leader`, `collaborator`.
 
-> **Fase 0 completa (milestone 1–7)** + estensioni: scaffold, auth e ruoli, CRM + import, rinnovi + avvisi push, formazione, calcolatori e pannello admin — più **agente AI (RAG)**, **rank a carte** con classifica e **Community** (feedback con foto). Setup del database in [`supabase/README.md`](supabase/README.md).
+> **App feature-complete** (Fase 0 + agente AI RAG, rank a carte, Community, trading MT5). Per accenderla: **guida di deploy passo-passo in [`DEPLOY.md`](DEPLOY.md)**. Dettagli database in [`supabase/README.md`](supabase/README.md).
 
 ---
 
