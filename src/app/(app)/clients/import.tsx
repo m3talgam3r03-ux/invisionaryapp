@@ -17,7 +17,6 @@ import { radius, spacing, useTheme } from '@/theme';
 export default function ImportClients() {
   const router = useRouter();
   const importer = useImportClients();
-  const { colors } = useTheme();
 
   const [sheet, setSheet] = useState<ParsedSheet | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping | null>(null);

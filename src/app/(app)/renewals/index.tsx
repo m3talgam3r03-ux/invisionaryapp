@@ -67,7 +67,6 @@ export default function RenewalsList() {
 }
 
 function RenewalRow({ renewal, onPress }: { renewal: RenewalWithClient; onPress: () => void }) {
-  const { colors } = useTheme();
   const days = daysUntil(renewal.scadenza);
   const isActive = renewal.status === 'active';
 

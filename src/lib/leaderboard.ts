@@ -61,7 +61,7 @@ export function useLeaderboard() {
       if (clients.error) throw clients.error;
       if (renewals.error) throw renewals.error;
 
-      const tally = (rows: Array<Record<string, unknown>> | null, key: string) => {
+      const tally = (rows: Record<string, unknown>[] | null, key: string) => {
         const map = new Map<string, number>();
         for (const row of rows ?? []) {
           const id = row[key] as string;

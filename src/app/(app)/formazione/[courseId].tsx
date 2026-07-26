@@ -4,12 +4,11 @@ import { Pressable, View } from 'react-native';
 import { Card, Screen, ThemedText } from '@/components/ui';
 import { useCourse, useLessons } from '@/lib/courses';
 import { useLessonProgress } from '@/lib/progress';
-import { spacing, useTheme } from '@/theme';
+import { spacing } from '@/theme';
 
 export default function CourseDetail() {
   const { courseId } = useLocalSearchParams<{ courseId: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
   const { data: course } = useCourse(courseId);
   const { data: lessons, isLoading, isError, error } = useLessons(courseId);
   const { data: completed } = useLessonProgress();
