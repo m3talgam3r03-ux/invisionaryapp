@@ -98,3 +98,13 @@ export type Document = {
   content: string;
   created_at: string;
 };
+
+/** Riga della tabella `feedback_posts` (Community). */
+export type FeedbackPost = {
+  id: string;
+  owner_id: string;
+  author_name: string | null;
+  body: string | null;
+  photo_url: string | null;
+  created_at: string;
+};

@@ -32,6 +32,12 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Consenti l'accesso alle foto per allegare immagini ai feedback."
+        }
       ]
     ],
     "experiments": {
