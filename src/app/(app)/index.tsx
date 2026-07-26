@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Crest } from '@/components/Crest';
 import { Button, Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { PILLARS, RED_SUITS, type Role, radius, spacing, useTheme } from '@/theme';
@@ -30,12 +31,8 @@ export default function Dashboard() {
     <Screen scroll>
       {/* Intestazione con emblema, saluto e badge ruolo */}
       <View style={styles.header}>
-        <Pressable
-          onPress={() => router.push('/agente')}
-          accessibilityRole="button"
-          style={[styles.eyeRing, { borderColor: colors.gold }]}
-        >
-          <View style={[styles.pupil, { backgroundColor: colors.accent }]} />
+        <Pressable onPress={() => router.push('/agente')} accessibilityRole="button">
+          <Crest size={58} />
         </Pressable>
         <View style={{ flex: 1, gap: spacing.xs }}>
           <ThemedText variant="title">Ciao, {firstName}</ThemedText>
@@ -170,19 +167,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.lg,
-  },
-  eyeRing: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.pill,
-    borderWidth: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pupil: {
-    width: 18,
-    height: 18,
-    borderRadius: radius.pill,
   },
   badge: {
     alignSelf: 'flex-start',

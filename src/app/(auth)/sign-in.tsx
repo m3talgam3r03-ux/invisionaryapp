@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { Crest } from '@/components/Crest';
 import { Button, Screen, TextField, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { isSupabaseConfigured } from '@/lib/supabase';
@@ -29,11 +30,14 @@ export default function SignIn() {
 
   return (
     <Screen scroll contentStyle={{ justifyContent: 'center' }}>
-      <View style={{ gap: spacing.xs, marginBottom: spacing.md }}>
+      <View style={{ alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md }}>
+        <Crest size={108} variant="full" />
         <ThemedText tone="gold" variant="label">
           {BRAND.payoff}
         </ThemedText>
-        <ThemedText variant="title">Accedi a {BRAND.name}</ThemedText>
+        <ThemedText variant="title" style={{ textAlign: 'center' }}>
+          Accedi a {BRAND.name}
+        </ThemedText>
       </View>
 
       {!isSupabaseConfigured && (

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Crest } from '@/components/Crest';
 import { ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { askAgent, type ChatMessage } from '@/lib/ai';
@@ -257,12 +258,9 @@ function Typing() {
 }
 
 function Welcome() {
-  const { colors } = useTheme();
   return (
     <View style={{ gap: spacing.md, paddingVertical: spacing.xxl, alignItems: 'center' }}>
-      <View style={[styles.eyeRing, { borderColor: colors.gold }]}>
-        <View style={[styles.pupil, { backgroundColor: colors.accent }]} />
-      </View>
+      <Crest size={72} />
       <ThemedText variant="title">Agente AI</ThemedText>
       <ThemedText tone="muted" variant="caption" style={{ textAlign: 'center', maxWidth: 300 }}>
         Fai una domanda sui contenuti della piattaforma. Le risposte si basano sulla base di
@@ -313,18 +311,5 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
     lineHeight: 22,
-  },
-  eyeRing: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.pill,
-    borderWidth: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pupil: {
-    width: 20,
-    height: 20,
-    borderRadius: radius.pill,
   },
 });
