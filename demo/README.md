@@ -1,0 +1,50 @@
+# Demo Invisionary — anteprima da condividere
+
+[`invisionary-demo.html`](invisionary-demo.html) è un'**anteprima interattiva** dell'app,
+in un **unico file** senza dipendenze: si apre con doppio clic, funziona **offline** e non
+richiede installazioni, account o connessione a Supabase.
+
+## Come condividerla con i collaboratori
+
+- **File**: mandalo per WhatsApp / email / Drive. Si apre nel browser del telefono o del PC.
+- **Link**: la stessa anteprima è pubblicata come artifact — comodo se preferisci non girare un file.
+
+> Su alcune app di messaggistica un `.html` viene bloccato o aperto in anteprima: in quel caso
+> conviene metterlo su Drive/OneDrive e condividere il link, oppure usare il link dell'artifact.
+
+## Cosa si può provare
+
+| Sezione | Interazione reale nella demo |
+| --- | --- |
+| Login | Accedi → dashboard (selettore **ruolo** in alto: admin / leader / collaboratore) |
+| Navigazione | Pulsante **Indietro** e **menu a tendina** (☰) con tutte le sezioni |
+| Agente AI | **Scrivi e invia**: risponde su network marketing, trading e imprenditoria; fuori tema rifiuta |
+| Trading ♠ | **Collega MT5** (login/server/investor password), **Classifica**, **Sincronizza** |
+| Network ♥ | **+ Nuovo** apre la finestra prospect: quello che aggiungi compare in lista; **Importa** CSV/Excel |
+| Scadenzario | Rinnovi con urgenza a colori |
+| Formazione ♦ | Corsi → lezione → video, calendario, avanzamento della rete |
+| Calcolatori | **Calcolo reale**: lottaggio **per strumento** (EUR/USD, XAU/USD, US30, BTC/USD…) e interesse composto |
+| Rank | Rank a carte (2 → Asso) e classifica |
+| Community ♣ | Feedback della squadra |
+| Admin | Gestione ruoli e gerarchia (visibile solo col ruolo admin) |
+
+## Cosa NON è
+
+È un'anteprima di **interfaccia e flussi**, non l'app compilata:
+
+- i dati sono d'esempio e **non vengono salvati** (ricaricando la pagina si riparte da capo);
+- l'agente AI usa risposte **precaricate**; nell'app vera risponde **Claude** tramite la
+  Edge Function `ai-chat`, con la base di conoscenza della rete (RAG);
+- MT5, import file e notifiche push sono **simulati**.
+
+Per l'app reale con dati veri: [`../DEPLOY.md`](../DEPLOY.md).
+
+## Aggiornarla
+
+Il file è generato a partire dal frammento usato per l'anteprima online; se lo modifichi,
+ricordati che `<head>`, `charset` e viewport stanno **solo** in questo file autonomo.
+
+---
+
+Contenuti a scopo **educativo e informativo**. Nessuna promessa di rendimento, nessuna
+consulenza finanziaria personalizzata. Dati CRM = dati personali (GDPR, storage EU).

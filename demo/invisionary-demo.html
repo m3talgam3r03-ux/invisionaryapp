@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Invisionary — anteprima app</title>
+<style>
+  html,body{margin:0;padding:0;background:#0E0E10;-webkit-text-size-adjust:100%}
+  *{box-sizing:border-box}
+</style>
+</head>
+<body>
+<style>
+  :root{
+    --bg:#0E0E10; --surface:#1A1A1D; --surface2:#232327; --border:#2E2E33;
+    --text:#F5F3EF; --muted:#8A8A90; --accent:#C8102E; --gold:#C9A227;
+    --success:#2E8B57; --error:#D21F3C;
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:22px;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  .iv-root{background:radial-gradient(1200px 600px at 50% -10%, #17171b 0%, var(--bg) 60%);
+    min-height:100%;color:var(--text);font-family:var(--sans);line-height:1.5;
+    padding:28px 16px 56px;display:flex;flex-direction:column;align-items:center;gap:22px}
+  .iv-intro{max-width:760px;text-align:center;display:flex;flex-direction:column;gap:10px}
+  .iv-kicker{color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.28em;font-size:12px}
+  .iv-title{font-size:clamp(26px,5vw,40px);font-weight:800;text-transform:uppercase;letter-spacing:.04em;
+    text-wrap:balance;margin:0}
+  .iv-note{color:var(--muted);font-size:13px;max-width:620px;margin:0 auto;text-wrap:pretty}
+  .iv-controls{display:flex;flex-direction:column;gap:12px;align-items:center;width:100%;max-width:760px}
+  .iv-tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .iv-tab{background:var(--surface);border:1px solid var(--border);color:var(--muted);
+    padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .iv-tab:hover{color:var(--text)}
+  .iv-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .iv-rolebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+  .iv-rolebar .rb{background:var(--surface);border:1px solid var(--border);color:var(--muted);
+    padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer}
+  .iv-rolebar .rb.on{border-color:var(--gold);color:var(--gold)}
+
+  /* Phone */
+  .iv-phone{width:390px;max-width:100%;height:min(80vh,820px);background:var(--bg);
+    border:1px solid var(--border);border-radius:36px;box-shadow:0 30px 80px -30px #000, inset 0 0 0 6px #050506;
+    overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .iv-status{height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;
+    font-size:12px;color:var(--muted);flex:0 0 auto}
+  .iv-status b{color:var(--text);letter-spacing:.06em;text-transform:uppercase;font-size:11px}
+
+  /* App bar (barra con Indietro + titolo + menu a tendina) */
+  .appbar{display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid var(--border);flex:0 0 auto;min-height:46px}
+  .appbar.hide{display:none}
+  .iconbtn{width:38px;height:38px;border-radius:10px;background:transparent;border:1px solid transparent;color:var(--text);
+    font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:0 0 auto;line-height:1}
+  .iconbtn:hover{background:var(--surface)}
+  .abtitle{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:800;
+    text-transform:uppercase;letter-spacing:.12em;color:var(--text)}
+  .navwrap{position:relative;flex:0 0 auto}
+  .navmenu{position:absolute;top:44px;right:0;z-index:30;background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;box-shadow:0 24px 60px -22px #000;padding:6px;display:none;min-width:210px}
+  .navmenu.on{display:block;animation:fade .15s ease}
+  .navmenu button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:0;
+    color:var(--text);padding:10px 12px;border-radius:10px;font-size:14px;cursor:pointer;font-family:var(--sans)}
+  .navmenu button:hover{background:var(--surface2)}
+  .navmenu button .s{width:16px;text-align:center;font-size:14px}
+  .navmenu .sep{height:1px;background:var(--border);margin:6px 6px}
+  .navmenu button.logout{color:var(--accent)}
+
+  .iv-screen{flex:1;overflow-y:auto;overflow-x:hidden;padding:18px 18px 40px}
+  .iv-screen::-webkit-scrollbar{width:8px}
+  .iv-screen::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:8px}
+
+  .view{display:none;flex-direction:column;gap:16px;animation:fade .25s ease}
+  .view.on{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){.view,.navmenu,.sheet,.iv-root *{animation:none!important}}
+
+  /* Components */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;
+    display:flex;flex-direction:column;gap:8px}
+  .heading{font-size:17px;font-weight:700;margin:0}
+  .title{font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin:0}
+  .display{font-size:34px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin:0}
+  .label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+  .cap{font-size:12.5px;color:var(--muted);margin:0}
+  .muted{color:var(--muted)} .gold{color:var(--gold)} .accent{color:var(--accent)}
+  .success{color:var(--success)} .error{color:var(--error)}
+  .btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:#fff;
+    height:48px;border-radius:var(--r-md);font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+    font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
+  .btn:hover{filter:brightness(1.08)}
+  .btn:disabled{opacity:.55;cursor:default;filter:none}
+  .btn.sec{background:transparent;border-color:var(--border);color:var(--text)}
+  .btn.sm{height:40px;font-size:12px;padding:0 14px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field input{height:48px;border-radius:var(--r-md);border:1px solid var(--border);background:var(--surface);
+    color:var(--text);padding:0 14px;font-size:16px;font-family:var(--sans);outline:none}
+  .field input:focus{border-color:var(--accent)}
+  select.sel{height:48px;border-radius:var(--r-md);border:1px solid var(--border);background:var(--surface);
+    color:var(--text);padding:0 12px;font-size:16px;font-family:var(--sans);outline:none;width:100%;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238A8A90' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center;cursor:pointer}
+  select.sel:focus{border-color:var(--accent)}
+  .pill{align-self:flex-start;background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+    padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+  .chip{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:999px;
+    font-size:12.5px;cursor:pointer;white-space:nowrap}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .row{display:flex;align-items:center;gap:10px}
+  .between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .list{display:flex;flex-direction:column;gap:12px}
+  .press{cursor:pointer;transition:.15s} .press:hover{border-color:#3b3b42}
+
+  /* chat */
+  .inputbar{border-top:1px solid var(--border);padding-top:12px;gap:8px;align-items:flex-end;display:flex}
+  .inputbar input{flex:1;height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface);
+    color:var(--text);padding:0 14px;font-size:15px;outline:none;font-family:var(--sans)}
+  .inputbar input:focus{border-color:var(--accent)}
+  .send{width:44px;height:44px;border-radius:999px;background:var(--accent);border:0;color:#fff;font-size:20px;
+    font-weight:800;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+  .send:disabled{opacity:.4;cursor:default}
+
+  /* Pillars */
+  .pillars{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pillar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 12px;
+    display:flex;flex-direction:column;align-items:center;gap:6px}
+  .pillar.press{cursor:pointer}
+  .suit{font-size:30px;line-height:1}
+  .headrow{display:flex;align-items:center;gap:14px}
+
+  /* severity stripe */
+  .stripe{border-left:3px solid var(--border);padding-left:13px}
+  .stripe.crit{border-color:var(--error)} .stripe.warn{border-color:var(--gold)} .stripe.ok{border-color:var(--border)}
+
+  .video{aspect-ratio:16/9;background:#000;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--border);position:relative}
+  .play{width:0;height:0;border-left:26px solid var(--accent);border-top:16px solid transparent;border-bottom:16px solid transparent;margin-left:6px}
+  .video small{position:absolute;bottom:8px;right:10px;color:var(--muted);font-size:11px}
+
+  .bar{height:7px;border-radius:5px;background:var(--surface2);overflow:hidden}
+  .bar > i{display:block;height:100%;background:var(--gold);border-radius:5px}
+  .crest{border:2px solid var(--gold);background:var(--surface);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:800;flex:0 0 auto}
+  .resline{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .resline b{font-variant-numeric:tabular-nums}
+
+  /* brand lockup */
+  .lockup{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .barcrest{display:inline-flex;flex:0 0 auto;opacity:.9}
+
+  /* filetto con stella, come i separatori del sigillo */
+  .rule{display:flex;align-items:center;gap:10px;align-self:stretch;color:var(--muted)}
+  .rule i{flex:1;height:1px;background:var(--border)}
+  .rule span{font-size:11px;letter-spacing:.1em}
+
+  /* asso: lettera sopra il seme (in basso invertito), come nell'iride del logo */
+  .ace{display:inline-flex;flex-direction:column;align-items:center;line-height:1;gap:1px}
+  .ace b{font-size:12px;font-weight:800;letter-spacing:.02em}
+  .ace i{font-style:normal;font-size:19px}
+  .ace.low{flex-direction:column-reverse}
+
+  /* card "sigillo": doppio bordo che riprende i due anelli del logo */
+  .card.ring{box-shadow:inset 0 0 0 1px var(--bg), inset 0 0 0 2px #35353c}
+
+  /* modal / sheet */
+  .modal{position:absolute;inset:0;z-index:40;background:#000b;display:none;align-items:flex-end}
+  .modal.on{display:flex}
+  .sheet{width:100%;background:var(--surface);border-top-left-radius:20px;border-top-right-radius:20px;
+    border:1px solid var(--border);border-bottom:0;padding:16px;display:flex;flex-direction:column;gap:12px;
+    max-height:94%;overflow-y:auto;animation:slideup .25s ease}
+  @keyframes slideup{from{transform:translateY(30px);opacity:.5}to{transform:none;opacity:1}}
+  .sheet .field input{font-size:16px}
+
+  .toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%) translateY(8px);background:var(--surface2);
+    border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:999px;font-size:12.5px;z-index:50;
+    opacity:0;transition:.22s;pointer-events:none;white-space:nowrap;max-width:90%}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .footer{max-width:760px;text-align:center;color:#4a4a52;font-size:12px}
+  .swatches{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}
+  .sw{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+  .sw i{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid #0006}
+</style>
+
+<div class="iv-root">
+  <div class="iv-intro">
+    <div class="iv-kicker">Winning Dream Team</div>
+    <h1 class="iv-title">Invisionary — anteprima app</h1>
+    <p class="iv-note">Anteprima <b>navigabile e interattiva</b>: barra con <b>Indietro</b> e <b>menu a tendina</b>, <b>agente AI</b> che risponde su network marketing, trading e imprenditoria, calcolatore lottaggio <b>per strumento</b> (Forex, oro, indici, cripto…), pulsanti del Trading e «+ Nuovo» del CRM funzionanti. Nella demo le risposte dell'agente sono precaricate; nell'app risponde <b>Claude</b> con la base di conoscenza della rete.</p>
+  </div>
+
+  <div class="iv-controls">
+    <div class="iv-tabs" id="tabs"></div>
+    <div class="iv-rolebar">
+      <span>Ruolo:</span>
+      <span class="rb on" data-role="admin">Admin</span>
+      <span class="rb" data-role="leader">Leader</span>
+      <span class="rb" data-role="collaborator">Collaboratore</span>
+    </div>
+  </div>
+
+  <div class="iv-phone">
+    <div class="iv-status"><b>Invisionary</b><span>9:41&nbsp;&nbsp;5G&nbsp;·&nbsp;100%</span></div>
+
+    <!-- APP BAR: Indietro + titolo + menu a tendina -->
+    <div class="appbar hide" id="appbar">
+      <button class="iconbtn" id="backBtn" onclick="goBack()" title="Indietro" aria-label="Indietro">‹</button>
+      <span class="abtitle"><span class="barcrest" id="barCrest"></span><span id="abTitle">Invisionary</span></span>
+      <div class="navwrap">
+        <button class="iconbtn" id="menuBtn" onclick="toggleMenu(event)" title="Menu" aria-label="Menu">☰</button>
+        <div class="navmenu" id="navMenu"></div>
+      </div>
+    </div>
+
+    <div class="iv-screen" id="screen">
+
+      <!-- LOGIN -->
+      <section class="view" data-view="login">
+        <div class="lockup" style="margin-top:10px">
+          <span id="loginCrest"></span>
+          <div class="rule"><i></i><span>✦</span><i></i></div>
+          <p class="cap" style="letter-spacing:.18em;text-transform:uppercase;font-size:11px">Accedi per continuare</p>
+        </div>
+        <div class="field"><span class="label">Email</span><input value="admin@invisionary.demo"></div>
+        <div class="field"><span class="label">Password</span><input type="password" value="Invisionary!23"></div>
+        <button class="btn" onclick="setScreen('dashboard')">Accedi</button>
+        <div class="row" style="justify-content:center"><span class="cap">Non hai un account?</span><span class="cap accent" style="cursor:pointer">Registrati</span></div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section class="view" data-view="dashboard">
+        <div class="headrow">
+          <span class="press" onclick="setScreen('agente')" title="Agente AI" id="dashCrest" style="cursor:pointer;display:inline-flex"></span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <h2 class="title" id="greet">Ciao, Admin</h2>
+            <span class="pill" id="rolePill">Amministratore</span>
+          </div>
+        </div>
+        <div class="card" id="roleCard"></div>
+        <div class="card">
+          <h3 class="heading">Agente AI</h3>
+          <p class="cap">Chiedi all'assistente: risposte basate sui contenuti della piattaforma.</p>
+          <button class="btn sm" onclick="setScreen('agente')">Apri l'agente</button>
+        </div>
+        <div class="card">
+          <h3 class="heading">Scadenzario rinnovi</h3>
+          <p class="cap">Tieni d'occhio le scadenze e ricevi un avviso prima del rinnovo.</p>
+          <button class="btn sec sm" onclick="setScreen('renewals')">Apri scadenzario</button>
+        </div>
+        <div class="card">
+          <h3 class="heading">Calcolatori</h3>
+          <p class="cap">Lottaggio e interesse composto — strumenti a scopo educativo.</p>
+          <button class="btn sec sm" onclick="setScreen('calc')">Apri calcolatori</button>
+        </div>
+        <div class="card">
+          <h3 class="heading">Rank &amp; classifica</h3>
+          <p class="cap">Il tuo avanzamento nella rete: diventa un Asso.</p>
+          <button class="btn sec sm" onclick="setScreen('rank')">Vedi il tuo rank</button>
+        </div>
+        <div class="pillars">
+          <div class="pillar press" onclick="setScreen('trading')"><span class="ace" style="color:var(--text)"><b>A</b><i>♠</i></span><span class="label" style="color:var(--text)">Trading</span><span class="cap accent">Apri →</span></div>
+          <div class="pillar press" onclick="setScreen('crm')"><span class="ace accent"><b>A</b><i>♥</i></span><span class="label" style="color:var(--text)">Network</span><span class="cap accent">Apri →</span></div>
+          <div class="pillar press" onclick="setScreen('formazione')"><span class="ace low accent"><b>A</b><i>♦</i></span><span class="label" style="color:var(--text)">Formazione</span><span class="cap accent">Apri →</span></div>
+          <div class="pillar press" onclick="setScreen('community')"><span class="ace low" style="color:var(--text)"><b>A</b><i>♣</i></span><span class="label" style="color:var(--text)">Community</span><span class="cap accent">Apri →</span></div>
+        </div>
+        <button class="btn sec" onclick="setScreen('login')">Esci</button>
+        <p class="cap" style="text-align:center">Contenuti a scopo educativo e informativo. Nessuna promessa di rendimento né consulenza finanziaria personalizzata.</p>
+      </section>
+
+      <!-- AGENTE AI -->
+      <section class="view" data-view="agente">
+        <div class="lockup" style="margin-top:2px">
+          <span id="agCrest"></span>
+          <span class="label">Agente AI</span>
+          <p class="cap" style="text-align:center;max-width:280px">Network marketing · trading · imprenditoria. Chiedimi del metodo, non del mercato.</p>
+        </div>
+        <div id="chatList" class="list"></div>
+        <div class="inputbar">
+          <input id="chatInput" placeholder="Scrivi all'agente…" oninput="updateSend()" onkeydown="chatKey(event)">
+          <button class="send" id="chatSend" onclick="sendChat()" disabled aria-label="Invia">↑</button>
+        </div>
+        <p class="cap" style="text-align:center">Nell'app risponde Claude con la base di conoscenza della piattaforma (RAG). Solo temi di network, trading e imprenditoria. Nessuna consulenza finanziaria personalizzata né promesse di guadagno.</p>
+      </section>
+
+      <!-- TRADING -->
+      <section class="view" data-view="trading">
+        <div id="tHome" class="list">
+          <div class="row" style="gap:8px">
+            <button class="btn sm" style="flex:1" onclick="tSub('connect')">+ Collega MT5</button>
+            <button class="btn sec sm" style="flex:1" onclick="tSub('board')">Classifica</button>
+          </div>
+          <button class="btn sec sm" id="syncBtn" onclick="syncMt5()">Sincronizza ora</button>
+          <div class="card" style="gap:8px">
+            <div class="between"><h3 class="heading">5012345@Broker-Live</h3><span class="cap muted">MT5</span></div>
+            <div class="resline" style="padding:2px 0"><span class="muted">Saldo</span><span id="tBal">10.240,00 EUR</span></div>
+            <div class="resline" style="padding:2px 0"><span class="muted">Equity</span><span id="tEq">10.310,00 EUR</span></div>
+            <div class="resline" style="padding:2px 0"><span class="muted">Rendimento (stima)</span><span class="gold" id="tPerf" style="font-weight:800">+3,80 %</span></div>
+            <div class="cap muted" id="tSync">Ultimo aggiornamento: 27/07/2026 09:41</div>
+          </div>
+          <span class="label">Operazioni</span>
+          <div id="tDeals" class="list">
+            <div class="card" style="flex-direction:row;align-items:center;gap:12px"><div style="flex:1"><h3 class="heading">EURUSD</h3><p class="cap">BUY · 0,50 · 24/07/2026</p></div><span class="label success">+128,40</span></div>
+            <div class="card" style="flex-direction:row;align-items:center;gap:12px"><div style="flex:1"><h3 class="heading">XAUUSD</h3><p class="cap">SELL · 0,20 · 22/07/2026</p></div><span class="label error">-45,10</span></div>
+          </div>
+          <p class="cap" style="text-align:center">Solo lettura (investor password). Metriche in percentuale, non importi garantiti né consulenza finanziaria.</p>
+        </div>
+
+        <div id="tConnect" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="tSub('home')">‹ Trading</button>
+          <h2 class="title">Collega MT5</h2>
+          <p class="cap">Collegamento in <b>sola lettura</b> con la <b>investor password</b>: non viene mai salvata.</p>
+          <div class="field"><span class="label">Login (numero conto)</span><input id="mtLogin" value="5012345"></div>
+          <div class="field"><span class="label">Server</span><input id="mtServer" value="Broker-Live"></div>
+          <div class="field"><span class="label">Investor password</span><input id="mtPass" type="password" value="••••••••"></div>
+          <button class="btn" id="mtConnectBtn" onclick="connectMt5()">Connetti (sola lettura)</button>
+          <div id="mtMsg"></div>
+          <p class="cap">Provisioning via MetaApi: dopo il collegamento attendi ~1 min, poi «Sincronizza». Dati a scopo informativo.</p>
+        </div>
+
+        <div id="tBoard" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="tSub('home')">‹ Trading</button>
+          <h2 class="title">Classifica trader</h2>
+          <p class="cap">Per rendimento percentuale del periodo (sola lettura).</p>
+          <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">1</span><div style="flex:1"><h3 class="heading">Leader Demo</h3><p class="cap">Leader · 14 operazioni</p></div><span class="label success">+12,40 %</span></div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:12px;border-color:var(--accent)"><span class="label muted" style="width:22px;text-align:center">2</span><div style="flex:1"><h3 class="heading">Admin Demo · tu</h3><p class="cap">Amministratore · 6 operazioni</p></div><span class="label gold">+3,80 %</span></div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">3</span><div style="flex:1"><h3 class="heading">Collaboratore Demo</h3><p class="cap">Collaboratore · 9 operazioni</p></div><span class="label error">-1,20 %</span></div>
+          <p class="cap" style="text-align:center">Percentuali, non importi. Le performance passate non garantiscono risultati futuri.</p>
+        </div>
+      </section>
+
+      <!-- CRM -->
+      <section class="view" data-view="crm">
+        <div class="between"><h2 class="title">Clienti</h2><span class="pill">CRM</span></div>
+        <div class="row"><button class="btn sm" style="flex:1" onclick="openCrm()">+ Nuovo</button><button class="btn sec sm" style="flex:1" onclick="crmSub('import')">Importa</button></div>
+
+        <div id="crmList" class="list">
+          <div class="card press"><h3 class="heading">Mario Rossi</h3><p class="cap">Membership Premium</p><p class="cap">mario.rossi@email.it</p></div>
+          <div class="card press"><h3 class="heading">Giulia Bianchi</h3><p class="cap">Pacchetto Starter</p><p class="cap">+39 340 1234567</p></div>
+          <div class="card press"><h3 class="heading">Luca Verdi</h3><p class="cap">Corso trading avanzato</p><p class="cap">luca.verdi@email.it</p></div>
+        </div>
+
+        <div id="crmImport" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="crmSub('list')">‹ Clienti</button>
+          <div class="card">
+            <h3 class="heading">clienti_luglio.xlsx</h3>
+            <p class="cap">128 righe rilevate · 4 colonne</p>
+          </div>
+          <span class="label">Abbina le colonne</span>
+          <div class="field"><span class="cap">Nome *</span><div class="row" style="flex-wrap:wrap"><span class="chip">—</span><span class="chip on">Nominativo</span><span class="chip">Email</span><span class="chip">Prodotto</span></div></div>
+          <div class="field"><span class="cap">Contatto</span><div class="row" style="flex-wrap:wrap"><span class="chip">—</span><span class="chip">Nominativo</span><span class="chip on">Email</span><span class="chip">Prodotto</span></div></div>
+          <div class="field"><span class="cap">Prodotto</span><div class="row" style="flex-wrap:wrap"><span class="chip">—</span><span class="chip">Nominativo</span><span class="chip">Email</span><span class="chip on">Prodotto</span></div></div>
+          <span class="label">Anteprima (126 clienti validi)</span>
+          <div class="card"><h3 class="heading">Anna Neri</h3><p class="cap">Membership annuale</p><p class="cap">anna.neri@email.it</p></div>
+          <div class="card"><h3 class="heading">Paolo Gialli</h3><p class="cap">Pacchetto Starter</p><p class="cap">paolo.g@email.it</p></div>
+          <p class="cap">…e altri 124.</p>
+          <button class="btn" onclick="crmSub('list')">Importa 126 clienti</button>
+          <p class="cap" style="text-align:center">Import CSV/Excel con mappatura colonne e anteprima prima del salvataggio.</p>
+        </div>
+      </section>
+
+      <!-- RENEWALS -->
+      <section class="view" data-view="renewals">
+        <div class="between"><h2 class="title">Scadenzario</h2></div>
+        <button class="btn sm" onclick="toast('Modulo «Nuovo rinnovo» (demo)')">+ Nuovo rinnovo</button>
+        <div class="list">
+          <div class="card stripe crit"><div class="between"><h3 class="heading">Mario Rossi</h3><span class="label error">Scaduto da 3 g</span></div><p class="cap">12/07/2026 · Membership Premium</p></div>
+          <div class="card stripe warn"><div class="between"><h3 class="heading">Giulia Bianchi</h3><span class="label gold">Tra 8 g</span></div><p class="cap">02/08/2026 · Pacchetto Starter</p></div>
+          <div class="card stripe ok"><div class="between"><h3 class="heading">Luca Verdi</h3><span class="label muted">Tra 45 g</span></div><p class="cap">08/09/2026 · Corso trading avanzato</p></div>
+          <div class="card stripe ok"><div class="between"><h3 class="heading">Anna Neri</h3><span class="label muted">Tra 12 g</span></div><p class="cap">06/08/2026 · Membership annuale · Rinnovato</p></div>
+        </div>
+      </section>
+
+      <!-- FORMAZIONE -->
+      <section class="view" data-view="formazione">
+        <div id="fmMenu" class="list">
+          <div class="row"><button class="btn sec sm" style="flex:1" onclick="fmSub('cal')">Calendario</button><button class="btn sec sm" id="reteBtn" style="flex:1" onclick="fmSub('rete')">Avanzamento rete</button></div>
+          <div class="card press" onclick="fmSub('course')"><h3 class="heading">Fondamenti Invisionary</h3><p class="cap">Corso introduttivo dimostrativo.</p></div>
+          <div class="card press" onclick="fmSub('course')"><h3 class="heading">Educazione finanziaria</h3><p class="cap">Basi di gestione del rischio e mindset.</p></div>
+        </div>
+
+        <div id="fmCourse" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="fmSub('menu')">‹ Corsi</button>
+          <div><h2 class="title">Fondamenti Invisionary</h2><span class="label gold">1/2 completate</span></div>
+          <div class="card press" onclick="fmSub('lesson')"><div class="row"><span class="heading success">✓</span><span style="flex:1">Benvenuto</span><span class="muted">›</span></div></div>
+          <div class="card press" onclick="fmSub('lesson')"><div class="row"><span class="heading muted">2</span><span style="flex:1">Mentalità vincente</span><span class="muted">›</span></div></div>
+        </div>
+
+        <div id="fmLesson" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="fmSub('course')">‹ Lezione</button>
+          <h2 class="title">Mentalità vincente</h2>
+          <div class="video"><div class="play"></div><small>video YouTube (demo)</small></div>
+          <button class="btn" onclick="toast('Lezione segnata come completata (demo)')">Segna come completata</button>
+          <p class="cap">Contenuti a scopo educativo e informativo. Nessuna consulenza finanziaria personalizzata.</p>
+        </div>
+
+        <div id="fmCal" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="fmSub('menu')">‹ Formazione</button>
+          <div class="card"><span class="label gold">15/09/2026 · 18:00</span><h3 class="heading">Webinar: apertura stagione</h3><p class="cap">Sessione dimostrativa.</p></div>
+          <div class="card"><span class="label gold">01/10/2026 · 10:00</span><h3 class="heading">Workshop di rete</h3><p class="cap">Incontro dimostrativo.</p></div>
+        </div>
+
+        <div id="fmRete" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="fmSub('menu')">‹ Formazione</button>
+          <p class="cap">Avanzamento formazione della tua rete.</p>
+          <div class="card"><div class="between"><h3 class="heading">Leader Demo</h3><span class="label gold">2/2</span></div><p class="cap">Leader · 100%</p><div class="bar"><i style="width:100%"></i></div></div>
+          <div class="card"><div class="between"><h3 class="heading">Collaboratore Demo</h3><span class="label gold">1/2</span></div><p class="cap">Collaboratore · 50%</p><div class="bar"><i style="width:50%"></i></div></div>
+          <div class="card"><div class="between"><h3 class="heading">Marco Blu</h3><span class="label gold">0/2</span></div><p class="cap">Collaboratore · 0%</p><div class="bar"><i style="width:0%"></i></div></div>
+        </div>
+      </section>
+
+      <!-- CALCOLATORI -->
+      <section class="view" data-view="calc">
+        <div id="cMenu" class="list">
+          <div class="card press" onclick="cSub('lot')"><h3 class="heading">Calcolatore lottaggio</h3><p class="cap">Dimensione della posizione per strumento (Forex, oro, indici, cripto), rischio % e stop loss.</p></div>
+          <div class="card press" onclick="cSub('comp')"><h3 class="heading">Interesse composto</h3><p class="cap">Proiezione del montante con versamenti periodici.</p></div>
+          <p class="cap">Strumenti a scopo educativo. I risultati sono stime, non consulenza finanziaria.</p>
+        </div>
+
+        <div id="cLot" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="cSub('menu')">‹ Calcolatori</button>
+          <div class="field"><span class="label">Strumento</span><select id="lotInstr" class="sel" onchange="onInstr()"></select></div>
+          <div class="card" style="gap:5px">
+            <div class="resline"><span class="muted">Categoria</span><span id="iGroup">—</span></div>
+            <div class="resline"><span class="muted">Contratto (1 lotto)</span><span id="iContract">—</span></div>
+            <div class="resline"><span class="muted">Valore <span class="uA">pip</span>/lotto</span><span id="iPip">—</span></div>
+          </div>
+          <div class="field"><span class="label">Saldo conto</span><input id="lotSaldo" value="10000" oninput="calcLot()"></div>
+          <div class="field"><span class="label">Valuta conto</span><input id="lotVal" value="EUR" oninput="calcLot()"></div>
+          <div class="field"><span class="label">Rischio %</span><input id="lotRisk" value="1" oninput="calcLot()"></div>
+          <div class="field"><span class="label">Stop loss (<span class="uB">pips</span>)</span><input id="lotSl" value="20" oninput="calcLot()"></div>
+          <div class="field"><span class="label">Tasso <span id="iQuote">USD</span> → conto</span><input id="lotRate" value="1" oninput="calcLot()"><span class="cap" id="rateHint"></span></div>
+          <div class="card"><span class="label">Risultato</span><div id="lotRes"></div></div>
+          <p class="cap">Formula: Lotti = Rischio ÷ (Stop × valore <span class="uA">pip</span> per lotto). Le convenzioni (dimensione contratto, valore pip) variano per broker. Stima educativa, non consulenza finanziaria.</p>
+        </div>
+
+        <div id="cComp" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="cSub('menu')">‹ Calcolatori</button>
+          <div class="field"><span class="label">Capitale iniziale (€)</span><input id="cCap" value="5000" oninput="calcComp()"></div>
+          <div class="field"><span class="label">Versamento mensile (€)</span><input id="cVers" value="200" oninput="calcComp()"></div>
+          <div class="field"><span class="label">Tasso annuo %</span><input id="cRate" value="6" oninput="calcComp()"></div>
+          <div class="field"><span class="label">Anni</span><input id="cYears" value="10" oninput="calcComp()"></div>
+          <div class="card"><span class="label">Risultato</span><div id="compRes"></div></div>
+          <div class="card"><span class="label">Montante per anno</span><div id="compYears" style="margin-top:6px"></div></div>
+          <p class="cap">Proiezione a scopo educativo, non consulenza finanziaria. Nessuna garanzia di rendimento.</p>
+        </div>
+      </section>
+
+      <!-- RANK -->
+      <section class="view" data-view="rank">
+        <div class="card">
+          <span class="label">Il tuo rank (esempio)</span>
+          <div class="row" style="gap:16px;align-items:center">
+            <div class="crest" style="width:72px;height:72px;font-size:30px">7</div>
+            <div style="flex:1"><h2 class="title" style="color:var(--gold)">7</h2><p class="cap">200 punti</p></div>
+          </div>
+          <div class="bar" style="margin-top:4px"><i style="width:25%"></i></div>
+          <p class="cap">Prossimo: 8 · 60 punti al traguardo.</p>
+          <p class="cap">Punti = lezioni (×10) + clienti (×5) + rinnovi attivi (×3).</p>
+        </div>
+        <span class="label">Classifica della rete</span>
+        <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">1</span><div class="crest" style="width:40px;height:40px;font-size:17px">9</div><div style="flex:1"><h3 class="heading">Leader Demo</h3><p class="cap">Leader</p></div><span class="label gold">490 pt</span></div>
+        <div class="card" style="flex-direction:row;align-items:center;gap:12px;border-color:var(--accent)"><span class="label muted" style="width:22px;text-align:center">2</span><div class="crest" style="width:40px;height:40px;font-size:17px">7</div><div style="flex:1"><h3 class="heading">Admin Demo · tu</h3><p class="cap">Amministratore</p></div><span class="label gold">200 pt</span></div>
+        <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">3</span><div class="crest" style="width:40px;height:40px;font-size:17px">5</div><div style="flex:1"><h3 class="heading">Collaboratore Demo</h3><p class="cap">Collaboratore</p></div><span class="label gold">95 pt</span></div>
+        <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">4</span><div class="crest" style="width:40px;height:40px;font-size:17px">4</div><div style="flex:1"><h3 class="heading">Marco Blu</h3><p class="cap">Collaboratore</p></div><span class="label gold">75 pt</span></div>
+        <p class="cap" style="text-align:center">Avanzamento a scopo motivazionale. Le metriche di trading (in percentuale) arrivano dall'integrazione MT5.</p>
+      </section>
+
+      <!-- COMMUNITY -->
+      <section class="view" data-view="community">
+        <button class="btn sm" onclick="toast('Modulo «Nuovo feedback» con foto (demo)')">+ Nuovo feedback</button>
+        <div class="list">
+          <div class="card" style="gap:8px">
+            <div class="between"><h3 class="heading">Leader Demo</h3><span class="cap">24/07/2026</span></div>
+            <span>Primo traguardo del mese raggiunto — grande squadra! 💪</span>
+            <div style="aspect-ratio:4/3;background:var(--surface2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px">foto</div>
+          </div>
+          <div class="card" style="gap:8px">
+            <div class="between"><h3 class="heading">Collaboratore Demo</h3><span class="cap">22/07/2026</span></div>
+            <span>Completato il corso «Fondamenti». Si continua!</span>
+          </div>
+        </div>
+        <p class="cap" style="text-align:center">Contenuti a scopo educativo e motivazionale.</p>
+      </section>
+
+      <!-- ADMIN -->
+      <section class="view" data-view="admin">
+        <div id="adminGate"></div>
+        <div id="adminBody" class="list">
+          <div id="adminList" class="list">
+            <h2 class="title">Gestione utenti</h2>
+            <p class="cap">Assegna ruoli e gerarchia. I nuovi utenti si registrano come collaboratori; creazione ed eliminazione account avvengono da Supabase.</p>
+            <div class="card press" onclick="adSub('detail')"><div class="between"><h3 class="heading">Admin Demo</h3><span class="label gold">Amministratore</span></div></div>
+            <div class="card press" onclick="adSub('detail')"><div class="between"><h3 class="heading">Leader Demo</h3><span class="label gold">Leader</span></div></div>
+            <div class="card press" onclick="adSub('detail')"><div class="between"><h3 class="heading">Collaboratore Demo</h3><span class="label gold">Collaboratore</span></div><p class="cap">Leader: Leader Demo</p></div>
+          </div>
+          <div id="adminDetail" style="display:none" class="list">
+            <button class="btn sec sm" style="align-self:flex-start" onclick="adSub('list')">‹ Utenti</button>
+            <h2 class="title">Collaboratore Demo</h2>
+            <div class="card"><span class="label">Ruolo</span><div class="row" style="flex-wrap:wrap"><span class="chip">Amministratore</span><span class="chip">Leader</span><span class="chip on">Collaboratore</span></div></div>
+            <div class="card"><span class="label">Leader</span><div class="row" style="flex-wrap:wrap"><span class="chip">— Nessuno</span><span class="chip on">Leader Demo</span></div></div>
+            <button class="btn" onclick="toast('Modifiche salvate (demo)')">Salva</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- MODALE: nuovo prospect -->
+    <div class="modal" id="crmModal">
+      <div class="sheet">
+        <div class="between"><h3 class="heading">Nuovo prospect</h3><button class="iconbtn" onclick="closeCrm()" aria-label="Chiudi">✕</button></div>
+        <div class="field"><span class="label">Nome e cognome *</span><input id="npName" placeholder="Es. Sara Conti"></div>
+        <div class="field"><span class="label">Prodotto / interesse</span><input id="npProd" placeholder="Es. Membership Premium"></div>
+        <div class="field"><span class="label">Email</span><input id="npEmail" placeholder="nome@email.it"></div>
+        <div class="field"><span class="label">Telefono</span><input id="npPhone" placeholder="+39 …"></div>
+        <div id="npErr"></div>
+        <button class="btn" onclick="addProspect()">Aggiungi prospect</button>
+        <p class="cap">Dati personali trattati secondo GDPR (storage EU). Anteprima dimostrativa: il prospect viene aggiunto alla lista in alto.</p>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="footer">
+    <div>Design system del brand · dark-first</div>
+    <div class="swatches">
+      <span class="sw"><i style="background:#0E0E10"></i>background</span>
+      <span class="sw"><i style="background:#1A1A1D"></i>surface</span>
+      <span class="sw"><i style="background:#F5F3EF"></i>text</span>
+      <span class="sw"><i style="background:#C8102E"></i>accent</span>
+      <span class="sw"><i style="background:#C9A227"></i>oro</span>
+      <span class="sw"><i style="background:#2E8B57"></i>success</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ===== Emblema / logo (crest: occhio + iride a 4 assi, croce, wordmark) ===== */
+  const BONE='#F5F3EF', RED='#C8102E';
+
+  // Lettere disposte lungo un arco. In basso il verso si inverte, così il testo
+  // resta leggibile con le lettere rivolte verso il centro (come nel logo).
+  function arcText(text, radius, centerDeg, stepDeg, size, top){
+    const chars=[...text], mid=(chars.length-1)/2; let out='';
+    chars.forEach((ch,i)=>{
+      if(ch===' ') return;
+      const deg = top ? centerDeg+(i-mid)*stepDeg : centerDeg-(i-mid)*stepDeg;
+      const rad = deg*Math.PI/180;
+      const x = 50+radius*Math.cos(rad), y = 50+radius*Math.sin(rad);
+      const rot = top ? deg+90 : deg-90;
+      out += '<text x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" font-size="'+size+'" font-weight="'+(top?800:700)+
+             '" fill="'+BONE+'" text-anchor="middle" transform="rotate('+rot.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+')">'+ch+'</text>';
+    });
+    return out;
+  }
+  // Stella a quattro punte (i separatori a ore 3 e ore 9).
+  function star(cx,cy,r){ const i=r*0.22;
+    return '<path d="M '+cx+' '+(cy-r)+' Q '+(cx+i)+' '+(cy-i)+' '+(cx+r)+' '+cy+' Q '+(cx+i)+' '+(cy+i)+' '+cx+' '+(cy+r)+
+           ' Q '+(cx-i)+' '+(cy+i)+' '+(cx-r)+' '+cy+' Q '+(cx-i)+' '+(cy-i)+' '+cx+' '+(cy-r)+' Z" fill="'+BONE+'"/>'; }
+
+  // ace(x, colonna): "A" sopra il seme in alto, seme sopra la "A" in basso.
+  function ace(x, suit, color, lower){
+    const yA = lower?62.3:42.3, yS = lower?55.8:48.8;
+    return '<text x="'+x+'" y="'+yA+'" font-size="6.2" font-weight="800" fill="'+color+'" text-anchor="middle">A</text>'+
+           '<text x="'+x+'" y="'+yS+'" font-size="6.6" font-weight="700" fill="'+color+'" text-anchor="middle">'+suit+'</text>';
+  }
+
+  /** variant 'full' = sigillo completo (logo ufficiale); 'mark' = ridotto per gli header. */
+  function crest(size, variant){
+    const full = variant==='full';
+    let s='<svg width="'+size+'" height="'+size+'" viewBox="0 0 100 100" fill="none">';
+    if(full){
+      s+='<circle cx="50" cy="50" r="49" stroke="'+BONE+'" stroke-width="0.8"/>'+
+         '<circle cx="50" cy="50" r="46.5" stroke="'+BONE+'" stroke-width="1.8"/>'+
+         '<circle cx="50" cy="50" r="34" stroke="'+BONE+'" stroke-width="1.2"/>'+
+         arcText('INVISIONARY', 36, 270, 11.5, 9, true)+
+         arcText('WINNING DREAM TEAM', 44.5, 90, 6.6, 5.5, false)+
+         star(10,50,4.2)+star(90,50,4.2);
+    }
+    s+='<path d="M 16 50 Q 50 16 84 50 Q 50 84 16 50 Z" stroke="'+BONE+'" stroke-width="2"/>'+
+       '<circle cx="50" cy="50" r="16.5" stroke="'+BONE+'" stroke-width="1.4"/>'+
+       '<line x1="32" y1="50" x2="68" y2="50" stroke="'+BONE+'" stroke-width="2.2"/>'+
+       '<line x1="50" y1="32" x2="50" y2="68" stroke="'+BONE+'" stroke-width="2.2"/>';
+    if(full){
+      s+=ace(42,'♠',BONE,false)+ace(58,'♥',RED,false)+ace(42,'♦',RED,true)+ace(58,'♣',BONE,true);
+    }else{
+      // Riduzione: solo i semi, più grandi, per restare leggibili a 40-60 px.
+      s+='<text x="43" y="46.4" font-size="8.6" font-weight="700" fill="'+BONE+'" text-anchor="middle">♠</text>'+
+         '<text x="57" y="46.4" font-size="8.6" font-weight="700" fill="'+RED+'" text-anchor="middle">♥</text>'+
+         '<text x="43" y="61.6" font-size="8.6" font-weight="700" fill="'+RED+'" text-anchor="middle">♦</text>'+
+         '<text x="57" y="61.6" font-size="8.6" font-weight="700" fill="'+BONE+'" text-anchor="middle">♣</text>';
+    }
+    return s+'</svg>';
+  }
+  document.getElementById('loginCrest').innerHTML = crest(190,'full');
+  document.getElementById('dashCrest').innerHTML  = crest(58,'mark');
+  document.getElementById('agCrest').innerHTML    = crest(56,'mark');
+  document.getElementById('barCrest').innerHTML   = crest(26,'mark');
+
+  /* ===== Navigazione: schermate, barra, menu a tendina, Indietro ===== */
+  const SCREENS = [
+    ['dashboard','Dashboard'],['agente','Agente AI'],['trading','Trading'],['crm','Network'],['renewals','Scadenzario'],
+    ['formazione','Formazione'],['calc','Calcolatori'],['rank','Rank'],['community','Community'],['admin','Admin']
+  ];
+  const TITLES = {login:'Invisionary',dashboard:'Invisionary',agente:'Agente AI',trading:'Trading',crm:'Network / CRM',
+    renewals:'Scadenzario',formazione:'Formazione',calc:'Calcolatori',rank:'Rank',community:'Community',admin:'Admin'};
+  const MENU = [
+    ['dashboard','⌂','Dashboard'],['agente','◉','Agente AI'],['trading','♠','Trading'],['crm','♥','Network / CRM'],
+    ['renewals','◷','Scadenzario'],['formazione','♦','Formazione'],['calc','∑','Calcolatori'],['rank','★','Rank'],
+    ['community','♣','Community'],['admin','⚙','Admin']
+  ];
+  let role = 'admin';
+  let history = [];
+  const ROLE_LABEL = {admin:'Amministratore',leader:'Leader',collaborator:'Collaboratore'};
+  const ROLE_NAME = {admin:'Admin',leader:'Leader',collaborator:'Collaboratore'};
+
+  // tab esterne (comodità desktop)
+  const tabs = document.getElementById('tabs');
+  [['login','Login'],...SCREENS].forEach(([id,label])=>{
+    const b=document.createElement('button'); b.className='iv-tab'; b.textContent=label; b.dataset.s=id;
+    b.onclick=()=>setScreen(id); tabs.appendChild(b);
+  });
+
+  // menu a tendina interno
+  const navMenu = document.getElementById('navMenu');
+  MENU.forEach(([id,glyph,label])=>{
+    const b=document.createElement('button');
+    const red = (glyph==='♥'||glyph==='♦');
+    b.innerHTML='<span class="s" style="color:'+(red?'var(--accent)':'var(--muted)')+'">'+glyph+'</span>'+label;
+    b.onclick=()=>{ setScreen(id); };
+    navMenu.appendChild(b);
+  });
+  const sep=document.createElement('div'); sep.className='sep'; navMenu.appendChild(sep);
+  const out=document.createElement('button'); out.className='logout'; out.innerHTML='<span class="s">⎋</span>Esci';
+  out.onclick=()=>{ setScreen('login'); }; navMenu.appendChild(out);
+
+  function toggleMenu(e){ if(e) e.stopPropagation(); navMenu.classList.toggle('on'); }
+  function closeMenu(){ navMenu.classList.remove('on'); }
+  document.addEventListener('click',(e)=>{ if(!e.target.closest('.navwrap')) closeMenu(); });
+
+  function setScreen(id, back){
+    const cur = document.querySelector('.view.on') ? document.querySelector('.view.on').dataset.view : null;
+    if(!back && cur && cur!==id && id!=='login') history.push(cur);
+    if(id==='login') history=[];
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on', v.dataset.view===id));
+    document.querySelectorAll('.iv-tab').forEach(t=>t.classList.toggle('on', t.dataset.s===id));
+    document.getElementById('screen').scrollTop=0;
+    updateAppbar(id);
+    closeMenu();
+    if(id==='dashboard') renderDashboard();
+    if(id==='admin') renderAdmin();
+    if(id==='formazione') fmSub('menu');
+    if(id==='calc') cSub('menu');
+    if(id==='crm') crmSub('list');
+    if(id==='trading') tSub('home');
+  }
+  function updateAppbar(id){
+    const bar=document.getElementById('appbar');
+    if(id==='login'){ bar.classList.add('hide'); return; }
+    bar.classList.remove('hide');
+    document.getElementById('abTitle').textContent = TITLES[id]||'';
+    document.getElementById('backBtn').style.visibility = (id==='dashboard') ? 'hidden' : 'visible';
+  }
+  function goBack(){ const prev = history.pop(); setScreen(prev||'dashboard', true); }
+
+  document.querySelectorAll('.rb').forEach(r=>r.onclick=()=>{
+    role=r.dataset.role;
+    document.querySelectorAll('.rb').forEach(x=>x.classList.toggle('on',x===r));
+    renderDashboard(); renderAdmin();
+    document.getElementById('reteBtn').style.display = (role==='collaborator')?'none':'';
+  });
+
+  function renderDashboard(){
+    document.getElementById('greet').textContent='Ciao, '+ROLE_NAME[role];
+    document.getElementById('rolePill').textContent=ROLE_LABEL[role];
+    const c=document.getElementById('roleCard');
+    if(role==='admin') c.innerHTML='<h3 class="heading">Pannello amministratore</h3><p class="cap">Gestione utenti, ruoli e autorizzazioni della rete.</p><button class="btn sm" onclick="setScreen(\'admin\')">Apri pannello admin</button>';
+    else if(role==='leader') c.innerHTML='<h3 class="heading">La mia rete</h3><p class="cap">Qui vedi i tuoi collaboratori, i loro rinnovi e l\'avanzamento formazione.</p>';
+    else c.innerHTML='<h3 class="heading">Il mio spazio</h3><p class="cap">Clienti, rinnovi e formazione: tutto in un unico posto.</p>';
+  }
+  function renderAdmin(){
+    const gate=document.getElementById('adminGate'), body=document.getElementById('adminBody');
+    if(role!=='admin'){ gate.innerHTML='<div class="card"><h3 class="heading error">Area riservata</h3><p class="cap">Il pannello admin è visibile solo agli amministratori. Cambia ruolo in "Admin" qui sopra per vederlo.</p></div>'; body.style.display='none'; }
+    else { gate.innerHTML=''; body.style.display=''; adSub('list'); }
+  }
+
+  function crmSub(v){ document.getElementById('crmList').style.display=(v==='list')?'':'none'; document.getElementById('crmImport').style.display=(v==='import')?'':'none'; }
+  function fmSub(v){ ['menu','course','lesson','cal','rete'].forEach(k=>{ const el=document.getElementById('fm'+k.charAt(0).toUpperCase()+k.slice(1)); if(el) el.style.display=(k===v)?'':'none'; }); }
+  function cSub(v){ document.getElementById('cMenu').style.display=(v==='menu')?'':'none'; document.getElementById('cLot').style.display=(v==='lot')?'':'none'; document.getElementById('cComp').style.display=(v==='comp')?'':'none'; if(v==='lot')calcLot(); if(v==='comp')calcComp(); }
+  function adSub(v){ document.getElementById('adminList').style.display=(v==='list')?'':'none'; document.getElementById('adminDetail').style.display=(v==='detail')?'':'none'; }
+  function tSub(v){ document.getElementById('tHome').style.display=(v==='home')?'':'none'; document.getElementById('tConnect').style.display=(v==='connect')?'':'none'; document.getElementById('tBoard').style.display=(v==='board')?'':'none'; if(v==='connect') document.getElementById('mtMsg').innerHTML=''; }
+
+  /* ===== Toast ===== */
+  let toastT=null;
+  function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2200); }
+
+  /* ===== Agente AI (chat dimostrativa che risponde) ===== */
+  // Base di conoscenza dimostrativa. Nell'app reale la risposta arriva da Claude
+  // (Edge Function ai-chat) con lo stesso ambito: network marketing, trading, imprenditoria.
+  const CHAT_QA = [
+    // — Network marketing —
+    {k:['prospect','lista nomi','nuovi contatti','trovare person','a chi parlo','mercato caldo','mercato freddo'], a:'Parti da una lista scritta, non dalla memoria: conoscenze dirette, poi contatti di secondo grado. Qualifica prima di presentare — capisci se la persona ha un motivo reale (tempo, reddito, crescita) e solo dopo proponi. Meglio 10 conversazioni vere che 100 messaggi copia-incolla.\n\nPasso pratico: scrivi 30 nomi e classificali in "ascolta volentieri" / "forse" / "non ora".', s:['manuale-rete']},
+    {k:['follow up','follow-up','richiamare','non risponde','ricontatt'], a:'Il follow-up è dove si chiude la maggior parte del lavoro: la regola è concordare sempre il prossimo passo prima di chiudere la conversazione ("ti scrivo giovedì, ti va?"). Se non risponde, cambia canale e taglio dopo il secondo tentativo, e non insistere oltre: un no chiaro vale più di un forse infinito.\n\nPasso pratico: metti ogni contatto nel CRM con una data di richiamo.', s:['manuale-rete']},
+    {k:['obiezion','ci devo pensare','non ho tempo','non ho soldi','piramide','schema'], a:'Le obiezioni si ascoltano, non si combattono. Riformula ("quindi il punto è il tempo, giusto?"), chiedi cosa servirebbe per superarla, poi rispondi con fatti — mai con pressione. Sulla domanda "è una piramide?" rispondi con trasparenza: si guadagna in base al lavoro e ai risultati, non dal reclutare in sé, e non esistono guadagni garantiti.', s:['manuale-rete','compliance']},
+    {k:['duplicaz','duplicare','onboarding','nuovo collaboratore','far partire','primi passi'], a:'La duplicazione funziona solo se ciò che fai è semplice da ripetere. Dai al nuovo collaboratore un percorso di 7 giorni: strumenti, primi contatti, prima presentazione affiancata. Se un metodo richiede il tuo talento personale, non si duplica.\n\nPasso pratico: assegna i corsi in Formazione e controlla l\'avanzamento dalla vista rete.', s:['manuale-rete','guida-formazione']},
+    {k:['leadership','motivare','team','squadra','gestire il gruppo','collaboratori demotivat'], a:'Guidi con l\'esempio e con la costanza, non con i discorsi. Fissa pochi indicatori di attività (contatti, presentazioni, follow-up), fai riunioni brevi e regolari, e riconosci i comportamenti giusti anche quando il risultato non è ancora arrivato. Chi è fermo va ascoltato prima che spronato.', s:['manuale-rete']},
+    {k:['evento','presentazion','webinar','riunion'], a:'L\'evento serve a creare contesto e appartenenza, non a vendere dal palco. Invita di persona, conferma il giorno prima, e prepara il dopo-evento: senza follow-up entro 48 ore l\'energia si perde.\n\nPasso pratico: metti gli eventi nel calendario della sezione Formazione.', s:['manuale-rete']},
+    {k:['social','instagram','personal brand','contenut','pubblicare','reel'], a:'Sui social costruisci credibilità, non vendita diretta: mostra il percorso, il metodo e le persone, non i risultati economici (le affermazioni di reddito sono vietate e non aiutano). Un contenuto utile a settimana batte dieci post motivazionali.', s:['manuale-rete','compliance']},
+
+    // — Trading —
+    {k:['gestione del rischio','money management','quanto rischiare','capitale','drawdown','perdit'], a:'La prima regola è la sopravvivenza: si definisce il rischio per operazione (spesso una frazione contenuta del capitale) e lo stop PRIMA di entrare, mai dopo. Il drawdown fa parte del gioco: quello che lo rende gestibile è la dimensione della posizione, non la bravura nel prevedere.\n\nPasso pratico: usa Calcolatori → Lottaggio per legare rischio % e stop loss.', s:['educazione-finanziaria','calcolatori']},
+    {k:['lotto','lottaggio','posizione','pip','stop loss'], a:'Il lotto si ricava dal rischio, non dall\'istinto: Lotti = (capitale × rischio %) ÷ (stop in pip × valore pip per lotto). Attenzione: il valore pip cambia per strumento — 1 lotto EUR/USD non è 1 lotto XAU/USD o US30.\n\nPasso pratico: apri Calcolatori → Lottaggio e scegli lo strumento dal menu.', s:['calcolatori']},
+    {k:['psicologi','disciplina','emozion','paura','revenge','journal','diario'], a:'La disciplina si costruisce con le regole scritte, non con la forza di volontà: piano operativo prima del mercato aperto, e un giornale delle operazioni dove annoti motivo di ingresso, rischio ed errore. Dopo una perdita, la regola più utile è la pausa obbligata.', s:['educazione-finanziaria']},
+    {k:['mt5','metaapi','collega','broker','investor'], a:'In Trading tocca «+ Collega MT5» e inserisci login, server e investor password: il collegamento è in sola lettura e la password non viene salvata. Dopo circa un minuto premi «Sincronizza» per vedere operazioni, saldo e rendimento in percentuale.', s:['guida-trading']},
+    {k:['analisi tecnica','supporti','resistenz','trend','indicator','grafico','time frame'], a:'L\'analisi serve a costruire uno scenario con probabilità, non certezze: struttura del prezzo e livelli prima, indicatori solo come conferma. Più indicatori aggiungi, più stai cercando conferme alle tue idee. Nota: non do segnali operativi né dico cosa comprare o vendere.', s:['educazione-finanziaria']},
+
+    // — Imprenditoria —
+    {k:['aprire','avviare','partita iva','business plan','mettermi in proprio','startup','impresa'], a:'Prima del business plan serve la prova che qualcuno paga: definisci il problema, a chi, e vendi la versione più piccola possibile dell\'offerta. Poi metti i numeri di base — costi fissi, margine, punto di pareggio. Per fisco e forma giuridica rivolgiti a un commercialista: non do consulenza fiscale o legale.', s:['imprenditoria']},
+    {k:['produttiv','tempo','organizz','priorit','procrastin','agenda'], a:'Scegli 2-3 attività che generano davvero risultato (contatti, presentazioni, follow-up) e blocca le fasce orarie in agenda prima di tutto il resto. Il lavoro amministrativo si accorpa in un unico blocco: è quello che sembra produttivo ma non lo è.', s:['imprenditoria']},
+    {k:['vendita','vendere','chiusura','chiudere','trattativa','prezzo','sconto'], a:'Vendere è diagnosticare, non convincere: fai domande finché il problema è chiaro a entrambi, riassumi con parole sue, poi proponi. Sul prezzo non scendere per paura — se serve, riduci il perimetro dell\'offerta invece dello sconto.', s:['imprenditoria']},
+    {k:['marketing','acquisizione','clienti nuovi','farsi conoscere','pubblicit','passaparola'], a:'Meglio un canale presidiato bene che cinque abbandonati. Scegli dove sono già i tuoi clienti, definisci un\'offerta chiara e misura una sola metrica per volta (contatti generati, poi tasso di conversione). Il passaparola si progetta: chiedilo, non aspettarlo.', s:['imprenditoria']},
+    {k:['mindset','obiettiv','abitudin','motivazione','costanza','disciplina personale'], a:'Gli obiettivi si tengono solo se diventano attività settimanali misurabili: non "crescere la rete" ma "10 conversazioni a settimana". Rivedi i numeri ogni settimana, e cambia il metodo quando i dati lo dicono, non quando ti senti stanco.', s:['imprenditoria']},
+
+    // — Piattaforma —
+    {k:['lezione','completat','corso','formazione','video'], a:'Apri la lezione dalla sezione Formazione e tocca «Segna come completata»: l\'avanzamento si aggiorna e il tuo leader può vederlo nella vista rete.', s:['guida-formazione']},
+    {k:['rinnovo','scadenz','scadenza','avviso','notifica'], a:'Nello Scadenzario vedi ogni cliente con la data di rinnovo e l\'urgenza a colori. La piattaforma invia una notifica push alcuni giorni prima della scadenza, così il rinnovo non ti sfugge.', s:['manuale-rete']},
+    {k:['crm','importa','csv','excel','anagrafic','aggiungere un cliente'], a:'Nel Network/CRM tocca «+ Nuovo» per aggiungere un prospect, oppure «Importa» per caricare un CSV/Excel con mappatura delle colonne e anteprima prima del salvataggio. I dati sono personali: storage in EU e trattamento secondo GDPR.', s:['manuale-rete']},
+    {k:['rank','classifica','punti','asso'], a:'Il rank va da 2 ad Asso. I punti sono trasparenti: lezioni completate ×10 + clienti ×5 + rinnovi attivi ×3. Trovi il tuo rank e la classifica della rete nella sezione Rank.', s:['regolamento-rank']},
+    {k:['ruolo','admin','gerarchia','permess'], a:'I ruoli sono admin, leader e collaboratore. Il leader vede i propri collaboratori e i loro dati; l\'admin gestisce ruoli e gerarchia dal Pannello admin.', s:['manuale-rete']},
+    {k:['community','feedback','post'], a:'Nella Community puoi pubblicare un feedback con foto per condividere traguardi e motivare la squadra.', s:['manuale-rete']},
+
+    // — Compliance (ha priorità sulle risposte "operative") —
+    {k:['quanto si guadagna','quanto posso guadagnare','quanto guadagn','rendimento garantito','guadagno sicuro','soldi facili','mi conviene investire','cosa compro','cosa devo comprare','su cosa investo'], a:'Su questo non posso aiutarti come vorresti: non do consulenza finanziaria personalizzata, non indico cosa comprare o vendere e non faccio stime di guadagno — nessun risultato è garantito e il capitale è a rischio. Posso invece lavorare con te sul metodo: gestione del rischio, costruzione della rete, organizzazione del lavoro.', s:['compliance']}
+  ];
+
+  // Temi chiaramente fuori ambito: l\'agente resta sul suo perimetro.
+  const OFF_TOPIC = ['ricetta','cucin','meteo','tempo che fa','calcio','partita di','film','serie tv','canzone','musica',
+    'compiti','traduci','poesia','barzellett','oroscopo','viaggio','vacanz','medicin','sintom','farmac','videogioc'];
+
+  function answer(text){
+    const t=text.toLowerCase();
+    if(OFF_TOPIC.some(w=>t.includes(w))){
+      return {a:'Su questo non posso aiutarti: rispondo solo su network marketing, trading e mercati, imprenditoria ed educazione finanziaria — più l\'uso di Invisionary. Se vuoi, ripartiamo da lì: com\'è messa la tua settimana di contatti e follow-up? (risposta dimostrativa)', s:[]};
+    }
+    for(const qa of CHAT_QA){ if(qa.k.some(w=>t.includes(w))) return {a:qa.a+'\n\n(risposta dimostrativa)', s:qa.s}; }
+    return {a:'Sono l\'assistente di Invisionary: lavoro con te su network marketing (prospecting, follow-up, obiezioni, duplicazione, leadership), trading e gestione del rischio, imprenditoria ed educazione finanziaria — oltre all\'uso dell\'app. Prova con «come gestisco l\'obiezione ci devo pensare?», «quanto rischio per operazione?» oppure «come trovo nuovi clienti?». (risposta dimostrativa)', s:[]};
+  }
+  function scrollDown(){ const s=document.getElementById('screen'); s.scrollTop=s.scrollHeight; }
+  function addMsg(roleM, text, sources){
+    const list=document.getElementById('chatList');
+    const wrap=document.createElement('div');
+    wrap.style.alignSelf = roleM==='user'?'flex-end':'flex-start'; wrap.style.maxWidth='88%';
+    const card=document.createElement('div'); card.className='card';
+    if(roleM==='user'){ card.style.background='var(--accent)'; card.style.borderColor='var(--accent)'; }
+    const span=document.createElement('span'); if(roleM==='user') span.style.color='#fff';
+    span.style.whiteSpace='pre-wrap'; span.textContent=text;
+    card.appendChild(span); wrap.appendChild(card);
+    if(sources && sources.length){ const p=document.createElement('p'); p.className='cap'; p.style.marginTop='4px'; p.textContent='Fonti: '+sources.join(' · '); wrap.appendChild(p); }
+    list.appendChild(wrap); scrollDown(); return wrap;
+  }
+  function updateSend(){ const i=document.getElementById('chatInput'); document.getElementById('chatSend').disabled = i.value.trim().length===0; }
+  function chatKey(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } }
+  let chatBusy=false;
+  function sendChat(){
+    const inp=document.getElementById('chatInput'); const t=inp.value.trim(); if(!t||chatBusy) return;
+    addMsg('user',t); inp.value=''; updateSend(); chatBusy=true;
+    const typing=addMsg('assistant','Sto pensando…');
+    setTimeout(()=>{ typing.remove(); const r=answer(t); addMsg('assistant',r.a,r.s); chatBusy=false; }, 650);
+  }
+  // scambio d'esempio iniziale
+  addMsg('user','Come gestisco l\'obiezione «ci devo pensare»?');
+  addMsg('assistant','Le obiezioni si ascoltano, non si combattono. Riformula («quindi il punto è il tempo, giusto?»), chiedi cosa servirebbe per superarla, poi rispondi con fatti — mai con pressione.\n\n(risposta dimostrativa)',['manuale-rete','compliance']);
+
+  /* ===== Trading: connetti + sincronizza ===== */
+  function connectMt5(){
+    const btn=document.getElementById('mtConnectBtn'); const msg=document.getElementById('mtMsg');
+    btn.disabled=true; btn.textContent='Provisioning in corso…';
+    setTimeout(()=>{
+      btn.disabled=false; btn.textContent='Connetti (sola lettura)';
+      msg.innerHTML='<div class="card" style="border-color:var(--success)"><span class="success" style="font-weight:700">✓ Conto collegato in sola lettura</span><p class="cap">La investor password non è stata salvata. Tra poco premi «Sincronizza ora».</p></div>';
+      toast('MT5 collegato (demo)');
+      setTimeout(()=>tSub('home'), 1400);
+    }, 1100);
+  }
+  function syncMt5(){
+    const btn=document.getElementById('syncBtn'); btn.disabled=true; btn.textContent='Sincronizzo…';
+    setTimeout(()=>{
+      btn.disabled=false; btn.textContent='Sincronizza ora';
+      const now=new Date();
+      const pad=n=>String(n).padStart(2,'0');
+      const stamp=pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+      document.getElementById('tSync').textContent='Ultimo aggiornamento: '+stamp;
+      toast('Dati sincronizzati (demo)');
+    }, 900);
+  }
+
+  /* ===== CRM: modale nuovo prospect ===== */
+  function openCrm(){ document.getElementById('npErr').innerHTML=''; document.getElementById('crmModal').classList.add('on'); setTimeout(()=>document.getElementById('npName').focus(),50); }
+  function closeCrm(){ document.getElementById('crmModal').classList.remove('on'); }
+  function addProspect(){
+    const name=document.getElementById('npName').value.trim();
+    const prod=document.getElementById('npProd').value.trim();
+    const email=document.getElementById('npEmail').value.trim();
+    const phone=document.getElementById('npPhone').value.trim();
+    if(!name){ document.getElementById('npErr').innerHTML='<p class="cap error">Il nome è obbligatorio.</p>'; return; }
+    const card=document.createElement('div'); card.className='card press';
+    let html='<h3 class="heading">'+esc(name)+'</h3>';
+    if(prod) html+='<p class="cap">'+esc(prod)+'</p>';
+    if(email) html+='<p class="cap">'+esc(email)+'</p>';
+    if(phone) html+='<p class="cap">'+esc(phone)+'</p>';
+    card.innerHTML=html;
+    const list=document.getElementById('crmList'); list.insertBefore(card, list.firstChild);
+    ['npName','npProd','npEmail','npPhone'].forEach(id=>document.getElementById(id).value='');
+    closeCrm(); crmSub('list'); toast('Prospect aggiunto');
+  }
+  function esc(s){ return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  /* ===== Calcolatore lottaggio: tabella strumenti + math corretto per strumento ===== */
+  // pipValue (valuta quotata) per 1 lotto = pip × contratto  →  poi × tasso (quotata→conto)
+  const INSTR = {
+    'EUR/USD':{group:'Forex',contract:100000,pip:0.0001,quote:'USD',unit:'pip',cl:'100.000 unità',sl:20},
+    'GBP/USD':{group:'Forex',contract:100000,pip:0.0001,quote:'USD',unit:'pip',cl:'100.000 unità',sl:20},
+    'USD/JPY':{group:'Forex',contract:100000,pip:0.01,quote:'JPY',unit:'pip',cl:'100.000 unità',sl:20},
+    'AUD/USD':{group:'Forex',contract:100000,pip:0.0001,quote:'USD',unit:'pip',cl:'100.000 unità',sl:20},
+    'USD/CHF':{group:'Forex',contract:100000,pip:0.0001,quote:'CHF',unit:'pip',cl:'100.000 unità',sl:20},
+    'USD/CAD':{group:'Forex',contract:100000,pip:0.0001,quote:'CAD',unit:'pip',cl:'100.000 unità',sl:20},
+    'EUR/JPY':{group:'Forex',contract:100000,pip:0.01,quote:'JPY',unit:'pip',cl:'100.000 unità',sl:25},
+    'XAU/USD':{group:'Metalli',contract:100,pip:0.1,quote:'USD',unit:'punto',cl:'100 oz (oro)',sl:100},
+    'XAG/USD':{group:'Metalli',contract:5000,pip:0.01,quote:'USD',unit:'punto',cl:'5.000 oz (argento)',sl:80},
+    'US30':{group:'Indici',contract:1,pip:1,quote:'USD',unit:'punto',cl:'1 contratto (1$/punto)',sl:150},
+    'NAS100':{group:'Indici',contract:1,pip:1,quote:'USD',unit:'punto',cl:'1 contratto (1$/punto)',sl:120},
+    'GER40':{group:'Indici',contract:1,pip:1,quote:'EUR',unit:'punto',cl:'1 contratto (1€/punto)',sl:120},
+    'SPX500':{group:'Indici',contract:1,pip:1,quote:'USD',unit:'punto',cl:'1 contratto (1$/punto)',sl:40},
+    'BTC/USD':{group:'Cripto',contract:1,pip:1,quote:'USD',unit:'punto',cl:'1 BTC',sl:400},
+    'ETH/USD':{group:'Cripto',contract:1,pip:1,quote:'USD',unit:'punto',cl:'1 ETH',sl:60},
+    'WTI':{group:'Energia',contract:1000,pip:0.01,quote:'USD',unit:'punto',cl:'1.000 barili',sl:50}
+  };
+  // popola il menu a tendina strumenti (raggruppato)
+  (function(){
+    const sel=document.getElementById('lotInstr'); const groups={};
+    Object.keys(INSTR).forEach(k=>{ const g=INSTR[k].group; (groups[g]=groups[g]||[]).push(k); });
+    Object.keys(groups).forEach(g=>{ const og=document.createElement('optgroup'); og.label=g;
+      groups[g].forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; og.appendChild(o); }); sel.appendChild(og); });
+    sel.value='EUR/USD';
+  })();
+
+  function parseNum(v){ const n=String(v).replace(/\s/g,'').replace(',','.'); if(n==='')return NaN; return Number(n); }
+  function fmt(v,d){ d=(d==null?2:d); if(!Number.isFinite(v))return '—'; return v.toLocaleString('it-IT',{maximumFractionDigits:d,minimumFractionDigits:0}); }
+  function v(id){ return document.getElementById(id).value; }
+  function row(l,val){ return '<div class="resline" style="padding:5px 0"><span class="muted">'+l+'</span><span>'+val+'</span></div>'; }
+
+  function onInstr(){
+    const I=INSTR[v('lotInstr')];
+    const unitS = I.unit;                         // pip / punto
+    const unitP = I.unit==='pip'?'pips':'punti';  // plurale
+    document.querySelectorAll('.uA').forEach(e=>e.textContent=unitS);
+    document.querySelectorAll('.uB').forEach(e=>e.textContent=unitP);
+    document.getElementById('iGroup').textContent=I.group;
+    document.getElementById('iContract').textContent=I.cl;
+    document.getElementById('iPip').textContent=fmt(I.pip*I.contract)+' '+I.quote;
+    document.getElementById('iQuote').textContent=I.quote;
+    document.getElementById('lotSl').value=I.sl;
+    const acct=(v('lotVal')||'EUR').toUpperCase();
+    if(I.quote===acct) document.getElementById('lotRate').value='1';
+    document.getElementById('rateHint').textContent = I.quote===acct
+      ? 'Stessa valuta del conto: tasso 1.'
+      : '1 '+I.quote+' in '+acct+' (imposta il tasso reale; in demo può restare 1).';
+    calcLot();
+  }
+  function calcLot(){
+    const I=INSTR[v('lotInstr')];
+    const balance=parseNum(v('lotSaldo')), riskPercent=parseNum(v('lotRisk')), stop=parseNum(v('lotSl')),
+          rate=parseNum(v('lotRate')), acct=(v('lotVal')||'EUR').toUpperCase();
+    const el=document.getElementById('lotRes');
+    const ok=[balance,riskPercent,stop,rate].every(Number.isFinite)&&balance>0&&riskPercent>0&&stop>0&&rate>0;
+    if(!ok){ el.innerHTML='<p class="cap">Compila i campi con valori validi (&gt; 0).</p>'; return; }
+    const pipQuote = I.pip*I.contract;      // valore pip/punto per lotto, in valuta quotata
+    const pipAcct  = pipQuote*rate;         // convertito nella valuta del conto
+    const riskAmount = balance*(riskPercent/100);
+    const lots = riskAmount/(stop*pipAcct);
+    const units = lots*I.contract;
+    const unitS=I.unit, unitP=(I.unit==='pip'?'pips':'punti');
+    const lotsTxt = lots<0.01 ? '&lt; 0,01 (micro)' : fmt(lots,2);
+    el.innerHTML =
+      row('Rischio', fmt(riskAmount)+' '+acct)+
+      row('Valore '+unitS+'/lotto', fmt(pipAcct)+' '+acct)+
+      row('Lotti', '<b class="gold" style="font-size:18px">'+lotsTxt+'</b>')+
+      row((I.group==='Forex'?'Unità':'Quantità'), fmt(units, I.contract>=100?0:2)+(I.group==='Metalli'?' oz':(I.group==='Energia'?' barili':'')))+
+      row('Perdita stimata a '+stop+' '+unitP, fmt(lots*stop*pipAcct)+' '+acct);
+  }
+
+  function calcComp(){
+    const p=parseNum(v('cCap')), m=parseNum(v('cVers')), ar=parseNum(v('cRate')), y=parseNum(v('cYears'));
+    const ok=[p,m,ar,y].every(Number.isFinite)&&p>=0&&m>=0&&y>0&&y<=100;
+    const res=document.getElementById('compRes'), yrs=document.getElementById('compYears');
+    if(!ok){ res.innerHTML='<p class="cap">Compila i campi (anni tra 1 e 100).</p>'; yrs.innerHTML=''; return; }
+    const r=ar/100/12; let bal=p, contr=p; const per=[]; const months=Math.round(y*12);
+    for(let i=1;i<=months;i++){ bal=bal*(1+r)+m; contr+=m; if(i%12===0)per.push([i/12,bal]); }
+    res.innerHTML=
+      row('Montante finale','<b class="gold" style="font-size:18px">'+fmt(bal)+' €</b>')+
+      row('Totale versato', fmt(contr)+' €')+
+      row('Interessi maturati', fmt(bal-contr)+' €');
+    yrs.innerHTML=per.map(([yy,bb])=>'<div class="resline" style="padding:7px 0;border-bottom:1px solid var(--border)"><span class="cap">Anno '+yy+'</span><span class="cap">'+fmt(bb)+' €</span></div>').join('');
+  }
+
+  /* ===== init ===== */
+  onInstr();
+  setScreen('login');
+  renderDashboard();
+  document.getElementById('reteBtn').style.display='';
+</script>
+
+</body>
+</html>
