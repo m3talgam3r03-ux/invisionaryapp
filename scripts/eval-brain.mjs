@@ -99,18 +99,67 @@ main().catch((e) => {
 });
 
 async function main() {
-  const brain = await compileBrain();
+  const brain = await compile('supabase/functions/_shared/brain.ts', 'brain.js');
   const offline = evalOffline(brain);
+
+  const speech = await compile('src/lib/speech.ts', 'speech.js');
+  const voice = evalSpeech(speech);
 
   let live = null;
   if (LIVE) live = await evalLive();
 
-  const failed = offline.failed + (live?.failed ?? 0);
+  const failed = offline.failed + voice.failed + (live?.failed ?? 0);
   console.log(
     `\n${failed === 0 ? '✔' : '✖'} offline ${offline.passed}/${offline.total}` +
+      ` · voce ${voice.passed}/${voice.total}` +
       (live ? ` · live ${live.passed}/${live.total}` : ' · live non eseguito (--live)'),
   );
   if (failed > 0) process.exit(1);
+}
+
+// ----------------------------------------------------------------------------
+// Voce: il testo scritto per l'occhio va reso ascoltabile.
+// ----------------------------------------------------------------------------
+function evalSpeech({ toSpeech }) {
+  console.log('\nVOCE — normalizzazione per la sintesi\n');
+
+  const checks = [
+    ['toglie la citazione della fonte', 'Accogli l\'obiezione (fonte: Gestione delle obiezioni) e isola.',
+      (s) => !s.includes('fonte') && s.includes('isola')],
+    ['legge le percentuali', 'Una perdita del 30% richiede +43%.',
+      (s) => s.includes('30 per cento') && s.includes('43 per cento')],
+    ['legge i negativi', 'Il conto segna -50% sull\'anno.',
+      (s) => s.includes('meno 50 per cento')],
+    ['toglie il grassetto', 'La **scoperta** è il 60% del lavoro.',
+      (s) => !s.includes('*') && s.includes('scoperta')],
+    ['separa i punti elenco con una pausa', '- Primo punto\n- Secondo punto\n- Terzo punto',
+      (s) => (s.match(/\./g) ?? []).length >= 3 && !s.includes('- ')],
+    ['scioglie le frecce', 'Accogli → isola → chiarisci.',
+      (s) => s.includes('diventa') && !s.includes('→')],
+    ['trasforma l\'inciso in pausa', 'La leva — quella vera — è il volume.',
+      (s) => !s.includes('—')],
+    ['legge le divisioni', 'Regola del 72: anni ≈ 72 / 6.',
+      (s) => s.includes('72 diviso 6')],
+    ['toglie i separatori a punto medio', 'Vendita · marketing · rete.',
+      (s) => !s.includes('·')],
+    ['non lascia riferimenti numerici tra parentesi quadre', 'Come detto [1] e [2], conta il metodo.',
+      (s) => !s.includes('[1]') && !s.includes('[2]')],
+    ['tronca oltre il limite del motore', 'a'.repeat(5000),
+      (s) => s.length <= 3801],
+    ['lascia intatto un testo già pulito', 'Chiudi chiedendo una decisione chiara.',
+      (s) => s === 'Chiudi chiedendo una decisione chiara.'],
+  ];
+
+  let passed = 0;
+  for (const [name, input, assert] of checks) {
+    const out = toSpeech(input);
+    const ok = assert(out);
+    if (ok) passed++;
+    console.log(`  ${ok ? '✓' : '✗'} ${name}`);
+    if (!ok) console.log(`     ottenuto: ${JSON.stringify(out.slice(0, 120))}`);
+  }
+
+  return { passed, total: checks.length, failed: checks.length - passed };
 }
 
 // ----------------------------------------------------------------------------
@@ -228,7 +277,7 @@ function looksLikeRefusal(answer) {
 // ----------------------------------------------------------------------------
 // brain.ts è TypeScript per Deno: lo si compila in una cartella temporanea.
 // ----------------------------------------------------------------------------
-async function compileBrain() {
+async function compile(relPath, outFile) {
   const outDir = await mkdtemp(join(tmpdir(), 'brain-eval-'));
   try {
     // Si invoca l'entry JS di tsc con node: su Windows lanciare `npx.cmd` con
@@ -238,7 +287,7 @@ async function compileBrain() {
       process.execPath,
       [
         join(ROOT, 'node_modules/typescript/bin/tsc'),
-        join(ROOT, 'supabase/functions/_shared/brain.ts'),
+        join(ROOT, relPath),
         '--ignoreConfig',
         '--target', 'es2022',
         '--module', 'esnext',
@@ -246,9 +295,9 @@ async function compileBrain() {
       ],
       { cwd: ROOT },
     );
-    return await import(pathToFileURL(join(outDir, 'brain.js')).href);
+    return await import(pathToFileURL(join(outDir, outFile)).href);
   } catch (e) {
-    throw new Error(`Compilazione di brain.ts fallita: ${e.stdout || e.message}`);
+    throw new Error(`Compilazione di ${relPath} fallita: ${e.stdout || e.message}`);
   } finally {
     // La cartella resta finché il modulo è importato: pulizia best-effort a fine processo.
     process.on('exit', () => { rm(outDir, { recursive: true, force: true }).catch(() => {}); });

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Crest } from '@/components/Crest';
 import { ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
+import { useSpeech } from '@/hooks/use-speech';
 import { askAgent, type ChatMessage } from '@/lib/ai';
 import { createConversation, getLatestConversationId, loadMessages, saveMessage } from '@/lib/conversations';
 import { isSupabaseConfigured } from '@/lib/supabase';
@@ -45,6 +46,7 @@ export default function Agente() {
   const [initializing, setInitializing] = useState(isSupabaseConfigured);
   const [convId, setConvId] = useState<string | null>(null);
   const listRef = useRef<FlatList<UIMessage>>(null);
+  const { speakingId, speak, stop, autoRead, setAutoRead } = useSpeech();
 
   // Carica l'ultima conversazione (se il backend è configurato).
   useEffect(() => {
@@ -75,6 +77,7 @@ export default function Agente() {
   }, []);
 
   function newConversation() {
+    stop();
     setConvId(null);
     setMessages([]);
     setInput('');
@@ -83,6 +86,9 @@ export default function Agente() {
   async function send() {
     const text = input.trim();
     if (!text || sending) return;
+
+    // Se stava leggendo la risposta precedente, la nuova domanda la interrompe.
+    stop();
 
     const history: ChatMessage[] = messages
       .filter((m) => !m.error)
@@ -108,10 +114,12 @@ export default function Agente() {
     try {
       const reply = await askAgent(text, history);
       const content = reply.answer || '—';
+      const replyId = nextId();
       setMessages((prev) => [
         ...prev,
-        { id: nextId(), role: 'assistant', content, sources: reply.sources, domains: reply.domains },
+        { id: replyId, role: 'assistant', content, sources: reply.sources, domains: reply.domains },
       ]);
+      if (autoRead) speak(replyId, content);
       if (isSupabaseConfigured && cid) {
         try {
           await saveMessage(cid, 'assistant', content);
@@ -144,6 +152,16 @@ export default function Agente() {
             ＋ Nuova conversazione
           </ThemedText>
         </Pressable>
+        <Pressable
+          onPress={() => setAutoRead(!autoRead)}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: autoRead }}
+          accessibilityLabel="Leggi automaticamente le risposte"
+        >
+          <ThemedText tone={autoRead ? 'accent' : 'muted'} variant="caption">
+            {autoRead ? '🔊 Lettura attiva' : '🔇 Lettura'}
+          </ThemedText>
+        </Pressable>
         {isAdmin && (
           <Pressable onPress={() => router.push('/agente/documenti')} accessibilityRole="button">
             <ThemedText tone="muted" variant="caption">
@@ -168,7 +186,13 @@ export default function Agente() {
             data={messages}
             keyExtractor={(m) => m.id}
             contentContainerStyle={{ padding: spacing.lg, flexGrow: 1, gap: spacing.sm }}
-            renderItem={({ item }) => <Bubble message={item} />}
+            renderItem={({ item }) => (
+              <Bubble
+                message={item}
+                speaking={speakingId === item.id}
+                onToggleSpeak={() => speak(item.id, item.content)}
+              />
+            )}
             ListEmptyComponent={<Welcome />}
             ListFooterComponent={sending ? <Typing /> : null}
             onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
@@ -204,10 +228,19 @@ export default function Agente() {
   );
 }
 
-function Bubble({ message }: { message: UIMessage }) {
+function Bubble({
+  message,
+  speaking,
+  onToggleSpeak,
+}: {
+  message: UIMessage;
+  speaking: boolean;
+  onToggleSpeak: () => void;
+}) {
   const { colors } = useTheme();
   const isUser = message.role === 'user';
   const domains = !isUser && !message.error ? (message.domains ?? []) : [];
+  const canSpeak = !isUser && !message.error && message.content.trim().length > 0;
   return (
     <View style={{ alignItems: isUser ? 'flex-end' : 'flex-start' }}>
       {domains.length > 0 && (
@@ -239,6 +272,19 @@ function Bubble({ message }: { message: UIMessage }) {
           {message.content}
         </ThemedText>
       </View>
+      {canSpeak && (
+        <Pressable
+          onPress={onToggleSpeak}
+          accessibilityRole="button"
+          accessibilityLabel={speaking ? 'Interrompi la lettura' : 'Ascolta la risposta'}
+          hitSlop={8}
+          style={{ marginTop: spacing.xs }}
+        >
+          <ThemedText tone={speaking ? 'accent' : 'muted'} variant="caption">
+            {speaking ? '■ Interrompi' : '▶ Ascolta'}
+          </ThemedText>
+        </Pressable>
+      )}
       {message.sources && message.sources.length > 0 && (
         <ThemedText tone="muted" variant="caption" style={{ marginTop: spacing.xs, maxWidth: '88%' }}>
           Fonti: {message.sources.map((s) => s.source ?? 'documento').join(' · ')}

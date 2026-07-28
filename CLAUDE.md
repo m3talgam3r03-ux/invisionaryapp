@@ -27,6 +27,9 @@ App mobile cross-platform (iOS + Android, App Store + Google Play) per una **ret
 - `knowledge/` — corpus versionato in Markdown con front-matter (`title`, `domain`, `tags`); chunking per sezione (`chunkMarkdown`). Caricamento idempotente con `node scripts/ingest-knowledge.mjs` (`--dry`, `--only=<ramo>`). Vedi `knowledge/README.md`.
 - `knowledge/90-compliance.md` ha **precedenza su ogni altro contenuto** della base di conoscenza.
 
+✅ **Voce (sintesi)**: risposte lette ad alta voce in italiano con `expo-speech` (voci di sistema, `it-IT`, nessuna rete e nessun costo — l'audio non lascia il dispositivo). `src/lib/speech.ts` normalizza il testo per l'orecchio (markdown, elenchi, `%`, `→`, citazioni della fonte); `src/hooks/use-speech.ts` gestisce riproduzione e preferenza "lettura automatica" persistita. Nella chat: interruttore in barra + «▶ Ascolta» su ogni risposta.
+⬜ **Voce (dettatura)**: non implementata. `expo-speech-recognition` richiede un **development build** (niente Expo Go) e dichiara SDK 53/54, non 57; l'alternativa è la trascrizione lato server, che introduce un fornitore terzo a pagamento e dati vocali in uscita (valutazione GDPR).
+
 ✅ **Rank a carte** (2→Asso): punteggio trasparente (lezioni/clienti/rinnovi), classifica di rete (RLS), crest oro. `src/lib/rank.ts` + `src/lib/leaderboard.ts`, route `(app)/rank`.
 
 ✅ **Community** (feedback con foto su Supabase Storage): `0007_feedback.sql` (bucket `feedback` + RLS), route `(app)/community`, upload via `expo-image-picker` + `base64-arraybuffer`.
