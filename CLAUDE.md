@@ -16,7 +16,13 @@ App mobile cross-platform (iOS + Android, App Store + Google Play) per una **ret
 6. ✅ **Calcolatori** (lottaggio, interesse composto) — tutto lato client (`src/lib/calculators.ts`).
 7. ✅ **Pannello admin** (utenti, ruoli, gerarchia). Route `(app)/admin`; data layer `src/lib/admin.ts`.
 
-✅ **Agente AI (RAG)** completo: `0005_rag.sql` (pgvector) + `0006_ai_conversations.sql` (chat persistente, RLS privata); Edge Function `ai-chat`/`ai-ingest` (embedding Voyage `voyage-3.5` 1024d, generazione Claude `claude-opus-4-8`, chiave Anthropic solo lato server); UI chat `(app)/agente` con cronologia salvata + UI admin "Base di conoscenza".
+✅ **Agente AI (RAG)** completo: `0005_rag.sql` (pgvector) + `0006_ai_conversations.sql` (chat persistente, RLS privata); Edge Function `ai-chat`/`ai-ingest` (embedding Voyage `voyage-3.5` 1024d, generazione Claude `claude-opus-5`, chiave Anthropic solo lato server); UI chat `(app)/agente` con cronologia salvata + UI admin "Base di conoscenza".
+
+✅ **Cervello dell'agente** (`0009_ai_brain.sql`): competenza esperta in vendita, marketing, network marketing, investimenti e trading.
+- `supabase/functions/_shared/brain.ts` — nucleo del prompt (identità, metodo, compliance) + un **playbook per dominio**; `detectDomains()` classifica la domanda con un lessico pesato (ancorato a inizio parola) e `buildSystem()` inietta solo i playbook pertinenti.
+- `match_knowledge()` — retrieval coseno con **boost sui domini rilevati** (`documents.domain`, colonna generata da `metadata->>'domain'`).
+- `knowledge/` — corpus versionato in Markdown con front-matter (`title`, `domain`, `tags`); chunking per sezione (`chunkMarkdown`). Caricamento idempotente con `node scripts/ingest-knowledge.mjs` (`--dry`, `--only=<ramo>`). Vedi `knowledge/README.md`.
+- `knowledge/90-compliance.md` ha **precedenza su ogni altro contenuto** della base di conoscenza.
 
 ✅ **Rank a carte** (2→Asso): punteggio trasparente (lezioni/clienti/rinnovi), classifica di rete (RLS), crest oro. `src/lib/rank.ts` + `src/lib/leaderboard.ts`, route `(app)/rank`.
 

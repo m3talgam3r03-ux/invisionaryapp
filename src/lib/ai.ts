@@ -7,6 +7,8 @@ export type AgentSource = { source: string | null; similarity: number };
 export type AgentReply = {
   answer: string;
   sources: AgentSource[];
+  /** Aree di competenza attivate dal router per questa domanda (es. "Vendita"). */
+  domains?: string[];
 };
 
 /**

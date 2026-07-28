@@ -39,6 +39,41 @@ export async function embedTexts(
   return out;
 }
 
+/**
+ * Suddivide un documento Markdown rispettando la struttura: prima taglia sulle
+ * intestazioni (##/###), poi eventualmente per dimensione. Ogni chunk viene
+ * prefissato con titolo e percorso della sezione, così l'embedding conserva il
+ * contesto e l'estratto resta leggibile nel prompt.
+ *
+ * Migliora nettamente il retrieval rispetto al taglio "cieco" a 1000 caratteri:
+ * un chunk non finisce più a metà di un elenco privo di titolo.
+ */
+export function chunkMarkdown(markdown: string, title: string, maxChars = 1200): string[] {
+  const lines = markdown.split(/\r?\n/);
+
+  type Section = { heading: string; body: string[] };
+  const sections: Section[] = [{ heading: '', body: [] }];
+
+  for (const line of lines) {
+    const match = /^(#{2,4})\s+(.*)$/.exec(line);
+    if (match) sections.push({ heading: match[2].trim(), body: [] });
+    else sections[sections.length - 1].body.push(line);
+  }
+
+  const chunks: string[] = [];
+  for (const section of sections) {
+    const body = section.body.join('\n').trim();
+    if (!body) continue;
+
+    const label = section.heading ? `${title} — ${section.heading}` : title;
+    // Sezione lunga: la si spezza ancora, ma ogni pezzo conserva l'intestazione.
+    const pieces = body.length <= maxChars ? [body] : chunkText(body, maxChars, 150);
+    for (const piece of pieces) chunks.push(`${label}\n\n${piece}`);
+  }
+
+  return chunks.length > 0 ? chunks : chunkText(markdown, maxChars, 150);
+}
+
 /** Suddivide il testo in chunk (~maxChars) con sovrapposizione, su confini di parola. */
 export function chunkText(text: string, maxChars = 1000, overlap = 150): string[] {
   const clean = text.replace(/\s+/g, ' ').trim();
