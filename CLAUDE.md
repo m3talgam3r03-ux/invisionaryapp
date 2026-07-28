@@ -20,7 +20,10 @@ App mobile cross-platform (iOS + Android, App Store + Google Play) per una **ret
 
 ✅ **Cervello dell'agente** (`0009_ai_brain.sql`): competenza esperta in vendita, marketing, network marketing, investimenti e trading.
 - `supabase/functions/_shared/brain.ts` — nucleo del prompt (identità, metodo, compliance) + un **playbook per dominio**; `detectDomains()` classifica la domanda con un lessico pesato (ancorato a inizio parola) e `buildSystem()` inietta solo i playbook pertinenti.
+- `supabase/functions/_shared/context.ts` — **contesto dell'utente** (ruolo, anzianità, lezioni, clienti, rinnovi in scadenza, squadra, MT5) iniettato nel prompt. Solo aggregati del chiamante: **mai** nomi o dati personali di clienti o collaboratori.
+- Pipeline `ai-chat`: identità → router → query contestualizzata sui follow-up (`buildRetrievalQuery`) → ricerca ampia (24 candidati) → **rerank** Voyage `rerank-2.5` → 6 estratti → Claude. Il rerank è fail-safe: se non risponde si prosegue con l'ordine per similarità.
 - `match_knowledge()` — retrieval coseno con **boost sui domini rilevati** (`documents.domain`, colonna generata da `metadata->>'domain'`).
+- `node scripts/eval-brain.mjs` — set di valutazione. Offline (router, contestualizzazione, presenza dei limiti) senza chiavi; `--live` esegue la pipeline completa e verifica fonti attese e casi da rifiutare. **Lanciarlo dopo ogni modifica a prompt, lessico o retrieval.**
 - `knowledge/` — corpus versionato in Markdown con front-matter (`title`, `domain`, `tags`); chunking per sezione (`chunkMarkdown`). Caricamento idempotente con `node scripts/ingest-knowledge.mjs` (`--dry`, `--only=<ramo>`). Vedi `knowledge/README.md`.
 - `knowledge/90-compliance.md` ha **precedenza su ogni altro contenuto** della base di conoscenza.
 

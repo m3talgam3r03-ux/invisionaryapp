@@ -1,7 +1,9 @@
 // Embedding via Voyage AI (raccomandato da Anthropic; Anthropic non fornisce embedding).
 // Il modello e la dimensione devono combaciare con vector(1024) nella migrazione 0005.
 const VOYAGE_URL = 'https://api.voyageai.com/v1/embeddings';
+const RERANK_URL = 'https://api.voyageai.com/v1/rerank';
 const MODEL = 'voyage-3.5';
+const RERANK_MODEL = 'rerank-2.5';
 const DIM = 1024;
 const BATCH = 100;
 
@@ -37,6 +39,56 @@ export async function embedTexts(
     }
   }
   return out;
+}
+
+/**
+ * Riordina i candidati per pertinenza reale alla domanda (cross-encoder).
+ * La ricerca vettoriale trova ciò che *somiglia*; il reranker giudica ciò che
+ * *risponde*. Recuperare largo e poi restringere qui alza nettamente la
+ * precisione del contesto passato al modello.
+ *
+ * Ritorna gli indici dei documenti in ordine di pertinenza (i migliori primi).
+ * In caso di errore ritorna `null`: il chiamante deve poter proseguire con
+ * l'ordinamento originale — un reranker non disponibile non deve spegnere
+ * l'agente.
+ */
+export async function rerank(
+  query: string,
+  documents: string[],
+  topK: number,
+): Promise<number[] | null> {
+  const apiKey = Deno.env.get('VOYAGE_API_KEY');
+  if (!apiKey || documents.length === 0) return null;
+
+  try {
+    const res = await fetch(RERANK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        query,
+        documents,
+        model: RERANK_MODEL,
+        top_k: Math.min(topK, documents.length),
+      }),
+    });
+    if (!res.ok) {
+      console.error(`Rerank ${res.status}: ${await res.text()}`);
+      return null;
+    }
+    const data = await res.json();
+    const results = data?.data;
+    if (!Array.isArray(results) || results.length === 0) return null;
+
+    return results
+      .map((r: { index: number }) => r.index)
+      .filter((i: number) => Number.isInteger(i) && i >= 0 && i < documents.length);
+  } catch (e) {
+    console.error('Rerank non disponibile:', e instanceof Error ? e.message : e);
+    return null;
+  }
 }
 
 /**

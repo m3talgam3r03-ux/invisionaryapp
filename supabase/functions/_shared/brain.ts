@@ -145,7 +145,7 @@ export const DOMAINS: Domain[] = [
 · Vietato: indicare strumenti, titoli o allocazioni specifiche; stimare rendimenti futuri; dire alla persona quanto investire. Rimanda a un consulente abilitato quando la domanda diventa personale.`,
     terms: [
       ['investiment', 3], ['investire', 3], ['risparmi', 3], ['interesse composto', 3],
-      ['diversificazion', 3], ['portafoglio', 3], ['etf', 3], ['obbligazion', 3],
+      ['diversific', 3], ['portafoglio', 3], ['etf', 3], ['obbligazion', 3], ['perdit', 1],
       ['azioni', 2], ['rendiment', 2], ['pac', 2], ['fondo di emergenza', 3],
       ['educazione finanziaria', 3], ['budget', 2], ['inflazion', 2], ['pensione', 2],
       ['orizzonte temporale', 3], ['capitale', 1], ['mutuo', 2], ['debito', 2],
@@ -173,7 +173,9 @@ export const DOMAINS: Domain[] = [
       ['risk management', 3], ['money management', 3], ['backtest', 3],
       ['journal', 2], ['operazion', 1], ['grafico', 2], ['timeframe', 3],
       ['trend', 2], ['volatilit', 2], ['equity', 2], ['broker', 2], ['posizione', 1],
-      ['scalping', 3], ['swing', 2],
+      // `recuper` è volutamente debole: da solo indica il recupero di un
+      // drawdown, ma compare anche in "recuperare un cliente".
+      ['scalping', 3], ['swing', 2], ['recuper', 1], ['perdit', 2],
     ],
   },
   {
@@ -189,9 +191,9 @@ export const DOMAINS: Domain[] = [
     terms: [
       ['mindset', 3], ['motivazion', 2], ['disciplina', 2], ['abitudin', 2],
       ['produttivit', 3], ['organizzarmi', 2], ['organizzazione', 2],
-      ['procrastin', 3], ['paura', 2], ['blocco', 2], ['rifiuto', 2], ['costanza', 2],
+      ['procrastin', 3], ['paura', 2], ['blocco', 2], ['rifiuto', 2], ['costan', 2],
       ['obiettiv', 1], ['routine', 2], ['equilibrio', 1], ['burnout', 3],
-      ['part-time', 2], ['scoraggi', 2],
+      ['part-time', 2], ['scoraggi', 2], ['moll', 2], ['abbandon', 2], ['demotiv', 3],
     ],
   },
   {
@@ -224,7 +226,11 @@ function normalize(text: string): string {
     // rimuove i segni diacritici combinanti (U+0300–U+036F)
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9\s-]/g, ' ')
-    .replace(/\s+/g, ' ');
+    .replace(/\s+/g, ' ')
+    // "network marketing" è il nome del mestiere, non una domanda di marketing:
+    // saldandolo in una parola sola il termine `marketing` (ancorato a inizio
+    // parola) smette di attivare il dominio sbagliato, mentre `network` regge.
+    .replace(/network marketing/g, 'networkmarketing');
 }
 
 /**
@@ -274,22 +280,55 @@ export function detectDomains(message: string, history: string[] = [], max = 2):
     .map(([id]) => id);
 }
 
-/** Monta il system prompt: nucleo + playbook dei domini attivi. */
-export function buildSystem(domains: DomainId[]): string {
-  if (domains.length === 0) return CORE;
+/**
+ * Monta il system prompt: nucleo + playbook dei domini attivi + contesto utente.
+ * L'ordine non è casuale — il nucleo è identico a ogni chiamata e sta davanti,
+ * così resta un prefisso stabile per la cache del prompt.
+ */
+export function buildSystem(domains: DomainId[], userContext?: string | null): string {
+  let prompt = CORE;
 
-  const playbooks = domains
-    .map((id) => DOMAIN_BY_ID.get(id))
-    .filter((d): d is Domain => Boolean(d))
-    .map((d) => d.playbook)
-    .join('\n\n');
+  if (domains.length > 0) {
+    const playbooks = domains
+      .map((id) => DOMAIN_BY_ID.get(id))
+      .filter((d): d is Domain => Boolean(d))
+      .map((d) => d.playbook)
+      .join('\n\n');
 
-  return `${CORE}
+    prompt += `
 
 COMPETENZA ATTIVA PER QUESTA DOMANDA
 Applica i playbook seguenti. Sono il tuo metodo, non un elenco da recitare: usali per ragionare, non citarli come tali all'utente.
 
 ${playbooks}`;
+  }
+
+  if (userContext) prompt += `\n\n${userContext}`;
+
+  return prompt;
+}
+
+/**
+ * Costruisce la query da mandare all'embedding.
+ *
+ * Un follow-up ellittico ("e se mi dice che ci pensa?") come embedding non vale
+ * nulla: manca il soggetto. In quel caso si riaggancia l'ultimo turno utente.
+ * Le domande già autosufficienti restano intatte, altrimenti si annacquerebbe
+ * una query buona con contesto vecchio.
+ */
+export function buildRetrievalQuery(message: string, previousUserTurns: string[]): string {
+  const trimmed = message.trim();
+  const words = trimmed.split(/\s+/).length;
+  const previous = previousUserTurns[previousUserTurns.length - 1];
+  if (!previous) return trimmed;
+
+  // Ellittica se è corta, oppure se apre con una congiunzione/pronome di ripresa.
+  const anaphoric = /^(e |ma |quindi |allora |perch|come mai|e se|quello|questo|lo stesso|anche )/i.test(
+    trimmed,
+  );
+  if (words > 12 && !anaphoric) return trimmed;
+
+  return `${previous.trim()}\n${trimmed}`;
 }
 
 /** Etichette leggibili dei domini (per la UI e i log). */
