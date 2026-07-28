@@ -103,7 +103,8 @@ async function main() {
   const offline = evalOffline(brain);
 
   const speech = await compile('src/lib/speech.ts', 'speech.js');
-  const voice = evalSpeech(speech);
+  const dictation = await compile('src/lib/dictation.ts', 'dictation.js');
+  const voice = evalSpeech(speech, dictation);
 
   let live = null;
   if (LIVE) live = await evalLive();
@@ -120,8 +121,8 @@ async function main() {
 // ----------------------------------------------------------------------------
 // Voce: il testo scritto per l'occhio va reso ascoltabile.
 // ----------------------------------------------------------------------------
-function evalSpeech({ toSpeech }) {
-  console.log('\nVOCE — normalizzazione per la sintesi\n');
+function evalSpeech({ toSpeech }, { mergeDictation, transcriptFrom }) {
+  console.log('\nVOCE — normalizzazione per la sintesi e dettatura\n');
 
   const checks = [
     ['toglie la citazione della fonte', 'Accogli l\'obiezione (fonte: Gestione delle obiezioni) e isola.',
@@ -159,7 +160,27 @@ function evalSpeech({ toSpeech }) {
     if (!ok) console.log(`     ottenuto: ${JSON.stringify(out.slice(0, 120))}`);
   }
 
-  return { passed, total: checks.length, failed: checks.length - passed };
+  // Dettatura: la parte pura, cioè come il parlato si innesta su ciò che c'è già.
+  const dictationChecks = [
+    ['si accoda al testo digitato', mergeDictation('Come gestisco', 'un cliente indeciso'),
+      'Come gestisco un cliente indeciso'],
+    ['apre una frase nuova dopo il punto', mergeDictation('Ho capito.', 'e adesso cosa faccio'),
+      'Ho capito. E adesso cosa faccio'],
+    ['non perde nulla se il campo è vuoto', mergeDictation('', 'ciao'), 'ciao'],
+    ['ignora una dettatura vuota', mergeDictation('testo', '   '), 'testo'],
+    ['estrae la trascrizione', transcriptFrom({ isFinal: true, results: [{ transcript: '  ciao  ' }] }), 'ciao'],
+    ['regge un evento senza risultati', transcriptFrom({ isFinal: true, results: [] }), ''],
+  ];
+
+  for (const [name, got, expected] of dictationChecks) {
+    const ok = got === expected;
+    if (ok) passed++;
+    console.log(`  ${ok ? '✓' : '✗'} ${name}`);
+    if (!ok) console.log(`     atteso ${JSON.stringify(expected)}, ottenuto ${JSON.stringify(got)}`);
+  }
+
+  const total = checks.length + dictationChecks.length;
+  return { passed, total, failed: total - passed };
 }
 
 // ----------------------------------------------------------------------------

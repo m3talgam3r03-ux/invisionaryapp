@@ -15,7 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Crest } from '@/components/Crest';
 import { ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
+import { useDictation } from '@/hooks/use-dictation';
 import { useSpeech } from '@/hooks/use-speech';
+import { mergeDictation } from '@/lib/dictation';
 import { askAgent, type ChatMessage } from '@/lib/ai';
 import { createConversation, getLatestConversationId, loadMessages, saveMessage } from '@/lib/conversations';
 import { isSupabaseConfigured } from '@/lib/supabase';
@@ -47,6 +49,17 @@ export default function Agente() {
   const [convId, setConvId] = useState<string | null>(null);
   const listRef = useRef<FlatList<UIMessage>>(null);
   const { speakingId, speak, stop, autoRead, setAutoRead } = useSpeech();
+
+  // Il testo dettato si accoda a quanto già digitato; quello provvisorio si
+  // mostra a parte, così non sporca l'input se la dettatura viene annullata.
+  const [partial, setPartial] = useState('');
+  const dictation = useDictation({
+    onFinal: (text) => {
+      setPartial('');
+      setInput((prev) => mergeDictation(prev, text));
+    },
+    onPartial: setPartial,
+  });
 
   // Carica l'ultima conversazione (se il backend è configurato).
   useEffect(() => {
@@ -87,8 +100,11 @@ export default function Agente() {
     const text = input.trim();
     if (!text || sending) return;
 
-    // Se stava leggendo la risposta precedente, la nuova domanda la interrompe.
+    // Se stava leggendo la risposta precedente, la nuova domanda la interrompe;
+    // e non ha senso continuare ad ascoltare dopo l'invio.
     stop();
+    if (dictation.listening) dictation.stop();
+    setPartial('');
 
     const history: ChatMessage[] = messages
       .filter((m) => !m.error)
@@ -200,12 +216,40 @@ export default function Agente() {
           />
         )}
 
+        {(dictation.listening || dictation.error) && (
+          <View style={[styles.dictationBar, { backgroundColor: colors.surfaceAlt, borderTopColor: colors.border }]}>
+            <ThemedText tone={dictation.error ? 'error' : 'muted'} variant="caption" numberOfLines={2}>
+              {dictation.error ?? (partial ? `“${partial}”` : 'Sto ascoltando… tocca ■ per fermare.')}
+            </ThemedText>
+          </View>
+        )}
+
         <View style={[styles.inputBar, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
+          {dictation.available && (
+            <Pressable
+              onPress={dictation.toggle}
+              disabled={sending}
+              accessibilityRole="button"
+              accessibilityLabel={dictation.listening ? 'Ferma la dettatura' : 'Detta la domanda'}
+              style={[
+                styles.mic,
+                {
+                  backgroundColor: dictation.listening ? colors.accent : 'transparent',
+                  borderColor: colors.border,
+                  opacity: sending ? 0.4 : 1,
+                },
+              ]}
+            >
+              <ThemedText style={{ fontSize: 18, color: dictation.listening ? '#FFFFFF' : colors.textMuted }}>
+                {dictation.listening ? '■' : '🎤'}
+              </ThemedText>
+            </Pressable>
+          )}
           <TextInput
             style={[typography.body, styles.input, { color: colors.text }]}
             value={input}
             onChangeText={setInput}
-            placeholder="Scrivi all'agente…"
+            placeholder={dictation.listening ? 'Parla pure…' : "Scrivi all'agente…"}
             placeholderTextColor={colors.textMuted}
             multiline
             editable={!sending}
@@ -374,6 +418,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
+  },
+  dictationBar: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  mic: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   send: {
     width: 44,

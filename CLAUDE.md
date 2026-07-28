@@ -28,7 +28,8 @@ App mobile cross-platform (iOS + Android, App Store + Google Play) per una **ret
 - `knowledge/90-compliance.md` ha **precedenza su ogni altro contenuto** della base di conoscenza.
 
 ✅ **Voce (sintesi)**: risposte lette ad alta voce in italiano con `expo-speech` (voci di sistema, `it-IT`, nessuna rete e nessun costo — l'audio non lascia il dispositivo). `src/lib/speech.ts` normalizza il testo per l'orecchio (markdown, elenchi, `%`, `→`, citazioni della fonte); `src/hooks/use-speech.ts` gestisce riproduzione e preferenza "lettura automatica" persistita. Nella chat: interruttore in barra + «▶ Ascolta» su ogni risposta.
-⬜ **Voce (dettatura)**: non implementata. `expo-speech-recognition` richiede un **development build** (niente Expo Go) e dichiara SDK 53/54, non 57; l'alternativa è la trascrizione lato server, che introduce un fornitore terzo a pagamento e dati vocali in uscita (valutazione GDPR).
+✅ **Voce (dettatura)**: `expo-speech-recognition` con riconoscimento di sistema `it-IT`. `src/lib/dictation.ts` è la parte pura (merge del dettato con il digitato, estrazione della trascrizione); `src/hooks/use-dictation.ts` carica il modulo nativo con `require` pigro dentro try/catch.
+> ⚠️ **Serve un development build** (`eas build --profile development`): su Expo Go il modulo nativo non esiste e il microfono **non viene mostrato** — `dictation.available` è false e l'app funziona lo stesso. Il pacchetto è pubblicato per SDK 56 mentre il progetto è su SDK 57: la compatibilità va confermata al primo dev build. Permessi in italiano configurati nel plugin in `app.json`.
 
 ✅ **Rank a carte** (2→Asso): punteggio trasparente (lezioni/clienti/rinnovi), classifica di rete (RLS), crest oro. `src/lib/rank.ts` + `src/lib/leaderboard.ts`, route `(app)/rank`.
 
