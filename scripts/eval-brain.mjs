@@ -106,16 +106,61 @@ async function main() {
   const dictation = await compile('src/lib/dictation.ts', 'dictation.js');
   const voice = evalSpeech(speech, dictation);
 
+  const sync = await evalSync(brain);
+
   let live = null;
   if (LIVE) live = await evalLive();
 
-  const failed = offline.failed + voice.failed + (live?.failed ?? 0);
+  const failed = offline.failed + voice.failed + sync.failed + (live?.failed ?? 0);
   console.log(
     `\n${failed === 0 ? '✔' : '✖'} offline ${offline.passed}/${offline.total}` +
       ` · voce ${voice.passed}/${voice.total}` +
+      ` · coerenza ${sync.passed}/${sync.total}` +
       (live ? ` · live ${live.passed}/${live.total}` : ' · live non eseguito (--live)'),
   );
   if (failed > 0) process.exit(1);
+}
+
+// ----------------------------------------------------------------------------
+// Coerenza fra le copie che i runtime diversi impongono di duplicare.
+// Il router gira su Deno, l'app su React Native: non possono condividere un
+// modulo, quindi la deriva va intercettata qui invece che in produzione.
+// ----------------------------------------------------------------------------
+async function evalSync(brain) {
+  console.log('\nCOERENZA — duplicazioni fra runtime\n');
+  let passed = 0;
+  let total = 0;
+
+  // 1. Domini dell'app == domini del router.
+  total++;
+  const appDomains = (await readFile(join(ROOT, 'src/lib/domains.ts'), 'utf8'))
+    .match(/DOMAIN_IDS\s*=\s*\[([\s\S]*?)\]/)?.[1]
+    .match(/'([a-z]+)'/g)
+    ?.map((s) => s.replace(/'/g, '')) ?? [];
+  const routerDomains = brain.DOMAINS.map((d) => d.id);
+  // `metodo` e `compliance` esistono come domini di documento ma non hanno un
+  // playbook nel router: sono conoscenza, non competenza attiva.
+  const missing = routerDomains.filter((d) => !appDomains.includes(d));
+  const okDomains = missing.length === 0 && appDomains.length > 0;
+  if (okDomains) passed++;
+  console.log(`  ${okDomains ? '✓' : '✗'} i domini dell'app coprono quelli del router`);
+  if (!okDomains) console.log(`     mancanti in src/lib/domains.ts: ${missing.join(', ')}`);
+
+  // 2. Corpus incluso nell'app allineato ai Markdown.
+  total++;
+  let corpusOk = true;
+  try {
+    await run(process.execPath, [join(ROOT, 'scripts/build-corpus.mjs'), '--check'], { cwd: ROOT });
+  } catch {
+    corpusOk = false;
+  }
+  if (corpusOk) passed++;
+  console.log(
+    `  ${corpusOk ? '✓' : '✗'} src/lib/corpus.generated.ts allineato a knowledge/` +
+      (corpusOk ? '' : '\n     rigenera con: node scripts/build-corpus.mjs'),
+  );
+
+  return { passed, total, failed: total - passed };
 }
 
 // ----------------------------------------------------------------------------

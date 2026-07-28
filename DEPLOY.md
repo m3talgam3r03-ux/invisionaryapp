@@ -40,13 +40,13 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon public key>
 
 ---
 
-## 3. Applica il database (migrazioni `0001` → `0008`)
+## 3. Applica il database (migrazioni `0001` → `0009`)
 
 Scegli **una** delle due strade.
 
 **A) SQL Editor (consigliata, sempre funziona).** Apri **SQL Editor** su Supabase e incolla
 ed esegui **in ordine** ogni file in [`supabase/migrations/`](supabase/migrations), da
-`0001_init.sql` a `0008_trading.sql`. Poi, **facoltativo**, incolla il seed dimostrativo
+`0001_init.sql` a `0009_ai_brain.sql`. Poi, **facoltativo**, incolla il seed dimostrativo
 [`supabase/seed/formazione_demo.sql`](supabase/seed/formazione_demo.sql).
 
 **B) Supabase CLI.**
@@ -90,6 +90,25 @@ npx supabase functions deploy mt5-sync
 | `mt5-connect`, `mt5-sync` | Trading MT5 | `METAAPI_TOKEN` |
 
 > In alternativa ai punti 3B+5 puoi lanciare lo script [`scripts/deploy.ps1`](scripts/deploy.ps1).
+
+### Dai all'agente la sua competenza
+
+Appena le function sono attive, apri l'app come **admin** → **Agente AI** → **Base di
+conoscenza** → **«Carica i 19 documenti»**. È tutto incluso nell'app: non serve il terminale.
+L'operazione è ripetibile, aggiorna senza duplicare.
+
+Se preferisci farlo da riga di comando (utile in CI):
+
+```powershell
+$env:INGEST_EMAIL="admin@esempio.it"; $env:INGEST_PASSWORD="..."
+npm run knowledge
+```
+
+Verifica che il cervello risponda come previsto:
+
+```powershell
+npm run eval:live
+```
 
 ---
 
