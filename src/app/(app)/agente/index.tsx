@@ -25,6 +25,8 @@ type UIMessage = {
   role: 'user' | 'assistant';
   content: string;
   sources?: { source: string | null }[];
+  /** Aree di competenza attivate dal router per questa risposta. */
+  domains?: string[];
   error?: boolean;
 };
 
@@ -108,7 +110,7 @@ export default function Agente() {
       const content = reply.answer || '—';
       setMessages((prev) => [
         ...prev,
-        { id: nextId(), role: 'assistant', content, sources: reply.sources },
+        { id: nextId(), role: 'assistant', content, sources: reply.sources, domains: reply.domains },
       ]);
       if (isSupabaseConfigured && cid) {
         try {
@@ -205,8 +207,23 @@ export default function Agente() {
 function Bubble({ message }: { message: UIMessage }) {
   const { colors } = useTheme();
   const isUser = message.role === 'user';
+  const domains = !isUser && !message.error ? (message.domains ?? []) : [];
   return (
     <View style={{ alignItems: isUser ? 'flex-end' : 'flex-start' }}>
+      {domains.length > 0 && (
+        <View style={styles.domains}>
+          {domains.map((d) => (
+            <View
+              key={d}
+              style={[styles.chip, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+            >
+              <ThemedText tone="muted" variant="caption">
+                {d}
+              </ThemedText>
+            </View>
+          ))}
+        </View>
+      )}
       <View
         style={{
           maxWidth: '88%',
@@ -283,6 +300,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  domains: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+    maxWidth: '88%',
+  },
+  chip: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
   },
   inputBar: {
     flexDirection: 'row',
