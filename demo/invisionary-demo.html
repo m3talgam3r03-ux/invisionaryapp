@@ -186,7 +186,7 @@
   <div class="iv-intro">
     <div class="iv-kicker">Winning Dream Team</div>
     <h1 class="iv-title">Invisionary — anteprima app</h1>
-    <p class="iv-note">Anteprima <b>navigabile e interattiva</b>: barra con <b>Indietro</b> e <b>menu a tendina</b>, <b>agente AI</b> che risponde su network marketing, trading e imprenditoria, calcolatore lottaggio <b>per strumento</b> (Forex, oro, indici, cripto…), pulsanti del Trading e «+ Nuovo» del CRM funzionanti. Nella demo le risposte dell'agente sono precaricate; nell'app risponde <b>Claude</b> con la base di conoscenza della rete.</p>
+    <p class="iv-note">Anteprima <b>navigabile e interattiva</b>: barra con <b>Indietro</b> e <b>menu a tendina</b>, <b>agente AI</b> che risponde su network marketing, trading e imprenditoria, calcolatore lottaggio <b>per strumento</b> (Forex, oro, indici, cripto…), pulsanti del Trading e «+ Nuovo» del CRM funzionanti. Nella demo le risposte dell'agente sono precaricate; nell'app risponde <b>Claude</b> con la base di conoscenza della rete. La <b>voce è reale</b>: l'agente legge le risposte in italiano e puoi dettargli la domanda col microfono (Chrome/Edge).</p>
   </div>
 
   <div class="iv-controls">
@@ -274,8 +274,13 @@
           <span class="label">Agente AI</span>
           <p class="cap" style="text-align:center;max-width:280px">Network marketing · trading · imprenditoria. Chiedimi del metodo, non del mercato.</p>
         </div>
+        <div class="row" style="gap:8px;justify-content:center;margin-bottom:6px">
+          <button class="btn sec sm" id="voiceToggle" onclick="toggleAutoRead()">🔇 Lettura</button>
+        </div>
         <div id="chatList" class="list"></div>
+        <div id="dictBar" class="cap" style="display:none;text-align:center;padding:4px 0"></div>
         <div class="inputbar">
+          <button class="send" id="chatMic" onclick="toggleDictation()" aria-label="Detta" style="background:transparent;border:1px solid var(--border);color:var(--muted);display:none">🎤</button>
           <input id="chatInput" placeholder="Scrivi all'agente…" oninput="updateSend()" onkeydown="chatKey(event)">
           <button class="send" id="chatSend" onclick="sendChat()" disabled aria-label="Invia">↑</button>
         </div>
@@ -746,16 +751,142 @@
     for(const qa of CHAT_QA){ if(qa.k.some(w=>t.includes(w))) return {a:qa.a+'\n\n(risposta dimostrativa)', s:qa.s}; }
     return {a:'Sono l\'assistente di Invisionary: lavoro con te su network marketing (prospecting, follow-up, obiezioni, duplicazione, leadership), trading e gestione del rischio, imprenditoria ed educazione finanziaria — oltre all\'uso dell\'app. Prova con «come gestisco l\'obiezione ci devo pensare?», «quanto rischio per operazione?» oppure «come trovo nuovi clienti?». (risposta dimostrativa)', s:[]};
   }
+  /* ===== Aree di competenza =====
+     Versione compatta del router che nell'app vive in _shared/brain.ts: assegna
+     la domanda a uno o due domini e ne dà priorità nel retrieval. Qui serve a
+     mostrare la stessa cosa che l'app scrive sopra la risposta. */
+  const DEMO_DOMAINS = [
+    ['Vendita',    ['vendit','vender','trattativa','obiezion','chiusura','closing','prezzo','sconto','ci devo pensare','troppo caro','cliente']],
+    ['Marketing',  ['marketing','posizionament','nicchia','contenut','social','instagram','personal brand','pubblicit','passaparola','acquisizione']],
+    ['Network marketing', ['network','rete','collaborator','duplicaz','duplicare','prospect','lista nomi','invito','invitare','presentazion','follow up','follow-up','team','squadra','leadership','onboarding','evento','recluta']],
+    ['Investimenti', ['investi','risparmi','interesse composto','diversific','portafoglio','fondo di emergenza','educazione finanziaria','inflazion']],
+    ['Trading',    ['trading','trader','mt5','lotto','lottaggio','stop loss','drawdown','pip','analisi tecnica','rischio per operazione','journal','money management','psicologi']],
+    ['Mindset',    ['mindset','motivazione','costanza','disciplina','abitudin','produttiv','organizz','procrastin','obiettiv']],
+    ['Piattaforma',['crm','importa','csv','excel','rank','classifica','scadenz','rinnovo','formazione','lezione','corso','community','ruolo','admin']],
+  ];
+  function detectDomains(text){
+    const t=' '+text.toLowerCase().replace(/[^a-z0-9\s-]/g,' ')+' ';
+    const scores=DEMO_DOMAINS.map(([label,terms])=>[label, terms.reduce((n,w)=>n+(t.includes(' '+w)?1:0),0)])
+      .filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]);
+    if(!scores.length) return [];
+    const top=scores[0][1];
+    return scores.filter(([,n])=>n>=top*0.5).slice(0,2).map(([l])=>l);
+  }
+
+  /* ===== Voce =====
+     Reale, non simulata: il browser sintetizza e riconosce l'italiano.
+     È la stessa funzione che nell'app fanno expo-speech e il riconoscimento
+     vocale di sistema. */
+  let autoRead=false, speakingEl=null;
+  // Il testo è scritto per l'occhio: senza questa pulizia il lettore scandisce
+  // i trattini e dice "percento" attaccato al numero.
+  function toSpeech(t){
+    return t.replace(/\(risposta dimostrativa\)/gi,'')
+      .replace(/\((?:fonte|fonti)\s*:[^)]*\)/gi,'')
+      .replace(/\*\*([^*]+)\*\*/g,'$1')
+      .replace(/^\s*[-*·•]\s+/gm,'')
+      .replace(/→/g,' diventa ')
+      .replace(/(\s)[—–](\s)/g,',$2')
+      .replace(/(^|[\s(])[-−]\s?(\d)/g,'$1meno $2')
+      .replace(/(\d)\s*%/g,'$1 per cento')
+      .replace(/(\d)\s*\/\s*(\d)/g,'$1 diviso $2')
+      .replace(/\s*·\s*/g,', ')
+      .replace(/\n{2,}/g,'. ').replace(/\n/g,'. ')
+      .replace(/\s+([,.;:!?])/g,'$1').replace(/\.{2,}/g,'.')
+      .replace(/\s{2,}/g,' ').trim();
+  }
+  function speechOk(){ return typeof window!=='undefined' && 'speechSynthesis' in window; }
+  function stopSpeech(){ if(speechOk()) window.speechSynthesis.cancel(); if(speakingEl){ speakingEl.textContent='▶ Ascolta'; speakingEl=null; } }
+  function speak(text, btn){
+    if(!speechOk()){ toast('Sintesi vocale non disponibile in questo browser'); return; }
+    if(speakingEl===btn){ stopSpeech(); return; }
+    stopSpeech();
+    const u=new SpeechSynthesisUtterance(toSpeech(text));
+    u.lang='it-IT'; u.rate=0.96;
+    const v=window.speechSynthesis.getVoices().find(x=>x.lang && x.lang.toLowerCase().startsWith('it'));
+    if(v) u.voice=v;
+    if(btn){ speakingEl=btn; btn.textContent='■ Interrompi'; }
+    u.onend=u.onerror=()=>{ if(btn) btn.textContent='▶ Ascolta'; speakingEl=null; };
+    window.speechSynthesis.speak(u);
+  }
+  function toggleAutoRead(){
+    autoRead=!autoRead;
+    const b=document.getElementById('voiceToggle');
+    b.textContent = autoRead?'🔊 Lettura attiva':'🔇 Lettura';
+    b.classList.toggle('sec', !autoRead);
+    if(!autoRead) stopSpeech();
+    toast(autoRead?'Leggo le risposte ad alta voce':'Lettura disattivata');
+  }
+
+  /* Dettatura: Web Speech API (Chrome/Edge). Dove manca, il microfono non compare. */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recog=null, listening=false;
+  if(SR){
+    document.getElementById('chatMic').style.display='inline-flex';
+    recog=new SR(); recog.lang='it-IT'; recog.interimResults=true; recog.continuous=false;
+    recog.onresult=(e)=>{
+      let finalTxt='', partial='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const r=e.results[i];
+        if(r.isFinal) finalTxt+=r[0].transcript; else partial+=r[0].transcript;
+      }
+      const bar=document.getElementById('dictBar');
+      if(partial) bar.textContent='“'+partial+'”';
+      if(finalTxt){
+        const inp=document.getElementById('chatInput');
+        inp.value=(inp.value.trim()+' '+finalTxt.trim()).trim();
+        updateSend();
+      }
+    };
+    recog.onend=()=>{ listening=false; setMic(false); };
+    recog.onerror=(e)=>{ listening=false; setMic(false);
+      if(e.error!=='no-speech' && e.error!=='aborted') toast('Dettatura non riuscita'); };
+  }
+  function setMic(on){
+    const b=document.getElementById('chatMic'), bar=document.getElementById('dictBar');
+    b.style.background=on?'var(--accent)':'transparent';
+    b.style.color=on?'#fff':'var(--muted)';
+    b.textContent=on?'■':'🎤';
+    bar.style.display=on?'block':'none';
+    if(on) bar.textContent='Sto ascoltando… parla pure.';
+  }
+  function toggleDictation(){
+    if(!recog) return;
+    if(listening){ recog.stop(); return; }
+    try{ stopSpeech(); recog.start(); listening=true; setMic(true); }
+    catch(_){ /* già avviata */ }
+  }
+
   function scrollDown(){ const s=document.getElementById('screen'); s.scrollTop=s.scrollHeight; }
-  function addMsg(roleM, text, sources){
+  function addMsg(roleM, text, sources, domains){
     const list=document.getElementById('chatList');
     const wrap=document.createElement('div');
     wrap.style.alignSelf = roleM==='user'?'flex-end':'flex-start'; wrap.style.maxWidth='88%';
+    if(domains && domains.length){
+      const chips=document.createElement('div');
+      chips.style.cssText='display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px';
+      domains.forEach(d=>{
+        const c=document.createElement('span');
+        c.className='cap';
+        c.style.cssText='border:1px solid var(--border);background:var(--surface-alt,#232327);border-radius:999px;padding:1px 8px';
+        c.textContent=d; chips.appendChild(c);
+      });
+      wrap.appendChild(chips);
+    }
     const card=document.createElement('div'); card.className='card';
     if(roleM==='user'){ card.style.background='var(--accent)'; card.style.borderColor='var(--accent)'; }
     const span=document.createElement('span'); if(roleM==='user') span.style.color='#fff';
     span.style.whiteSpace='pre-wrap'; span.textContent=text;
     card.appendChild(span); wrap.appendChild(card);
+    if(roleM==='assistant' && text && text!=='Sto pensando…'){
+      const play=document.createElement('button');
+      play.className='cap';
+      play.style.cssText='background:none;border:none;color:var(--muted);padding:4px 0;cursor:pointer;text-align:left';
+      play.textContent='▶ Ascolta';
+      play.onclick=()=>speak(text, play);
+      wrap.appendChild(play);
+      if(autoRead) speak(text, play);
+    }
     if(sources && sources.length){ const p=document.createElement('p'); p.className='cap'; p.style.marginTop='4px'; p.textContent='Fonti: '+sources.join(' · '); wrap.appendChild(p); }
     list.appendChild(wrap); scrollDown(); return wrap;
   }
@@ -764,13 +895,15 @@
   let chatBusy=false;
   function sendChat(){
     const inp=document.getElementById('chatInput'); const t=inp.value.trim(); if(!t||chatBusy) return;
+    if(listening && recog) recog.stop();
+    stopSpeech();
     addMsg('user',t); inp.value=''; updateSend(); chatBusy=true;
     const typing=addMsg('assistant','Sto pensando…');
-    setTimeout(()=>{ typing.remove(); const r=answer(t); addMsg('assistant',r.a,r.s); chatBusy=false; }, 650);
+    setTimeout(()=>{ typing.remove(); const r=answer(t); addMsg('assistant',r.a,r.s,detectDomains(t)); chatBusy=false; }, 650);
   }
   // scambio d'esempio iniziale
   addMsg('user','Come gestisco l\'obiezione «ci devo pensare»?');
-  addMsg('assistant','Le obiezioni si ascoltano, non si combattono. Riformula («quindi il punto è il tempo, giusto?»), chiedi cosa servirebbe per superarla, poi rispondi con fatti — mai con pressione.\n\n(risposta dimostrativa)',['manuale-rete','compliance']);
+  addMsg('assistant','Le obiezioni si ascoltano, non si combattono. Riformula («quindi il punto è il tempo, giusto?»), chiedi cosa servirebbe per superarla, poi rispondi con fatti — mai con pressione.\n\n(risposta dimostrativa)',['manuale-rete','compliance'],['Vendita']);
 
   /* ===== Trading: connetti + sincronizza ===== */
   function connectMt5(){

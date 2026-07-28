@@ -18,7 +18,8 @@ richiede installazioni, account o connessione a Supabase.
 | --- | --- |
 | Login | Accedi → dashboard (selettore **ruolo** in alto: admin / leader / collaboratore) |
 | Navigazione | Pulsante **Indietro** e **menu a tendina** (☰) con tutte le sezioni |
-| Agente AI | **Scrivi e invia**: risponde su network marketing, trading e imprenditoria; fuori tema rifiuta |
+| Agente AI | **Scrivi e invia**: risponde su vendita, marketing, network, investimenti e trading; fuori tema rifiuta. Mostra le **aree di competenza** attivate e le fonti |
+| Agente AI — voce | **Reale, non simulata**: «▶ Ascolta» legge la risposta in italiano, «🔊 Lettura» le legge tutte, 🎤 detta la domanda (Chrome/Edge) |
 | Trading ♠ | **Collega MT5** (login/server/investor password), **Classifica**, **Sincronizza** |
 | Network ♥ | **+ Nuovo** apre la finestra prospect: quello che aggiungi compare in lista; **Importa** CSV/Excel |
 | Scadenzario | Rinnovi con urgenza a colori |
