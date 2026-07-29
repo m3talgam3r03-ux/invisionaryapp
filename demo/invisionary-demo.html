@@ -176,10 +176,198 @@
     opacity:0;transition:.22s;pointer-events:none;white-space:nowrap;max-width:90%}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
+  /* ===== CRM: pensato per liste lunghe ===== */
+  /* barra di ricerca + filtri che resta agganciata in alto durante lo scorrimento */
+  .stick{position:sticky;top:-18px;z-index:20;background:var(--bg);
+    padding:10px 0 8px;margin:0 -2px;display:flex;flex-direction:column;gap:9px}
+  .stick::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--border)}
+
+  .search{position:relative;display:flex;align-items:center}
+  .search input{width:100%;height:42px;border-radius:var(--r-md);border:1px solid var(--border);
+    background:var(--surface);color:var(--text);padding:0 36px 0 36px;font-size:15px;font-family:var(--sans);outline:none}
+  .search input:focus{border-color:var(--accent)}
+  .search .mag{position:absolute;left:12px;color:var(--muted);font-size:14px;pointer-events:none}
+  .search .clr{position:absolute;right:8px;width:26px;height:26px;border-radius:999px;border:0;background:var(--surface2);
+    color:var(--muted);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:13px;line-height:1}
+  .search .clr.on{display:flex}
+
+  /* filtri di stato: scorrono in orizzontale, non vanno a capo */
+  .segs{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+  .segs::-webkit-scrollbar{display:none}
+  .seg{flex:0 0 auto;background:var(--surface);border:1px solid var(--border);color:var(--muted);
+    padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.15s}
+  .seg:hover{color:var(--text)}
+  .seg.on{background:var(--text);border-color:var(--text);color:var(--bg)}
+  .seg b{font-variant-numeric:tabular-nums;opacity:.65;margin-left:5px;font-weight:700}
+  .seg.on b{opacity:.55}
+
+  .crmbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .crmbar .cnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .sortsel{height:30px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);
+    font-size:12px;font-family:var(--sans);padding:0 26px 0 11px;outline:none;cursor:pointer;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238A8A90' stroke-width='1.8' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center}
+
+  /* intestazione alfabetica */
+  /* --alphaTop è misurato a runtime sull'altezza reale della barra sticky */
+  .alpha{position:sticky;top:var(--alphaTop,118px);z-index:10;background:var(--bg);color:var(--muted);
+    font-size:11px;font-weight:800;letter-spacing:.16em;padding:7px 2px 4px}
+
+  /* riga contatto: densa, una per contatto */
+  .crow{display:flex;align-items:center;gap:11px;padding:9px 4px;border-bottom:1px solid var(--border);
+    cursor:pointer;transition:.12s}
+  .crow:hover{background:var(--surface)}
+  .crow .av{width:38px;height:38px;border-radius:999px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:800;letter-spacing:.02em;border:1.5px solid currentColor;background:var(--surface)}
+  .crow .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .crow .nm{font-size:15px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .crow .sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .crow .chev{color:#4a4a52;font-size:17px;flex:0 0 auto}
+  .crow mark{background:transparent;color:var(--gold);font-weight:700}
+
+  /* pallino di stato sulla riga */
+  .dot{width:7px;height:7px;border-radius:999px;flex:0 0 auto;display:inline-block}
+
+  /* striscia statistiche per stato, toccabile */
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 4px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:.15s}
+  .stat:hover{border-color:#3b3b42}
+  .stat.on{border-color:var(--text)}
+  .stat b{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .stat span{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center;line-height:1.2}
+
+  /* etichetta di stato nel dettaglio */
+  .badge{align-self:flex-start;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.08em;border:1px solid currentColor}
+
+  /* azioni rapide del dettaglio contatto */
+  .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .act{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 4px;color:var(--text);
+    display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10.5px;cursor:pointer;transition:.15s;font-family:var(--sans)}
+  .act:hover{border-color:#3b3b42}
+  .act i{font-style:normal;font-size:17px}
+
+  .empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:34px 16px;text-align:center}
+  .empty .big{font-size:26px;opacity:.35}
+
   .footer{max-width:760px;text-align:center;color:#4a4a52;font-size:12px}
   .swatches{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}
   .sw{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
   .sw i{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid #0006}
+
+  /* ============================================================
+     SISTEMA VISIVO — superfici con profondità, gerarchia, componenti dati.
+     Le regole qui sotto raffinano quelle sopra (in CSS vince l'ultima).
+     ============================================================ */
+
+  /* Superfici: non più piatte — luce dall'alto, bordo che si schiarisce in cima */
+  .card{
+    background:linear-gradient(180deg,#1E1E22 0%,#191A1D 100%);
+    border:1px solid #2B2B31;
+    box-shadow:0 1px 0 0 #ffffff08 inset, 0 8px 24px -18px #000;
+    border-radius:var(--r-lg);
+  }
+  .press:hover{border-color:#3E3E47;transform:translateY(-1px)}
+  .press{transition:border-color .15s, transform .15s}
+
+  /* Pulsanti: il primario ha profondità, il secondario resta inciso */
+  .btn{
+    background:linear-gradient(180deg,#D4162F 0%,#B00D26 100%);
+    border-color:#D4162F;
+    box-shadow:0 1px 0 0 #ffffff2e inset, 0 10px 22px -14px #C8102E;
+  }
+  .btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+  .btn:active{transform:translateY(0);filter:brightness(.96)}
+  .btn{transition:filter .15s, transform .12s}
+  .btn.sec{background:linear-gradient(180deg,#212126 0%,#1A1A1E 100%);border-color:#31313A;
+    box-shadow:0 1px 0 0 #ffffff0d inset}
+  .btn.sec:hover{border-color:#43434E}
+
+  /* Titolo di sezione col filetto a stella del sigillo */
+  .sect{display:flex;align-items:center;gap:10px;margin-top:4px}
+  .sect .t{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.18em;color:var(--muted);white-space:nowrap}
+  .sect .l{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+  .sect .s{color:var(--gold);font-size:9px}
+
+  /* Intestazione schermata: titolo grande + sottotitolo */
+  .phead{display:flex;flex-direction:column;gap:3px}
+  .phead h2{font-size:26px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin:0;
+    background:linear-gradient(180deg,#FFFDF8,#BDB9B0);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .phead p{margin:0;font-size:12.5px;color:var(--muted)}
+
+  /* KPI: numeri grandi, tabulari, con etichetta */
+  .kpis{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+  .kpi{background:linear-gradient(180deg,#1E1E22,#191A1D);border:1px solid #2B2B31;border-radius:var(--r-md);
+    padding:11px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;
+    box-shadow:0 1px 0 0 #ffffff08 inset}
+  .kpi b{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.01em}
+  .kpi span{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;text-align:center;line-height:1.25}
+
+  /* "Le tue azioni di oggi": la lista che rende l'app utile all'apertura */
+  .todo{display:flex;flex-direction:column;gap:0}
+  .titem{display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid var(--border);cursor:pointer;transition:.12s}
+  .titem:last-child{border-bottom:0}
+  .titem:hover{background:#ffffff05}
+  .titem .ic{width:32px;height:32px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    font-size:14px;border:1px solid currentColor;background:#ffffff08}
+  .titem .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .titem .tx b{font-size:14px;font-weight:600;color:var(--text)}
+  .titem .tx span{font-size:11.5px;color:var(--muted)}
+  .titem .go{color:#4a4a52;font-size:17px}
+
+  /* Anello di avanzamento (rank, corsi) */
+  .ring{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+  .ring .val{position:absolute;display:flex;flex-direction:column;align-items:center;line-height:1}
+  .ring .val b{font-size:20px;font-weight:800;color:var(--gold)}
+  .ring .val i{font-style:normal;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+
+  /* Grafico andamento (equity) */
+  .spark{width:100%;height:64px;display:block}
+  hr.divider{height:1px;background:var(--border);border:0;margin:4px 0;width:100%}
+
+  /* Riga corso: anello di avanzamento + titolo */
+  .crs{display:flex;align-items:center;gap:14px}
+  .crs .meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .crs .meta b{font-size:16px;font-weight:700}
+  .crs .meta span{font-size:12px;color:var(--muted)}
+
+  /* Riga lezione */
+  .les{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--border);cursor:pointer;transition:.12s}
+  .les:last-child{border-bottom:0}
+  .les:hover{background:#ffffff05}
+  .les .n{width:26px;height:26px;border-radius:999px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:800;border:1.5px solid currentColor}
+  .les .tl{flex:1;font-size:14.5px}
+
+  /* Riga con urgenza (scadenzario) */
+  .urow{display:flex;align-items:center;gap:11px;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer;transition:.12s}
+  .urow:hover{background:#ffffff05}
+  .urow .when{width:52px;flex:0 0 auto;text-align:center;display:flex;flex-direction:column;gap:1px}
+  .urow .when b{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .urow .when span{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .urow .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .urow .mid b{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .urow .mid span{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Pilastri: più materici, il seme si illumina al passaggio */
+  .pillar{background:linear-gradient(180deg,#1E1E22,#17171B);border-color:#2B2B31;
+    box-shadow:0 1px 0 0 #ffffff08 inset;position:relative;overflow:hidden}
+  .pillar::after{content:'';position:absolute;inset:0;background:radial-gradient(90px 50px at 50% 0%,#ffffff0f,transparent 70%);
+    opacity:0;transition:.2s;pointer-events:none}
+  .pillar.press:hover::after{opacity:1}
+
+  /* Barre di avanzamento più definite */
+  .bar{background:#0F0F12;box-shadow:0 1px 0 0 #ffffff08 inset}
+  .bar > i{background:linear-gradient(90deg,#B8901F,var(--gold));box-shadow:0 0 12px -2px #C9A22766}
+
+  /* Scorrimento più discreto */
+  .iv-screen::-webkit-scrollbar-thumb{background:#2E2E35}
+  .iv-screen::-webkit-scrollbar-thumb:hover{background:#3C3C45}
+
+  /* Accessibilità: focus visibile ovunque */
+  .btn:focus-visible,.seg:focus-visible,.chip:focus-visible,.iconbtn:focus-visible,
+  input:focus-visible,select:focus-visible,.act:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </style>
 
 <div class="iv-root">
@@ -236,27 +424,23 @@
             <span class="pill" id="rolePill">Amministratore</span>
           </div>
         </div>
-        <div class="card" id="roleCard"></div>
-        <div class="card">
-          <h3 class="heading">Agente AI</h3>
-          <p class="cap">Chiedi all'assistente: risposte basate sui contenuti della piattaforma.</p>
-          <button class="btn sm" onclick="setScreen('agente')">Apri l'agente</button>
+        <!-- Rank + numeri della giornata: si capisce a colpo d'occhio come stai andando -->
+        <div class="card" style="flex-direction:row;align-items:center;gap:16px" onclick="setScreen('rank')">
+          <span class="ring" id="dashRing"></span>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+            <span class="label">Il tuo rank</span>
+            <span id="dashRankTxt" style="font-size:13px;color:var(--muted)"></span>
+            <div class="bar"><i id="dashRankBar" style="width:0%"></i></div>
+          </div>
         </div>
-        <div class="card">
-          <h3 class="heading">Scadenzario rinnovi</h3>
-          <p class="cap">Tieni d'occhio le scadenze e ricevi un avviso prima del rinnovo.</p>
-          <button class="btn sec sm" onclick="setScreen('renewals')">Apri scadenzario</button>
-        </div>
-        <div class="card">
-          <h3 class="heading">Calcolatori</h3>
-          <p class="cap">Lottaggio e interesse composto — strumenti a scopo educativo.</p>
-          <button class="btn sec sm" onclick="setScreen('calc')">Apri calcolatori</button>
-        </div>
-        <div class="card">
-          <h3 class="heading">Rank &amp; classifica</h3>
-          <p class="cap">Il tuo avanzamento nella rete: diventa un Asso.</p>
-          <button class="btn sec sm" onclick="setScreen('rank')">Vedi il tuo rank</button>
-        </div>
+
+        <div class="kpis" id="dashKpis"></div>
+
+        <!-- Le azioni di oggi, calcolate sui contatti reali della demo -->
+        <div class="sect"><span class="s">✦</span><span class="t">Le tue azioni di oggi</span><span class="l"></span></div>
+        <div class="card" style="padding:6px 12px"><div class="todo" id="dashTodo"></div></div>
+
+        <div class="sect"><span class="s">✦</span><span class="t">I quattro pilastri</span><span class="l"></span></div>
         <div class="pillars">
           <div class="pillar press" onclick="setScreen('trading')"><span class="ace" style="color:var(--text)"><b>A</b><i>♠</i></span><span class="label" style="color:var(--text)">Trading</span><span class="cap accent">Apri →</span></div>
           <div class="pillar press" onclick="setScreen('crm')"><span class="ace accent"><b>A</b><i>♥</i></span><span class="label" style="color:var(--text)">Network</span><span class="cap accent">Apri →</span></div>
@@ -295,18 +479,21 @@
             <button class="btn sec sm" style="flex:1" onclick="tSub('board')">Classifica</button>
           </div>
           <button class="btn sec sm" id="syncBtn" onclick="syncMt5()">Sincronizza ora</button>
-          <div class="card" style="gap:8px">
-            <div class="between"><h3 class="heading">5012345@Broker-Live</h3><span class="cap muted">MT5</span></div>
+          <div class="card" style="gap:10px">
+            <div class="between"><h3 class="heading">5012345@Broker-Live</h3><span class="cap muted">MT5 · sola lettura</span></div>
+            <div class="row" style="align-items:baseline;gap:8px">
+              <span class="gold" id="tPerf" style="font-size:30px;font-weight:800;letter-spacing:-.01em">+3,80 %</span>
+              <span class="cap">rendimento del periodo</span>
+            </div>
+            <div id="tSpark"></div>
+            <hr class="divider">
             <div class="resline" style="padding:2px 0"><span class="muted">Saldo</span><span id="tBal">10.240,00 EUR</span></div>
             <div class="resline" style="padding:2px 0"><span class="muted">Equity</span><span id="tEq">10.310,00 EUR</span></div>
-            <div class="resline" style="padding:2px 0"><span class="muted">Rendimento (stima)</span><span class="gold" id="tPerf" style="font-weight:800">+3,80 %</span></div>
-            <div class="cap muted" id="tSync">Ultimo aggiornamento: 27/07/2026 09:41</div>
+            <div class="cap muted" id="tSync">Ultimo aggiornamento: —</div>
           </div>
-          <span class="label">Operazioni</span>
-          <div id="tDeals" class="list">
-            <div class="card" style="flex-direction:row;align-items:center;gap:12px"><div style="flex:1"><h3 class="heading">EURUSD</h3><p class="cap">BUY · 0,50 · 24/07/2026</p></div><span class="label success">+128,40</span></div>
-            <div class="card" style="flex-direction:row;align-items:center;gap:12px"><div style="flex:1"><h3 class="heading">XAUUSD</h3><p class="cap">SELL · 0,20 · 22/07/2026</p></div><span class="label error">-45,10</span></div>
-          </div>
+          <div class="kpis" id="tKpis"></div>
+          <div class="sect"><span class="s">✦</span><span class="t">Operazioni</span><span class="l"></span></div>
+          <div id="tDeals"></div>
           <p class="cap" style="text-align:center">Solo lettura (investor password). Metriche in percentuale, non importi garantiti né consulenza finanziaria.</p>
         </div>
 
@@ -335,13 +522,32 @@
 
       <!-- CRM -->
       <section class="view" data-view="crm">
-        <div class="between"><h2 class="title">Clienti</h2><span class="pill">CRM</span></div>
-        <div class="row"><button class="btn sm" style="flex:1" onclick="openCrm()">+ Nuovo</button><button class="btn sec sm" style="flex:1" onclick="crmSub('import')">Importa</button></div>
+        <div id="crmMain">
+          <div class="between"><h2 class="title">Rete</h2><span class="pill">CRM</span></div>
+          <div class="row" style="margin-top:14px"><button class="btn sm" style="flex:1" onclick="openCrm()">+ Nuovo</button><button class="btn sec sm" style="flex:1" onclick="crmSub('import')">Importa</button></div>
 
-        <div id="crmList" class="list">
-          <div class="card press"><h3 class="heading">Mario Rossi</h3><p class="cap">Membership Premium</p><p class="cap">mario.rossi@email.it</p></div>
-          <div class="card press"><h3 class="heading">Giulia Bianchi</h3><p class="cap">Pacchetto Starter</p><p class="cap">+39 340 1234567</p></div>
-          <div class="card press"><h3 class="heading">Luca Verdi</h3><p class="cap">Corso trading avanzato</p><p class="cap">luca.verdi@email.it</p></div>
+          <!-- Contatti per stato: toccabili, filtrano la lista -->
+          <div class="stats" id="crmStats" style="margin-top:14px"></div>
+
+          <!-- Ricerca + filtri: restano agganciati in alto mentre scorri -->
+          <div class="stick" id="crmStick">
+            <div class="search">
+              <span class="mag">⌕</span>
+              <input id="crmQ" placeholder="Cerca nome, email, telefono…" oninput="renderCrm()" autocomplete="off">
+              <button class="clr" id="crmClr" onclick="clearCrmQ()" aria-label="Cancella ricerca">✕</button>
+            </div>
+            <div class="segs" id="crmSegs"></div>
+            <div class="crmbar">
+              <span class="cnt" id="crmCount">—</span>
+              <select class="sortsel" id="crmSort" onchange="renderCrm()" aria-label="Ordina">
+                <option value="az">A → Z</option>
+                <option value="recent">Attività recente</option>
+                <option value="stage">Per stato</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="crmList"></div>
         </div>
 
         <div id="crmImport" style="display:none" class="list">
@@ -365,22 +571,20 @@
 
       <!-- RENEWALS -->
       <section class="view" data-view="renewals">
-        <div class="between"><h2 class="title">Scadenzario</h2></div>
+        <div class="phead"><h2>Scadenzario</h2><p>Ogni rinnovo presidiato, con avviso push prima della scadenza.</p></div>
+        <div class="kpis" id="renKpis"></div>
         <button class="btn sm" onclick="toast('Modulo «Nuovo rinnovo» (demo)')">+ Nuovo rinnovo</button>
-        <div class="list">
-          <div class="card stripe crit"><div class="between"><h3 class="heading">Mario Rossi</h3><span class="label error">Scaduto da 3 g</span></div><p class="cap">12/07/2026 · Membership Premium</p></div>
-          <div class="card stripe warn"><div class="between"><h3 class="heading">Giulia Bianchi</h3><span class="label gold">Tra 8 g</span></div><p class="cap">02/08/2026 · Pacchetto Starter</p></div>
-          <div class="card stripe ok"><div class="between"><h3 class="heading">Luca Verdi</h3><span class="label muted">Tra 45 g</span></div><p class="cap">08/09/2026 · Corso trading avanzato</p></div>
-          <div class="card stripe ok"><div class="between"><h3 class="heading">Anna Neri</h3><span class="label muted">Tra 12 g</span></div><p class="cap">06/08/2026 · Membership annuale · Rinnovato</p></div>
-        </div>
+        <div id="renList"></div>
       </section>
 
       <!-- FORMAZIONE -->
       <section class="view" data-view="formazione">
         <div id="fmMenu" class="list">
           <div class="row"><button class="btn sec sm" style="flex:1" onclick="fmSub('cal')">Calendario</button><button class="btn sec sm" id="reteBtn" style="flex:1" onclick="fmSub('rete')">Avanzamento rete</button></div>
-          <div class="card press" onclick="fmSub('course')"><h3 class="heading">Fondamenti Invisionary</h3><p class="cap">Corso introduttivo dimostrativo.</p></div>
-          <div class="card press" onclick="fmSub('course')"><h3 class="heading">Educazione finanziaria</h3><p class="cap">Basi di gestione del rischio e mindset.</p></div>
+          <div class="phead"><h2>Formazione</h2><p>Il percorso della rete, lezione dopo lezione.</p></div>
+          <div class="kpis" id="fmKpis"></div>
+          <div class="sect"><span class="s">✦</span><span class="t">I tuoi corsi</span><span class="l"></span></div>
+          <div id="fmCourses" class="list"></div>
         </div>
 
         <div id="fmCourse" style="display:none" class="list">
@@ -452,17 +656,14 @@
 
       <!-- RANK -->
       <section class="view" data-view="rank">
-        <div class="card">
-          <span class="label">Il tuo rank (esempio)</span>
-          <div class="row" style="gap:16px;align-items:center">
-            <div class="crest" style="width:72px;height:72px;font-size:30px">7</div>
-            <div style="flex:1"><h2 class="title" style="color:var(--gold)">7</h2><p class="cap">200 punti</p></div>
-          </div>
-          <div class="bar" style="margin-top:4px"><i style="width:25%"></i></div>
-          <p class="cap">Prossimo: 8 · 60 punti al traguardo.</p>
-          <p class="cap">Punti = lezioni (×10) + clienti (×5) + rinnovi attivi (×3).</p>
+        <div class="card ring" style="align-items:center;gap:14px;padding:20px 16px">
+          <span class="label">Il tuo rank</span>
+          <span class="ring" id="rankRing"></span>
+          <div id="rankPts" style="text-align:center"></div>
+          <div class="bar" style="align-self:stretch"><i id="rankBar" style="width:0%"></i></div>
+          <div id="rankBreak" style="align-self:stretch"></div>
         </div>
-        <span class="label">Classifica della rete</span>
+        <div class="sect"><span class="s">✦</span><span class="t">Classifica della rete</span><span class="l"></span></div>
         <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">1</span><div class="crest" style="width:40px;height:40px;font-size:17px">9</div><div style="flex:1"><h3 class="heading">Leader Demo</h3><p class="cap">Leader</p></div><span class="label gold">490 pt</span></div>
         <div class="card" style="flex-direction:row;align-items:center;gap:12px;border-color:var(--accent)"><span class="label muted" style="width:22px;text-align:center">2</span><div class="crest" style="width:40px;height:40px;font-size:17px">7</div><div style="flex:1"><h3 class="heading">Admin Demo · tu</h3><p class="cap">Amministratore</p></div><span class="label gold">200 pt</span></div>
         <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">3</span><div class="crest" style="width:40px;height:40px;font-size:17px">5</div><div style="flex:1"><h3 class="heading">Collaboratore Demo</h3><p class="cap">Collaboratore</p></div><span class="label gold">95 pt</span></div>
@@ -521,6 +722,44 @@
         <div id="npErr"></div>
         <button class="btn" onclick="addProspect()">Aggiungi prospect</button>
         <p class="cap">Dati personali trattati secondo GDPR (storage EU). Anteprima dimostrativa: il prospect viene aggiunto alla lista in alto.</p>
+      </div>
+    </div>
+
+    <!-- SCHEDA CONTATTO -->
+    <div class="modal" id="cdModal">
+      <div class="sheet">
+        <div class="between">
+          <div class="row" style="min-width:0">
+            <span class="av" id="cdAv" style="width:44px;height:44px;border-radius:999px;display:flex;align-items:center;
+              justify-content:center;font-size:15px;font-weight:800;border:1.5px solid currentColor;background:var(--surface2)"></span>
+            <div style="min-width:0">
+              <h3 class="heading" id="cdName" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></h3>
+              <p class="cap" id="cdProd"></p>
+            </div>
+          </div>
+          <button class="iconbtn" onclick="closeDetail()" aria-label="Chiudi">✕</button>
+        </div>
+
+        <span class="badge" id="cdBadge"></span>
+
+        <div class="acts">
+          <button class="act" onclick="quick('Chiamata avviata')"><i>✆</i>Chiama</button>
+          <button class="act" onclick="quick('Bozza email aperta')"><i>✉</i>Email</button>
+          <button class="act" onclick="quick('Messaggio pronto')"><i>💬</i>Messaggio</button>
+          <button class="act" onclick="quick('Promemoria creato')"><i>◷</i>Richiama</button>
+        </div>
+
+        <div class="card" style="gap:6px">
+          <div class="resline"><span class="muted">Email</span><span id="cdEmail" style="font-size:13px"></span></div>
+          <div class="resline"><span class="muted">Telefono</span><span id="cdPhone" style="font-size:13px"></span></div>
+          <div class="resline"><span class="muted">Ultimo contatto</span><span id="cdLast" style="font-size:13px"></span></div>
+          <div class="resline"><span class="muted">Rinnovo</span><span id="cdRen" style="font-size:13px"></span></div>
+        </div>
+
+        <span class="label">Sposta di stato</span>
+        <div class="segs" id="cdStages"></div>
+
+        <p class="cap">Dati personali trattati secondo GDPR (storage EU). Nella demo le azioni sono simulate.</p>
       </div>
     </div>
 
@@ -654,11 +893,13 @@
     updateAppbar(id);
     closeMenu();
     if(id==='dashboard') renderDashboard();
+    if(id==='renewals') renderRenewals();
+    if(id==='rank') renderRank();
     if(id==='admin') renderAdmin();
-    if(id==='formazione') fmSub('menu');
+    if(id==='formazione'){ fmSub('menu'); renderFormazione(); }
     if(id==='calc') cSub('menu');
     if(id==='crm') crmSub('list');
-    if(id==='trading') tSub('home');
+    if(id==='trading'){ tSub('home'); renderTrading(); }
   }
   function updateAppbar(id){
     const bar=document.getElementById('appbar');
@@ -676,13 +917,152 @@
     document.getElementById('reteBtn').style.display = (role==='collaborator')?'none':'';
   });
 
+  /** Anello di avanzamento: cerchio di fondo + arco proporzionale. */
+  function ringSvg(size, pct, color){
+    const r=(size-7)/2, c=2*Math.PI*r, half=size/2;
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'+
+      '<circle cx="'+half+'" cy="'+half+'" r="'+r+'" stroke="#0F0F12" stroke-width="6" fill="none"/>'+
+      '<circle cx="'+half+'" cy="'+half+'" r="'+r+'" stroke="'+color+'" stroke-width="6" fill="none" stroke-linecap="round"'+
+      ' stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+(c*(1-pct)).toFixed(1)+'"'+
+      ' transform="rotate(-90 '+half+' '+half+')"/></svg>';
+  }
+
+  const RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+  const RANK_STEP=40;
+  const LESSONS_DONE=12;
+
+  /** Numeri della rete ricavati dai contatti veri della demo. */
+  function netStats(){
+    const clienti=CONTACTS.filter(c=>c.stage==='cliente').length;
+    const rinnovi=CONTACTS.filter(c=>c.renewalIn!=null).length;
+    const ritardo=CONTACTS.filter(c=>['contattato','appuntamento'].includes(c.stage) && c.days>14).length;
+    const nuovi=CONTACTS.filter(c=>c.stage==='nuovo').length;
+    const appunt=CONTACTS.filter(c=>c.stage==='appuntamento').length;
+    const punti=LESSONS_DONE*10 + clienti*5 + rinnovi*3;
+    const idx=Math.min(RANKS.length-1, Math.floor(punti/RANK_STEP));
+    const base=idx*RANK_STEP, next=(idx+1)*RANK_STEP;
+    return {clienti,rinnovi,ritardo,nuovi,appunt,punti,idx,
+      pct: idx>=RANKS.length-1 ? 1 : (punti-base)/RANK_STEP,
+      mancano: Math.max(0,next-punti)};
+  }
+
   function renderDashboard(){
     document.getElementById('greet').textContent='Ciao, '+ROLE_NAME[role];
     document.getElementById('rolePill').textContent=ROLE_LABEL[role];
-    const c=document.getElementById('roleCard');
-    if(role==='admin') c.innerHTML='<h3 class="heading">Pannello amministratore</h3><p class="cap">Gestione utenti, ruoli e autorizzazioni della rete.</p><button class="btn sm" onclick="setScreen(\'admin\')">Apri pannello admin</button>';
-    else if(role==='leader') c.innerHTML='<h3 class="heading">La mia rete</h3><p class="cap">Qui vedi i tuoi collaboratori, i loro rinnovi e l\'avanzamento formazione.</p>';
-    else c.innerHTML='<h3 class="heading">Il mio spazio</h3><p class="cap">Clienti, rinnovi e formazione: tutto in un unico posto.</p>';
+    const s=netStats();
+
+    // Anello + barra del rank
+    document.getElementById('dashRing').innerHTML =
+      ringSvg(78, s.pct, '#C9A227') +
+      '<span class="val"><b>'+RANKS[s.idx]+'</b><i>rank</i></span>';
+    document.getElementById('dashRankTxt').innerHTML =
+      '<b style="color:var(--text)">'+s.punti+' punti</b> · '+
+      (s.idx>=RANKS.length-1 ? 'sei un Asso' : 'mancano '+s.mancano+' per '+RANKS[s.idx+1]);
+    document.getElementById('dashRankBar').style.width=(s.pct*100).toFixed(0)+'%';
+
+    // Tre numeri che contano
+    document.getElementById('dashKpis').innerHTML=
+      kpi(CONTACTS.length,'Contatti','var(--text)')+
+      kpi(s.ritardo,'Da ricontattare', s.ritardo? 'var(--accent)':'var(--text)')+
+      kpi(s.rinnovi,'Rinnovi attivi','var(--gold)');
+
+    // Azioni di oggi: ognuna porta dove serve, già filtrata
+    const items=[];
+    if(s.ritardo) items.push(['✆','var(--accent)',s.ritardo+' follow-up in ritardo','Fermi da più di 14 giorni',
+      "goCrm('ritardo')"]);
+    if(s.appunt) items.push(['◷','var(--gold)',s.appunt+' appuntamenti da confermare','Ricorda di confermare il giorno prima',
+      "goCrm('appuntamento')"]);
+    if(s.nuovi) items.push(['✦','var(--text)',s.nuovi+' nuovi da qualificare','Capisci il motivo prima di presentare',
+      "goCrm('nuovo')"]);
+    items.push(['◈','var(--gold)',s.rinnovi+' rinnovi da presidiare','Avviso push prima della scadenza',"setScreen('renewals')"]);
+    if(role==='admin') items.push(['⚙','var(--muted)','Gestisci ruoli e gerarchia','Pannello amministratore',"setScreen('admin')"]);
+    else if(role==='leader') items.push(['♦','var(--accent)','Avanzamento formazione della rete','Vedi chi è indietro',"setScreen('formazione')"]);
+    else items.push(['♦','var(--accent)','Continua la formazione','Riprendi da dove eri rimasto',"setScreen('formazione')"]);
+    items.push(['◉','var(--accent)','Chiedi all\'agente','Metodo su network, trading e imprenditoria',"setScreen('agente')"]);
+
+    document.getElementById('dashTodo').innerHTML=items.map(([ic,col,t,sub,act])=>
+      '<div class="titem" onclick="'+act+'"><span class="ic" style="color:'+col+'">'+ic+'</span>'+
+      '<span class="tx"><b>'+t+'</b><span>'+sub+'</span></span><span class="go">›</span></div>').join('');
+  }
+  function kpi(n,label,color){
+    return '<div class="kpi"><b style="color:'+color+'">'+n+'</b><span>'+label+'</span></div>';
+  }
+  /** Apre il CRM già filtrato sullo stato scelto. */
+  function goCrm(stage){ crmState.stage=stage; crmState.q=''; const q=document.getElementById('crmQ'); if(q) q.value=''; setScreen('crm'); }
+
+  /* ===== Formazione: corsi con anello di avanzamento ===== */
+  const COURSES=[
+    {t:'Fondamenti Invisionary', d:'Metodo, strumenti e primi passi in rete.', done:4, tot:6},
+    {t:'Educazione finanziaria',  d:'Gestione del rischio, interesse composto, mindset.', done:3, tot:5},
+    {t:'Vendita e obiezioni',     d:'Ascolto, domande giuste, chiusura senza pressione.', done:5, tot:5},
+    {t:'Costruire la squadra',    d:'Duplicazione, onboarding e leadership.', done:0, tot:4}
+  ];
+  function renderFormazione(){
+    const done=COURSES.reduce((a,c)=>a+c.done,0), tot=COURSES.reduce((a,c)=>a+c.tot,0);
+    const finiti=COURSES.filter(c=>c.done===c.tot).length;
+    document.getElementById('fmKpis').innerHTML=
+      kpi(done+'/'+tot,'Lezioni','var(--text)')+
+      kpi(Math.round(done/tot*100)+'%','Completato','var(--gold)')+
+      kpi(finiti,'Corsi finiti','var(--success)');
+
+    document.getElementById('fmCourses').innerHTML=COURSES.map(c=>{
+      const pct=c.done/c.tot, fin=c.done===c.tot;
+      return '<div class="card press" onclick="fmSub(\'course\')"><div class="crs">'+
+        '<span class="ring">'+ringSvg(56,pct,fin?'#2E8B57':'#C9A227')+
+          '<span class="val"><b style="font-size:14px;color:'+(fin?'var(--success)':'var(--gold)')+'">'+
+          Math.round(pct*100)+'%</b></span></span>'+
+        '<span class="meta"><b>'+esc(c.t)+'</b><span>'+esc(c.d)+'</span>'+
+          '<span style="color:'+(fin?'var(--success)':'var(--muted)')+'">'+c.done+' di '+c.tot+' lezioni'+(fin?' · completato':'')+'</span></span>'+
+        '<span class="chev" style="color:#4a4a52;font-size:17px">›</span></div></div>';
+    }).join('');
+  }
+
+  /* ===== Scadenzario: i rinnovi dei clienti, raggruppati per urgenza ===== */
+  function renderRenewals(){
+    const items=CONTACTS.filter(c=>c.renewalIn!=null).sort((a,b)=>a.renewalIn-b.renewalIn);
+    const scaduti=items.filter(c=>c.renewalIn<0).length;
+    const entro30=items.filter(c=>c.renewalIn>=0&&c.renewalIn<=30).length;
+
+    document.getElementById('renKpis').innerHTML=
+      kpi(scaduti,'Scaduti', scaduti?'var(--error)':'var(--text)')+
+      kpi(entro30,'Entro 30 giorni','var(--gold)')+
+      kpi(items.length,'Totale','var(--text)');
+
+    const GROUPS=[
+      ['Scaduti',       c=>c.renewalIn<0],
+      ['Entro 7 giorni',c=>c.renewalIn>=0&&c.renewalIn<=7],
+      ['Entro 30 giorni',c=>c.renewalIn>7&&c.renewalIn<=30],
+      ['Più avanti',    c=>c.renewalIn>30]
+    ];
+    let html='';
+    GROUPS.forEach(([title,test])=>{
+      const g=items.filter(test); if(!g.length) return;
+      html+='<div class="sect" style="margin-top:14px"><span class="s">✦</span><span class="t">'+title+' ('+g.length+')</span><span class="l"></span></div>';
+      html+=g.map(c=>{
+        const w=renewalWhen(c.renewalIn);
+        return '<div class="urow" onclick="openDetail('+c.id+')">'+
+          '<span class="when" style="color:'+w.color+'"><b>'+w.n+'</b><span>'+w.u+'</span></span>'+
+          '<span class="mid"><b>'+esc(c.name)+'</b><span>'+renewalDate(c)+' · '+esc(c.product)+'</span></span>'+
+          '<span class="badge" style="color:'+w.color+';font-size:9.5px;padding:3px 8px">'+w.txt+'</span></div>';
+      }).join('');
+    });
+    document.getElementById('renList').innerHTML=html;
+  }
+
+  /* ===== Rank: anello + scomposizione dei punti ===== */
+  function renderRank(){
+    const s=netStats();
+    document.getElementById('rankRing').innerHTML =
+      ringSvg(132, s.pct, '#C9A227') +
+      '<span class="val"><b style="font-size:44px">'+RANKS[s.idx]+'</b><i>il tuo rank</i></span>';
+    document.getElementById('rankPts').innerHTML =
+      '<div style="font-size:22px;font-weight:800;font-variant-numeric:tabular-nums">'+s.punti+' <span style="font-size:13px;font-weight:600;color:var(--muted)">punti</span></div>'+
+      '<p class="cap">'+(s.idx>=RANKS.length-1?'Hai raggiunto l\'Asso.':'Mancano '+s.mancano+' punti per il rank '+RANKS[s.idx+1]+'.')+'</p>';
+    document.getElementById('rankBar').style.width=(s.pct*100).toFixed(0)+'%';
+    document.getElementById('rankBreak').innerHTML=
+      row('Lezioni completate ×10','<b>'+(LESSONS_DONE*10)+'</b>')+
+      row('Clienti ×5','<b>'+(s.clienti*5)+'</b>')+
+      row('Rinnovi attivi ×3','<b>'+(s.rinnovi*3)+'</b>');
   }
   function renderAdmin(){
     const gate=document.getElementById('adminGate'), body=document.getElementById('adminBody');
@@ -690,7 +1070,11 @@
     else { gate.innerHTML=''; body.style.display=''; adSub('list'); }
   }
 
-  function crmSub(v){ document.getElementById('crmList').style.display=(v==='list')?'':'none'; document.getElementById('crmImport').style.display=(v==='import')?'':'none'; }
+  function crmSub(v){
+    document.getElementById('crmMain').style.display=(v==='list')?'':'none';
+    document.getElementById('crmImport').style.display=(v==='import')?'':'none';
+    if(v==='list') renderCrm();
+  }
   function fmSub(v){ ['menu','course','lesson','cal','rete'].forEach(k=>{ const el=document.getElementById('fm'+k.charAt(0).toUpperCase()+k.slice(1)); if(el) el.style.display=(k===v)?'':'none'; }); }
   function cSub(v){ document.getElementById('cMenu').style.display=(v==='menu')?'':'none'; document.getElementById('cLot').style.display=(v==='lot')?'':'none'; document.getElementById('cComp').style.display=(v==='comp')?'':'none'; if(v==='lot')calcLot(); if(v==='comp')calcComp(); }
   function adSub(v){ document.getElementById('adminList').style.display=(v==='list')?'':'none'; document.getElementById('adminDetail').style.display=(v==='detail')?'':'none'; }
@@ -905,6 +1289,55 @@
   addMsg('user','Come gestisco l\'obiezione «ci devo pensare»?');
   addMsg('assistant','Le obiezioni si ascoltano, non si combattono. Riformula («quindi il punto è il tempo, giusto?»), chiedi cosa servirebbe per superarla, poi rispondi con fatti — mai con pressione.\n\n(risposta dimostrativa)',['manuale-rete','compliance'],['Vendita']);
 
+  /* ===== Trading: curva dell'equity, statistiche e operazioni ===== */
+  // Curva d'esempio in percentuale: nessun importo promesso, solo andamento.
+  const EQUITY=[0,0.6,0.2,1.4,1.1,2.2,1.7,2.6,2.1,3.1,2.8,3.5,3.2,4.1,3.6,3.8];
+  const DEALS=[
+    {sym:'EURUSD', side:'BUY',  lot:'0,50', d:5,  pl:128.40},
+    {sym:'XAUUSD', side:'SELL', lot:'0,20', d:7,  pl:-45.10},
+    {sym:'US30',   side:'BUY',  lot:'0,30', d:9,  pl:212.00},
+    {sym:'GBPUSD', side:'SELL', lot:'0,40', d:12, pl:-88.60},
+    {sym:'NAS100', side:'BUY',  lot:'0,20', d:15, pl:96.30},
+    {sym:'EURJPY', side:'BUY',  lot:'0,30', d:18, pl:54.20}
+  ];
+
+  /** Grafico ad area dell'andamento: percorso + riempimento sfumato. */
+  function sparkline(vals,w,h){
+    const min=Math.min(...vals), max=Math.max(...vals), span=(max-min)||1, pad=6;
+    const x=i=>(i/(vals.length-1))*(w-pad*2)+pad;
+    const y=v=>h-pad-((v-min)/span)*(h-pad*2);
+    const line=vals.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ');
+    const area=line+' L '+x(vals.length-1).toFixed(1)+' '+h+' L '+x(0).toFixed(1)+' '+h+' Z';
+    const up=vals[vals.length-1]>=vals[0], col=up?'#2E8B57':'#D21F3C';
+    return '<svg class="spark" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+
+      '<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0%" stop-color="'+col+'" stop-opacity="0.28"/>'+
+      '<stop offset="100%" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>'+
+      '<path d="'+area+'" fill="url(#sg)"/>'+
+      '<path d="'+line+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'+
+      '<circle cx="'+x(vals.length-1).toFixed(1)+'" cy="'+y(vals[vals.length-1]).toFixed(1)+'" r="3" fill="'+col+'"/></svg>';
+  }
+
+  function renderTrading(){
+    document.getElementById('tSpark').innerHTML=sparkline(EQUITY,320,64);
+
+    const vinc=DEALS.filter(d=>d.pl>0).length;
+    const perc=Math.round(vinc/DEALS.length*100);
+    document.getElementById('tKpis').innerHTML=
+      kpi(DEALS.length,'Operazioni','var(--text)')+
+      kpi(perc+'%','In utile','var(--success)')+
+      kpi(EQUITY[EQUITY.length-1].toFixed(1).replace('.',',')+'%','Periodo','var(--gold)');
+
+    document.getElementById('tDeals').innerHTML=DEALS.map(d=>{
+      const win=d.pl>0, col=win?'var(--success)':'var(--error)';
+      const val=(win?'+':'−')+Math.abs(d.pl).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+      return '<div class="urow">'+
+        '<span class="when" style="color:'+col+'"><b style="font-size:13px">'+d.side+'</b><span>'+d.lot+'</span></span>'+
+        '<span class="mid"><b>'+d.sym+'</b><span>'+fmtDate(addDays(-d.d))+'</span></span>'+
+        '<span style="color:'+col+';font-weight:800;font-variant-numeric:tabular-nums;font-size:13.5px">'+val+'</span></div>';
+    }).join('');
+  }
+
   /* ===== Trading: connetti + sincronizza ===== */
   function connectMt5(){
     const btn=document.getElementById('mtConnectBtn'); const msg=document.getElementById('mtMsg');
@@ -928,26 +1361,200 @@
     }, 900);
   }
 
-  /* ===== CRM: modale nuovo prospect ===== */
+  /* ===== CRM =====
+     Pensato per liste lunghe: ricerca, filtri di stato, ordinamento, righe dense
+     e scheda contatto. I dati sono d'esempio e restano in memoria. */
+  function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  const STAGES=[
+    {k:'nuovo',        label:'Nuovo',        color:'#8A8A90'},
+    {k:'contattato',   label:'Contattato',   color:'#4C8DD8'},
+    {k:'appuntamento', label:'Appuntamento', color:'#C9A227'},
+    {k:'cliente',      label:'Cliente',      color:'#2E8B57'},
+    {k:'perso',        label:'Perso',        color:'#7A5560'}
+  ];
+  const STAGE=Object.fromEntries(STAGES.map(s=>[s.k,s]));
+
+  const PRODUCTS=['Membership Premium','Pacchetto Starter','Corso trading avanzato','Membership annuale',
+    'Percorso formazione','Mentoring 1:1','Abbonamento base'];
+  const NAMES=['Mario Rossi','Giulia Bianchi','Luca Verdi','Anna Neri','Paolo Gialli','Sara Conti','Marco Blu',
+    'Elena Ferrari','Davide Russo','Chiara Esposito','Andrea Romano','Federica Colombo','Simone Ricci','Martina Marino',
+    'Alessandro Greco','Valentina Bruno','Matteo Gallo','Francesca Costa','Stefano Fontana','Laura Caruso',
+    'Giorgio Mancini','Silvia Rizzo','Roberto Lombardi','Alessia Moretti','Nicola Barbieri','Ilaria Giordano',
+    'Fabio Villa','Beatrice Serra','Emanuele Rinaldi','Camilla Farina','Riccardo Sala','Giada Pellegrini',
+    'Tommaso Vitale','Noemi Palumbo','Gabriele Sorrentino','Arianna De Luca','Cristian Longo','Eleonora Marchetti',
+    'Samuele Testa','Michela Grassi','Vincenzo Fiore','Serena Battaglia','Filippo Coppola','Alice Martini',
+    'Lorenzo Basile','Veronica Piras','Dario Amato','Roberta Silvestri','Enrico Parisi','Monica Leone',
+    'Claudio Damico','Nadia Ferraro'];
+
+  // Distribuzione deterministica (niente Math.random: la demo resta identica a ogni apertura).
+  const CONTACTS=NAMES.map((n,i)=>{
+    const stage=STAGES[[3,1,2,0,1,3,0,2,1,3,4,1,0,2,3][i%15]].k;
+    const first=n.split(' ')[0].toLowerCase();
+    const last=n.split(' ').slice(1).join('').toLowerCase().replace(/'/g,'');
+    return {
+      id:i, name:n, product:PRODUCTS[i%PRODUCTS.length], stage,
+      email:first+'.'+last+'@email.it',
+      phone:'+39 3'+(20+i%60)+' '+(1000000+i*37219).toString().slice(0,7),
+      days:(i*13)%92,                                  // giorni dall'ultimo contatto
+      // giorni al rinnovo (negativo = già scaduto); la data si calcola da oggi,
+      // così la demo resta coerente anche fra mesi
+      // i%10 sarebbe correlato a i%15 (lcm 30) e collasserebbe su pochi valori:
+      // mescolo con il numero di giro per coprire tutte le fasce di urgenza
+      renewalIn: stage==='cliente'
+        ? [-6,-1,2,5,8,12,21,45,90,150][(i*7 + Math.floor(i/15)*3) % 10]
+        : null
+    };
+  });
+
+  const DAY=86400000;
+  function addDays(n){ const d=new Date(Date.now()+n*DAY); return d; }
+  function fmtDate(d){ const p=x=>String(x).padStart(2,'0'); return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(); }
+  function renewalDate(c){ return c.renewalIn==null?null:fmtDate(addDays(c.renewalIn)); }
+  function renewalWhen(n){
+    if(n<0) return {n:Math.abs(n), u:Math.abs(n)===1?'giorno fa':'giorni fa', txt:'Scaduto', color:'var(--error)'};
+    if(n===0) return {n:'oggi', u:'', txt:'Scade oggi', color:'var(--error)'};
+    if(n<=7)  return {n, u:n===1?'giorno':'giorni', txt:'Urgente', color:'var(--gold)'};
+    if(n<=30) return {n, u:'giorni', txt:'In arrivo', color:'var(--text)'};
+    return {n, u:'giorni', txt:'Pianificato', color:'var(--muted)'};
+  }
+
+  const crmState={q:'',stage:'tutti',sort:'az'};
+
+  function initials(n){ const p=n.split(' '); return ((p[0]||'')[0]||'')+((p[1]||'')[0]||''); }
+  function since(d){ return d===0?'oggi':(d===1?'ieri':d+' giorni fa'); }
+  function mark(text,q){
+    const t=esc(text); if(!q) return t;
+    const i=text.toLowerCase().indexOf(q); if(i<0) return t;
+    return esc(text.slice(0,i))+'<mark>'+esc(text.slice(i,i+q.length))+'</mark>'+esc(text.slice(i+q.length));
+  }
+
+  /** Filtro intelligente: chi è in trattativa ma fermo da più di 14 giorni. */
+  const isLate=c=>['contattato','appuntamento'].includes(c.stage) && c.days>14;
+
+  function crmFiltered(){
+    const q=crmState.q.trim().toLowerCase();
+    let out=CONTACTS.filter(c=>{
+      if(crmState.stage==='ritardo'){ if(!isLate(c)) return false; }
+      else if(crmState.stage!=='tutti' && c.stage!==crmState.stage) return false;
+      if(!q) return true;
+      return (c.name+' '+c.email+' '+c.phone+' '+c.product).toLowerCase().includes(q);
+    });
+    const order=Object.fromEntries(STAGES.map((s,i)=>[s.k,i]));
+    if(crmState.sort==='az')      out.sort((a,b)=>a.name.localeCompare(b.name,'it'));
+    else if(crmState.sort==='recent') out.sort((a,b)=>a.days-b.days || a.name.localeCompare(b.name,'it'));
+    else                          out.sort((a,b)=>order[a.stage]-order[b.stage] || a.name.localeCompare(b.name,'it'));
+    return out;
+  }
+
+  function renderCrm(){
+    const qEl=document.getElementById('crmQ');
+    crmState.q=qEl.value; crmState.sort=document.getElementById('crmSort').value;
+    document.getElementById('crmClr').classList.toggle('on', crmState.q.length>0);
+
+    // Statistiche per stato (toccabili)
+    document.getElementById('crmStats').innerHTML=STAGES.map(s=>{
+      const n=CONTACTS.filter(c=>c.stage===s.k).length;
+      const on=crmState.stage===s.k?' on':'';
+      return '<div class="stat'+on+'" onclick="setCrmStage(\''+s.k+'\')"><b style="color:'+s.color+'">'+n+'</b><span>'+s.label+'</span></div>';
+    }).join('');
+
+    // Filtri sticky
+    const late=CONTACTS.filter(isLate).length;
+    document.getElementById('crmSegs').innerHTML=
+      '<button class="seg'+(crmState.stage==='tutti'?' on':'')+'" onclick="setCrmStage(\'tutti\')">Tutti<b>'+CONTACTS.length+'</b></button>'+
+      (late?'<button class="seg'+(crmState.stage==='ritardo'?' on':'')+'" onclick="setCrmStage(\'ritardo\')"'+
+        (crmState.stage==='ritardo'?'':' style="border-color:#5A2430;color:#E0637A"')+'>⚠ Da ricontattare<b>'+late+'</b></button>':'')+
+      STAGES.map(s=>{
+        const n=CONTACTS.filter(c=>c.stage===s.k).length;
+        return '<button class="seg'+(crmState.stage===s.k?' on':'')+'" onclick="setCrmStage(\''+s.k+'\')">'+s.label+'<b>'+n+'</b></button>';
+      }).join('');
+
+    const rows=crmFiltered();
+    const q=crmState.q.trim().toLowerCase();
+    document.getElementById('crmCount').textContent =
+      rows.length===CONTACTS.length ? CONTACTS.length+' contatti'
+      : rows.length+' di '+CONTACTS.length;
+
+    const list=document.getElementById('crmList');
+    if(!rows.length){
+      list.innerHTML='<div class="empty"><span class="big">⌕</span><p class="cap">Nessun contatto trovato'+
+        (q?' per «'+esc(crmState.q.trim())+'»':'')+'.</p>'+
+        '<button class="btn sec sm" onclick="resetCrm()">Azzera i filtri</button></div>';
+      return;
+    }
+
+    let html='', letter='';
+    rows.forEach(c=>{
+      if(crmState.sort==='az'){
+        const l=c.name[0].toUpperCase();
+        if(l!==letter){ letter=l; html+='<div class="alpha">'+l+'</div>'; }
+      }
+      const s=STAGE[c.stage];
+      html+='<div class="crow" onclick="openDetail('+c.id+')">'+
+        '<span class="av" style="color:'+s.color+'">'+esc(initials(c.name))+'</span>'+
+        '<span class="mid">'+
+          '<span class="nm">'+mark(c.name,q)+'</span>'+
+          '<span class="sub"><span class="dot" style="background:'+s.color+';margin-right:6px"></span>'+
+            s.label+' · '+esc(c.product)+'</span>'+
+        '</span>'+
+        '<span class="chev">›</span></div>';
+    });
+    list.innerHTML=html;
+
+    // Le intestazioni alfabetiche devono agganciarsi sotto la barra di ricerca.
+    const stick=document.getElementById('crmStick');
+    if(stick) document.querySelector('.iv-phone').style.setProperty('--alphaTop',(stick.offsetHeight-18)+'px');
+  }
+
+  function setCrmStage(k){ crmState.stage=(crmState.stage===k&&k!=='tutti')?'tutti':k; renderCrm(); }
+  function clearCrmQ(){ const e=document.getElementById('crmQ'); e.value=''; renderCrm(); e.focus(); }
+  function resetCrm(){ document.getElementById('crmQ').value=''; crmState.stage='tutti'; renderCrm(); }
+
+  /* — Scheda contatto — */
+  let cdId=null;
+  function openDetail(id){
+    const c=CONTACTS.find(x=>x.id===id); if(!c) return;
+    cdId=id; const s=STAGE[c.stage];
+    document.getElementById('cdAv').textContent=initials(c.name);
+    document.getElementById('cdAv').style.color=s.color;
+    document.getElementById('cdName').textContent=c.name;
+    document.getElementById('cdProd').textContent=c.product;
+    const b=document.getElementById('cdBadge'); b.textContent=s.label; b.style.color=s.color;
+    document.getElementById('cdEmail').textContent=c.email;
+    document.getElementById('cdPhone').textContent=c.phone;
+    document.getElementById('cdLast').textContent=since(c.days);
+    document.getElementById('cdRen').textContent=renewalDate(c)||'—';
+    document.getElementById('cdStages').innerHTML=STAGES.map(st=>
+      '<button class="seg'+(st.k===c.stage?' on':'')+'" onclick="setStage(\''+st.k+'\')">'+st.label+'</button>').join('');
+    document.getElementById('cdModal').classList.add('on');
+  }
+  function closeDetail(){ document.getElementById('cdModal').classList.remove('on'); cdId=null; }
+  function setStage(k){
+    const c=CONTACTS.find(x=>x.id===cdId); if(!c) return;
+    c.stage=k; c.days=0; renderCrm(); openDetail(c.id); toast('Stato aggiornato: '+STAGE[k].label);
+  }
+  function quick(msg){ toast(msg+' (demo)'); }
+
+  /* — Nuovo prospect — */
   function openCrm(){ document.getElementById('npErr').innerHTML=''; document.getElementById('crmModal').classList.add('on'); setTimeout(()=>document.getElementById('npName').focus(),50); }
   function closeCrm(){ document.getElementById('crmModal').classList.remove('on'); }
   function addProspect(){
     const name=document.getElementById('npName').value.trim();
-    const prod=document.getElementById('npProd').value.trim();
-    const email=document.getElementById('npEmail').value.trim();
-    const phone=document.getElementById('npPhone').value.trim();
     if(!name){ document.getElementById('npErr').innerHTML='<p class="cap error">Il nome è obbligatorio.</p>'; return; }
-    const card=document.createElement('div'); card.className='card press';
-    let html='<h3 class="heading">'+esc(name)+'</h3>';
-    if(prod) html+='<p class="cap">'+esc(prod)+'</p>';
-    if(email) html+='<p class="cap">'+esc(email)+'</p>';
-    if(phone) html+='<p class="cap">'+esc(phone)+'</p>';
-    card.innerHTML=html;
-    const list=document.getElementById('crmList'); list.insertBefore(card, list.firstChild);
+    CONTACTS.push({
+      id: CONTACTS.length ? Math.max(...CONTACTS.map(c=>c.id))+1 : 0,
+      name,
+      product: document.getElementById('npProd').value.trim() || 'Da qualificare',
+      stage:'nuovo',
+      email: document.getElementById('npEmail').value.trim() || '—',
+      phone: document.getElementById('npPhone').value.trim() || '—',
+      days:0, renewalIn:null
+    });
     ['npName','npProd','npEmail','npPhone'].forEach(id=>document.getElementById(id).value='');
-    closeCrm(); crmSub('list'); toast('Prospect aggiunto');
+    closeCrm(); crmSub('list'); crmState.stage='nuovo'; document.getElementById('crmQ').value='';
+    renderCrm(); toast('Prospect aggiunto');
   }
-  function esc(s){ return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
   /* ===== Calcolatore lottaggio: tabella strumenti + math corretto per strumento ===== */
   // pipValue (valuta quotata) per 1 lotto = pip × contratto  →  poi × tasso (quotata→conto)

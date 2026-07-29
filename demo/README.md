@@ -20,12 +20,13 @@ richiede installazioni, account o connessione a Supabase.
 | Navigazione | Pulsante **Indietro** e **menu a tendina** (☰) con tutte le sezioni |
 | Agente AI | **Scrivi e invia**: risponde su vendita, marketing, network, investimenti e trading; fuori tema rifiuta. Mostra le **aree di competenza** attivate e le fonti |
 | Agente AI — voce | **Reale, non simulata**: «▶ Ascolta» legge la risposta in italiano, «🔊 Lettura» le legge tutte, 🎤 detta la domanda (Chrome/Edge) |
-| Trading ♠ | **Collega MT5** (login/server/investor password), **Classifica**, **Sincronizza** |
-| Network ♥ | **+ Nuovo** apre la finestra prospect: quello che aggiungi compare in lista; **Importa** CSV/Excel |
-| Scadenzario | Rinnovi con urgenza a colori |
-| Formazione ♦ | Corsi → lezione → video, calendario, avanzamento della rete |
+| Trading ♠ | **Grafico dell'andamento** in %, KPI (operazioni, % in utile), elenco operazioni. **Collega MT5** (login/server/investor password), **Classifica**, **Sincronizza** |
+| Dashboard | **Azioni del giorno** calcolate sui contatti veri (follow-up in ritardo, appuntamenti, nuovi da qualificare): ogni voce apre il CRM **già filtrato**. Anello del rank e tre KPI |
+| Network ♥ | **52 contatti**: ricerca istantanea (nome, email, telefono, prodotto) con evidenziazione, filtri di stato, filtro **⚠ Da ricontattare**, ordinamento A→Z / attività / stato, indice alfabetico, scheda contatto con azioni rapide e cambio stato. **+ Nuovo** aggiunge davvero; **Importa** CSV/Excel |
+| Scadenzario | Rinnovi dei clienti raggruppati per urgenza (scaduti / 7 / 30 giorni / oltre), con KPI in testa |
+| Formazione ♦ | Corsi con **anello di avanzamento**, lezione → video, calendario, avanzamento della rete |
 | Calcolatori | **Calcolo reale**: lottaggio **per strumento** (EUR/USD, XAU/USD, US30, BTC/USD…) e interesse composto |
-| Rank | Rank a carte (2 → Asso) e classifica |
+| Rank | Rank a carte (2 → Asso) con **anello di avanzamento** e scomposizione dei punti, più la classifica |
 | Community ♣ | Feedback della squadra |
 | Admin | Gestione ruoli e gerarchia (visibile solo col ruolo admin) |
 
