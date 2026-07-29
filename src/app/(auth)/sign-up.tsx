@@ -2,8 +2,9 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { Button, Screen, TextField, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, TextField, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
+import { authErrorMessage } from '@/lib/auth-errors';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { BRAND, spacing } from '@/theme';
 
@@ -31,7 +32,7 @@ export default function SignUp() {
       }
       // Se la conferma email è disattivata, la sessione parte e la guardia reindirizza.
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Registrazione non riuscita.');
+      setError(authErrorMessage(e, isSupabaseConfigured));
     } finally {
       setLoading(false);
     }
@@ -50,9 +51,13 @@ export default function SignUp() {
       </View>
 
       {!isSupabaseConfigured && (
-        <ThemedText tone="error" variant="caption">
-          Supabase non configurato: imposta il file .env prima di registrarti.
-        </ThemedText>
+        <Card style={{ gap: spacing.xs }}>
+          <ThemedText variant="heading">Database non collegato</ThemedText>
+          <ThemedText tone="muted" variant="caption">
+            Nel file <ThemedText variant="caption">.env</ThemedText> mancano l’indirizzo e la chiave
+            del progetto Supabase: senza, non è possibile creare un account.
+          </ThemedText>
+        </Card>
       )}
 
       <TextField
@@ -93,7 +98,7 @@ export default function SignUp() {
         </ThemedText>
       )}
 
-      <Button title="Registrati" onPress={onSubmit} loading={loading} />
+      <Button title="Registrati" onPress={onSubmit} loading={loading} disabled={!isSupabaseConfigured} />
 
       <View style={{ flexDirection: 'row', gap: spacing.xs, justifyContent: 'center' }}>
         <ThemedText tone="muted" variant="caption">

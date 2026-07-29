@@ -107,7 +107,8 @@ async function main() {
   const voice = evalSpeech(speech, dictation);
 
   const contact = await compile('src/lib/contact.ts', 'contact.js');
-  const crm = evalCrm(contact);
+  const authErrors = await compile('src/lib/auth-errors.ts', 'auth-errors.js');
+  const crm = evalCrm(contact, authErrors);
 
   const sync = await evalSync(brain);
 
@@ -128,8 +129,8 @@ async function main() {
 // ----------------------------------------------------------------------------
 // CRM: ricerca, ordinamento e riconoscimento dei contatti.
 // ----------------------------------------------------------------------------
-function evalCrm({ parseContact, matchesQuery, byName }) {
-  console.log('\nCRM — ricerca e contatti\n');
+function evalCrm({ parseContact, matchesQuery, byName }, { authErrorMessage }) {
+  console.log('\nCRM e accesso — ricerca, contatti, messaggi d\'errore\n');
 
   const c = (nome, contatto, prodotto) => ({ nome, contatto, prodotto, note: null });
 
@@ -153,6 +154,39 @@ function evalCrm({ parseContact, matchesQuery, byName }) {
 
     ['ordina alfabeticamente', [c('Zeta'), c('Alfa')].sort(byName).map((x) => x.nome).join(','), 'Alfa,Zeta'],
     ['ordina ignorando gli accenti', [c('Àngelo'), c('Anna')].sort(byName).map((x) => x.nome).join(','), 'Àngelo,Anna'],
+
+    // Il caso che ha fatto perdere tempo davvero: "Failed to fetch" sembra una
+    // password sbagliata, e invece manca la configurazione.
+    [
+      '«Failed to fetch» senza .env spiega che manca il database',
+      authErrorMessage(new Error('Failed to fetch'), false).includes('.env'),
+      true,
+    ],
+    [
+      '«Failed to fetch» con .env parla di connessione, non di .env',
+      authErrorMessage(new Error('Failed to fetch'), true).includes('connessione'),
+      true,
+    ],
+    [
+      'non attribuisce a credenziali un errore di rete',
+      /password|credenzial/i.test(authErrorMessage(new Error('Failed to fetch'), false)),
+      false,
+    ],
+    [
+      'traduce le credenziali errate',
+      authErrorMessage(new Error('Invalid login credentials'), true),
+      'Email o password non corretti.',
+    ],
+    [
+      'traduce l\'email non confermata',
+      authErrorMessage(new Error('Email not confirmed'), true).includes('confermare'),
+      true,
+    ],
+    [
+      'conserva un messaggio sconosciuto invece di inventarne uno',
+      authErrorMessage(new Error('Qualcosa di specifico'), true),
+      'Qualcosa di specifico',
+    ],
   ];
 
   let passed = 0;

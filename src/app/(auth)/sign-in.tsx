@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { Crest } from '@/components/Crest';
-import { Button, Screen, TextField, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, TextField, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
+import { authErrorMessage } from '@/lib/auth-errors';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { BRAND, spacing } from '@/theme';
 
@@ -22,7 +23,7 @@ export default function SignIn() {
       await signIn(email.trim(), password);
       // Al successo, la guardia in _layout reindirizza alla home protetta.
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Accesso non riuscito.');
+      setError(authErrorMessage(e, isSupabaseConfigured));
     } finally {
       setLoading(false);
     }
@@ -40,10 +41,20 @@ export default function SignIn() {
         </ThemedText>
       </View>
 
+      {/* Senza database l'accesso non può riuscire: meglio dirlo prima del
+          tentativo, invece di lasciare che fallisca con un errore tecnico. */}
       {!isSupabaseConfigured && (
-        <ThemedText tone="error" variant="caption">
-          Supabase non configurato: imposta il file .env prima di accedere.
-        </ThemedText>
+        <Card style={{ gap: spacing.xs }}>
+          <ThemedText variant="heading">Database non collegato</ThemedText>
+          <ThemedText tone="muted" variant="caption">
+            Nel file <ThemedText variant="caption">.env</ThemedText> mancano l’indirizzo e la chiave
+            del progetto Supabase, quindi l’app non ha dove verificare le credenziali. L’accesso
+            resterà bloccato finché non vengono inseriti.
+          </ThemedText>
+          <ThemedText tone="muted" variant="caption">
+            Vedi DEPLOY.md per la procedura completa.
+          </ThemedText>
+        </Card>
       )}
 
       <TextField
@@ -72,7 +83,12 @@ export default function SignIn() {
         </ThemedText>
       )}
 
-      <Button title="Accedi" onPress={onSubmit} loading={loading} />
+      <Button
+        title="Accedi"
+        onPress={onSubmit}
+        loading={loading}
+        disabled={!isSupabaseConfigured}
+      />
 
       <View style={{ flexDirection: 'row', gap: spacing.xs, justifyContent: 'center' }}>
         <ThemedText tone="muted" variant="caption">
