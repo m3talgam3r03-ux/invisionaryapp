@@ -24,7 +24,7 @@ richiede installazioni, account o connessione a Supabase.
 | Trading ♠ | **Grafico dell'andamento** in %, KPI (operazioni, % in utile), elenco operazioni. **Collega MT5** (login/server/investor password), **Classifica**, **Sincronizza** |
 | Dashboard | **Azioni del giorno** calcolate sui contatti veri (follow-up in ritardo, appuntamenti, nuovi da qualificare): ogni voce apre il CRM **già filtrato**. Anello del rank e tre KPI |
 | Network ♥ | **52 contatti**: ricerca istantanea (nome, email, telefono, prodotto) con evidenziazione, filtri di stato, filtro **⚠ Da ricontattare**, ordinamento A→Z / attività / stato, indice alfabetico, scheda contatto con azioni rapide e cambio stato. **+ Nuovo** aggiunge davvero; **Importa** CSV/Excel |
-| Scadenzario | Rinnovi dei clienti raggruppati per urgenza (scaduti / 7 / 30 giorni / oltre), con KPI in testa |
+| Scadenzario | Rinnovi raggruppati per urgenza (scaduti / 7 / 30 giorni / oltre), con KPI in testa. Su scaduti e urgenti c'è **✓ Rinnova**: un tocco e la scadenza va a **+30 giorni**, la riga cambia gruppo da sola. Toccando la riga si aprono anche **+60 / +3 mesi / +6 mesi / +1 anno** e la **data manuale** dal calendario (le date passate vengono rifiutate) |
 | Formazione ♦ | Corsi con **anello di avanzamento**, lezione → video, calendario, avanzamento della rete |
 | Calcolatori | **Calcolo reale**. Lottaggio: risultato in evidenza, **semaforo del rischio** (prudente → molto alto) e presetti 0,5/1/2%, **per strumento** (EUR/USD, XAU/USD, US30, BTC/USD…). Interesse composto: **grafico a barre** che separa versato e interessi, KPI e montante anno per anno |
 | Rank | Rank a carte (2 → Asso) con **anello di avanzamento** e scomposizione dei punti, più la classifica |

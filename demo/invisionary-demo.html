@@ -365,6 +365,18 @@
   .iv-screen::-webkit-scrollbar-thumb{background:#2E2E35}
   .iv-screen::-webkit-scrollbar-thumb:hover{background:#3C3C45}
 
+  /* Pulsante compatto sulla riga (es. «Rinnova» nello scadenzario) */
+  .rbtn{flex:0 0 auto;border-radius:999px;border:1px solid currentColor;background:#ffffff0d;
+    padding:6px 11px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;
+    cursor:pointer;font-family:var(--sans);transition:.15s;white-space:nowrap}
+  .rbtn:hover{background:#ffffff1a}
+
+  /* Data manuale nel foglio di rinnovo */
+  input[type="date"].dt{height:46px;width:100%;border-radius:var(--r-md);border:1px solid var(--border);
+    background:var(--surface2);color:var(--text);padding:0 12px;font-size:15px;font-family:var(--sans);outline:none}
+  input[type="date"].dt:focus{border-color:var(--accent)}
+  input[type="date"].dt::-webkit-calendar-picker-indicator{filter:invert(.7);cursor:pointer}
+
   /* ===== Calcolatori ===== */
   /* Card d'ingresso colorata per strumento */
   .ctool{position:relative;overflow:hidden;border-radius:var(--r-lg);border:1px solid #2B2B31;padding:18px 16px;
@@ -865,13 +877,51 @@
           <div class="resline"><span class="muted">Email</span><span id="cdEmail" style="font-size:13px"></span></div>
           <div class="resline"><span class="muted">Telefono</span><span id="cdPhone" style="font-size:13px"></span></div>
           <div class="resline"><span class="muted">Ultimo contatto</span><span id="cdLast" style="font-size:13px"></span></div>
-          <div class="resline"><span class="muted">Rinnovo</span><span id="cdRen" style="font-size:13px"></span></div>
+          <div class="resline"><span class="muted">Rinnovo</span>
+            <span class="row" style="gap:8px"><span id="cdRen" style="font-size:13px"></span>
+            <button class="rbtn" style="color:var(--gold);padding:4px 9px" onclick="renewFromDetail()">Gestisci</button></span>
+          </div>
         </div>
 
         <span class="label">Sposta di stato</span>
         <div class="segs" id="cdStages"></div>
 
         <p class="cap">Dati personali trattati secondo GDPR (storage EU). Nella demo le azioni sono simulate.</p>
+      </div>
+    </div>
+
+    <!-- RINNOVO: un tocco per i 30 giorni, oppure data scelta a mano -->
+    <div class="modal" id="renModal">
+      <div class="sheet">
+        <div class="between">
+          <div style="min-width:0">
+            <h3 class="heading" id="renName" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></h3>
+            <p class="cap" id="renProd"></p>
+          </div>
+          <button class="iconbtn" onclick="closeRenew()" aria-label="Chiudi">✕</button>
+        </div>
+
+        <div class="card" style="gap:4px">
+          <div class="resline"><span class="muted">Scadenza attuale</span><span id="renCur" style="font-size:13px"></span></div>
+          <div class="resline"><span class="muted">Stato</span><span id="renState" style="font-size:13px;font-weight:700"></span></div>
+        </div>
+
+        <button class="btn" id="renQuick" onclick="renewCurrent(30)">✓ Rinnovato · +30 giorni</button>
+
+        <div class="sect"><span class="s">✦</span><span class="t">Oppure scegli la durata</span><span class="l"></span></div>
+        <div class="presets">
+          <button class="preset" onclick="renewCurrent(60)">+60 giorni</button>
+          <button class="preset" onclick="renewCurrent(90)">+3 mesi</button>
+          <button class="preset" onclick="renewCurrent(180)">+6 mesi</button>
+          <button class="preset" onclick="renewCurrent(365)">+1 anno</button>
+        </div>
+
+        <div class="sect"><span class="s">✦</span><span class="t">Oppure una data precisa</span><span class="l"></span></div>
+        <div class="field"><input type="date" class="dt" id="renDate"></div>
+        <div id="renErr"></div>
+        <button class="btn sec" onclick="renewManual()">Imposta questa data</button>
+
+        <p class="cap">La scadenza decorre da oggi. Riceverai un avviso push nei giorni prima. Nella demo la modifica resta in memoria.</p>
       </div>
     </div>
 
@@ -1190,13 +1240,81 @@
       html+='<div class="sect" style="margin-top:14px"><span class="s">✦</span><span class="t">'+title+' ('+g.length+')</span><span class="l"></span></div>';
       html+=g.map(c=>{
         const w=renewalWhen(c.renewalIn);
-        return '<div class="urow" onclick="openDetail('+c.id+')">'+
+        // Scaduti e urgenti: rinnovo a un tocco. Sugli altri il foglio basta.
+        const quick = c.renewalIn<=7
+          ? '<button class="rbtn" style="color:'+w.color+'" onclick="event.stopPropagation();renew('+c.id+',30)">✓ Rinnova</button>'
+          : '<span class="badge" style="color:'+w.color+';font-size:9.5px;padding:3px 8px">'+w.txt+'</span>';
+        return '<div class="urow" onclick="openRenew('+c.id+')">'+
           '<span class="when" style="color:'+w.color+'"><b>'+w.n+'</b><span>'+w.u+'</span></span>'+
           '<span class="mid"><b>'+esc(c.name)+'</b><span>'+renewalDate(c)+' · '+esc(c.product)+'</span></span>'+
-          '<span class="badge" style="color:'+w.color+';font-size:9.5px;padding:3px 8px">'+w.txt+'</span></div>';
+          quick+'</div>';
       }).join('');
     });
     document.getElementById('renList').innerHTML=html;
+  }
+
+  /* ===== Rinnovo: rapido a 30 giorni oppure con data scelta a mano ===== */
+  let renId=null;
+
+  /** Data in formato yyyy-mm-dd (quello richiesto da <input type="date">). */
+  function toISO(d){ const p=x=>String(x).padStart(2,'0');
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+  /** Giorni da oggi a una data ISO, confrontando i giorni e non gli orari. */
+  function daysFromToday(iso){
+    const [y,m,d]=iso.split('-').map(Number);
+    if(!y||!m||!d) return NaN;
+    const target=new Date(y,m-1,d), today=new Date(); today.setHours(0,0,0,0);
+    return Math.round((target-today)/DAY);
+  }
+
+  function openRenew(id){
+    const c=CONTACTS.find(x=>x.id===id); if(!c) return;
+    renId=id;
+    document.getElementById('renName').textContent=c.name;
+    document.getElementById('renProd').textContent=c.product;
+    document.getElementById('renErr').innerHTML='';
+
+    const has=c.renewalIn!=null;
+    document.getElementById('renCur').textContent = has ? renewalDate(c) : 'nessuna';
+    const st=document.getElementById('renState');
+    if(has){ const w=renewalWhen(c.renewalIn);
+      st.textContent = c.renewalIn<0 ? 'Scaduto da '+Math.abs(c.renewalIn)+' giorni'
+                     : (c.renewalIn===0 ? 'Scade oggi' : 'Fra '+c.renewalIn+' giorni');
+      st.style.color=w.color;
+    } else { st.textContent='—'; st.style.color='var(--muted)'; }
+
+    // Il pulsante mostra già la data che otterrai: niente sorprese.
+    document.getElementById('renQuick').textContent='✓ Rinnovato · +30 giorni → '+fmtDate(addDays(30));
+    // Proposta di partenza per il selettore: fra 30 giorni.
+    document.getElementById('renDate').value=toISO(addDays(30));
+    document.getElementById('renModal').classList.add('on');
+  }
+  function closeRenew(){ document.getElementById('renModal').classList.remove('on'); renId=null; }
+
+  /** Sposta la scadenza di `days` giorni a partire da oggi. */
+  function renew(id, days){
+    const c=CONTACTS.find(x=>x.id===id); if(!c) return;
+    c.renewalIn=days;
+    if(c.stage!=='cliente') c.stage='cliente';   // un rinnovo attivo è un cliente
+    closeRenew();
+    renderRenewals(); renderCrm(); renderDashboard();
+    toast('Rinnovato: prossima scadenza il '+fmtDate(addDays(days)));
+  }
+
+  /** Rinnova il contatto aperto nel foglio. */
+  function renewCurrent(days){ if(renId!=null) renew(renId, days); }
+
+  /** Dalla scheda contatto: chiude il dettaglio e apre il foglio di rinnovo. */
+  function renewFromDetail(){ const id=cdId; closeDetail(); openRenew(id); }
+
+  /** Imposta la scadenza a una data scelta dal calendario. */
+  function renewManual(){
+    const iso=document.getElementById('renDate').value;
+    const err=document.getElementById('renErr');
+    const n=daysFromToday(iso);
+    if(!iso || !Number.isFinite(n)){ err.innerHTML='<p class="cap error">Scegli una data valida.</p>'; return; }
+    if(n<0){ err.innerHTML='<p class="cap error">La data è nel passato: scegline una da oggi in avanti.</p>'; return; }
+    renew(renId, n);
   }
 
   /* ===== Rank: anello + scomposizione dei punti ===== */
