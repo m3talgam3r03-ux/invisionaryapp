@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, Card, ThemedText } from '@/components/ui';
+import { Button, Card, EmptyState, ThemedText } from '@/components/ui';
 import { useFeedbackPosts } from '@/lib/feedback';
 import { radius, spacing, useTheme } from '@/theme';
 import type { FeedbackPost } from '@/types/models';
@@ -37,19 +37,16 @@ export default function Community() {
           isLoading ? (
             <ThemedText tone="muted">Caricamento…</ThemedText>
           ) : isError ? (
-            <View style={{ gap: spacing.sm }}>
-              <ThemedText tone="error">Impossibile caricare la community.</ThemedText>
-              <ThemedText tone="muted" variant="caption">
-                {error instanceof Error ? error.message : 'Errore'} — verifica .env e la migrazione 0007.
-              </ThemedText>
-            </View>
+            <EmptyState
+              tone="error"
+              title="Impossibile caricare la community"
+              hint={error instanceof Error ? error.message : 'Errore sconosciuto.'}
+            />
           ) : (
-            <View style={{ gap: spacing.sm }}>
-              <ThemedText variant="heading">Ancora nessun feedback</ThemedText>
-              <ThemedText tone="muted" variant="caption">
-                Condividi un traguardo o un pensiero con la tua rete.
-              </ThemedText>
-            </View>
+            <EmptyState
+              title="Ancora nessun feedback"
+              hint="Condividi un traguardo o un pensiero con la tua rete."
+            />
           )
         }
         renderItem={({ item }) => <PostCard post={item} />}

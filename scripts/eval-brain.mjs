@@ -106,19 +106,64 @@ async function main() {
   const dictation = await compile('src/lib/dictation.ts', 'dictation.js');
   const voice = evalSpeech(speech, dictation);
 
+  const contact = await compile('src/lib/contact.ts', 'contact.js');
+  const crm = evalCrm(contact);
+
   const sync = await evalSync(brain);
 
   let live = null;
   if (LIVE) live = await evalLive();
 
-  const failed = offline.failed + voice.failed + sync.failed + (live?.failed ?? 0);
+  const failed = offline.failed + voice.failed + crm.failed + sync.failed + (live?.failed ?? 0);
   console.log(
     `\n${failed === 0 ? '✔' : '✖'} offline ${offline.passed}/${offline.total}` +
       ` · voce ${voice.passed}/${voice.total}` +
+      ` · crm ${crm.passed}/${crm.total}` +
       ` · coerenza ${sync.passed}/${sync.total}` +
       (live ? ` · live ${live.passed}/${live.total}` : ' · live non eseguito (--live)'),
   );
   if (failed > 0) process.exit(1);
+}
+
+// ----------------------------------------------------------------------------
+// CRM: ricerca, ordinamento e riconoscimento dei contatti.
+// ----------------------------------------------------------------------------
+function evalCrm({ parseContact, matchesQuery, byName }) {
+  console.log('\nCRM — ricerca e contatti\n');
+
+  const c = (nome, contatto, prodotto) => ({ nome, contatto, prodotto, note: null });
+
+  const checks = [
+    ['riconosce un telefono', parseContact('+39 333 123 4567').kind, 'phone'],
+    ['normalizza il numero', parseContact('+39 333 123 4567').value, '+393331234567'],
+    ['costruisce il link WhatsApp', parseContact('+39 333 123 4567').whatsapp, 'https://wa.me/393331234567'],
+    ['riconosce una email', parseContact('Mario.Rossi@Gmail.com').kind, 'email'],
+    ['minuscola la email', parseContact('Mario.Rossi@Gmail.com').mailto, 'mailto:mario.rossi@gmail.com'],
+    ['estrae la email da un testo', parseContact('scrivimi a info@tizio.it grazie').value, 'info@tizio.it'],
+    ['non offre azioni su un contatto non valido', parseContact('citofono 3').kind, 'unknown'],
+    ['regge un contatto vuoto', parseContact(null).kind, 'unknown'],
+
+    ['la ricerca ignora le maiuscole', matchesQuery(c('Mario Rossi'), 'mario'), true],
+    ['la ricerca ignora gli accenti', matchesQuery(c('Niccolò Verdi'), 'niccolo'), true],
+    ['la ricerca accetta parole parziali', matchesQuery(c('Mario Rossi'), 'mario ross'), true],
+    ['la ricerca guarda anche il contatto', matchesQuery(c('Mario', 'mario@gmail.com'), 'gmail'), true],
+    ['la ricerca guarda anche il prodotto', matchesQuery(c('Mario', null, 'Polizza vita'), 'polizza'), true],
+    ['la ricerca esclude chi non corrisponde', matchesQuery(c('Mario Rossi'), 'giovanni'), false],
+    ['una ricerca vuota tiene tutti', matchesQuery(c('Mario Rossi'), '   '), true],
+
+    ['ordina alfabeticamente', [c('Zeta'), c('Alfa')].sort(byName).map((x) => x.nome).join(','), 'Alfa,Zeta'],
+    ['ordina ignorando gli accenti', [c('Àngelo'), c('Anna')].sort(byName).map((x) => x.nome).join(','), 'Àngelo,Anna'],
+  ];
+
+  let passed = 0;
+  for (const [name, got, expected] of checks) {
+    const ok = got === expected;
+    if (ok) passed++;
+    console.log(`  ${ok ? '✓' : '✗'} ${name}`);
+    if (!ok) console.log(`     atteso ${JSON.stringify(expected)}, ottenuto ${JSON.stringify(got)}`);
+  }
+
+  return { passed, total: checks.length, failed: checks.length - passed };
 }
 
 // ----------------------------------------------------------------------------

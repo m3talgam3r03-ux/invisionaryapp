@@ -73,9 +73,7 @@ export const Crest = memo(function Crest({ size = 96, variant = 'mark' }: CrestP
               fontWeight="800"
               fill={line}
               textAnchor="middle"
-              rotation={l.rot}
-              originX={l.x}
-              originY={l.y}
+              transform={`rotate(${l.rot} ${l.x} ${l.y})`}
             >
               {l.ch}
             </SvgText>
@@ -91,9 +89,7 @@ export const Crest = memo(function Crest({ size = 96, variant = 'mark' }: CrestP
               fontWeight="700"
               fill={line}
               textAnchor="middle"
-              rotation={l.rot}
-              originX={l.x}
-              originY={l.y}
+              transform={`rotate(${l.rot} ${l.x} ${l.y})`}
             >
               {l.ch}
             </SvgText>

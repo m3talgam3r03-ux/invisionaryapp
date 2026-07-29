@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, Card, ThemedText } from '@/components/ui';
+import { Button, Card, EmptyState, ThemedText } from '@/components/ui';
 import { daysUntil, formatDateIT } from '@/lib/date';
 import { useRenewals } from '@/lib/renewals';
 import { spacing, useTheme } from '@/theme';
@@ -37,22 +37,16 @@ export default function RenewalsList() {
           isLoading ? (
             <ThemedText tone="muted">Caricamento scadenzario…</ThemedText>
           ) : isError ? (
-            <View style={{ gap: spacing.sm }}>
-              <ThemedText tone="error">Impossibile caricare i rinnovi.</ThemedText>
-              <ThemedText tone="muted" variant="caption">
-                {error instanceof Error ? error.message : 'Errore sconosciuto'}
-              </ThemedText>
-              <ThemedText tone="muted" variant="caption">
-                Verifica il file .env e che la migrazione 0003 sia applicata.
-              </ThemedText>
-            </View>
+            <EmptyState
+              tone="error"
+              title="Impossibile caricare i rinnovi"
+              hint={error instanceof Error ? error.message : 'Errore sconosciuto.'}
+            />
           ) : (
-            <View style={{ gap: spacing.sm }}>
-              <ThemedText variant="heading">Nessun rinnovo</ThemedText>
-              <ThemedText tone="muted" variant="caption">
-                Aggiungi una scadenza per iniziare a monitorarla.
-              </ThemedText>
-            </View>
+            <EmptyState
+              title="Nessun rinnovo"
+              hint="Aggiungi una scadenza per iniziare a monitorarla."
+            />
           )
         }
         renderItem={({ item }) => (

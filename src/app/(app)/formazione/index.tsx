@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
-import { Button, Card, Screen, ThemedText } from '@/components/ui';
+import { Button, Card, EmptyState, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { useCourses } from '@/lib/courses';
 import { spacing } from '@/theme';
@@ -44,12 +44,10 @@ export default function FormazioneIndex() {
       )}
 
       {courses?.length === 0 && (
-        <View style={{ gap: spacing.sm }}>
-          <ThemedText variant="heading">Nessun corso</ThemedText>
-          <ThemedText tone="muted" variant="caption">
-            I corsi vengono gestiti dall'amministratore. Puoi caricare il seed dimostrativo.
-          </ThemedText>
-        </View>
+        <EmptyState
+          title="Nessun corso"
+          hint="I corsi vengono gestiti dall'amministratore. Puoi caricare il seed dimostrativo."
+        />
       )}
 
       {courses?.map((c) => (

@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
-import { Button, Card, Screen, ThemedText } from '@/components/ui';
+import { Button, Card, EmptyState, Screen, ThemedText } from '@/components/ui';
 import { formatNumber } from '@/lib/format';
 import { useSyncAccounts, useTradingAccounts } from '@/lib/trading';
 import { spacing } from '@/theme';
@@ -44,12 +44,10 @@ export default function Trading() {
         </ThemedText>
       )}
       {accounts?.length === 0 && (
-        <View style={{ gap: spacing.sm }}>
-          <ThemedText variant="heading">Nessun account collegato</ThemedText>
-          <ThemedText tone="muted" variant="caption">
-            Collega un account MT5 in sola lettura con la tua investor password.
-          </ThemedText>
-        </View>
+        <EmptyState
+          title="Nessun account collegato"
+          hint="Collega un account MT5 in sola lettura con la tua investor password."
+        />
       )}
 
       {accounts?.map((a) => (
