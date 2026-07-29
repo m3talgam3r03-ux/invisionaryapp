@@ -365,6 +365,49 @@
   .iv-screen::-webkit-scrollbar-thumb{background:#2E2E35}
   .iv-screen::-webkit-scrollbar-thumb:hover{background:#3C3C45}
 
+  /* ===== Calcolatori ===== */
+  /* Card d'ingresso colorata per strumento */
+  .ctool{position:relative;overflow:hidden;border-radius:var(--r-lg);border:1px solid #2B2B31;padding:18px 16px;
+    display:flex;align-items:center;gap:14px;cursor:pointer;transition:.18s;
+    background:linear-gradient(135deg,#1F1F24,#17171B)}
+  .ctool:hover{transform:translateY(-2px);border-color:#43434E}
+  .ctool::after{content:'';position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:999px;
+    background:radial-gradient(circle,currentColor,transparent 68%);opacity:.16;pointer-events:none}
+  .ctool .ci{width:48px;height:48px;border-radius:14px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    font-size:22px;border:1.5px solid currentColor;background:#ffffff0d}
+  .ctool .cm{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .ctool .cm b{font-size:16.5px;font-weight:700;color:var(--text)}
+  .ctool .cm span{font-size:12px;color:var(--muted)}
+
+  /* Risultato in evidenza */
+  .hero{border-radius:var(--r-lg);padding:18px 16px;display:flex;flex-direction:column;align-items:center;gap:5px;
+    border:1px solid currentColor;background:linear-gradient(180deg,#ffffff12,#ffffff05)}
+  .hero .big{font-size:40px;font-weight:800;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .hero .lb{font-size:10.5px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted)}
+  .hero .sb{font-size:12.5px;color:var(--muted);text-align:center}
+
+  /* Indicatore di rischio a semaforo */
+  .gauge{display:flex;flex-direction:column;gap:7px}
+  .gtrack{height:10px;border-radius:6px;overflow:hidden;display:flex;background:#0F0F12;
+    box-shadow:0 1px 0 0 #ffffff08 inset}
+  .gtrack i{height:100%}
+  .gmark{position:relative;height:14px}
+  .gmark i{position:absolute;top:-1px;width:3px;height:14px;border-radius:2px;background:var(--text);
+    box-shadow:0 0 0 2px var(--bg);transition:left .25s}
+  .gscale{display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);letter-spacing:.06em}
+
+  /* Grafico a barre impilate (interesse composto) */
+  .chart{width:100%;height:150px;display:block}
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+  /* Presetti rapidi */
+  .presets{display:flex;gap:7px;flex-wrap:wrap}
+  .preset{background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:999px;
+    padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:.15s}
+  .preset:hover{color:var(--text);border-color:#43434E}
+
   /* Accessibilità: focus visibile ovunque */
   .btn:focus-visible,.seg:focus-visible,.chip:focus-visible,.iconbtn:focus-visible,
   input:focus-visible,select:focus-visible,.act:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
@@ -417,7 +460,7 @@
 
       <!-- DASHBOARD -->
       <section class="view" data-view="dashboard">
-        <div class="headrow">
+        <div class="headrow" style="order:-2">
           <span class="press" onclick="setScreen('agente')" title="Agente AI" id="dashCrest" style="cursor:pointer;display:inline-flex"></span>
           <div style="flex:1;display:flex;flex-direction:column;gap:6px">
             <h2 class="title" id="greet">Ciao, Admin</h2>
@@ -440,12 +483,15 @@
         <div class="sect"><span class="s">✦</span><span class="t">Le tue azioni di oggi</span><span class="l"></span></div>
         <div class="card" style="padding:6px 12px"><div class="todo" id="dashTodo"></div></div>
 
+        <!-- Per il collaboratore questo blocco viene spostato in cima (vedi renderDashboard) -->
+        <div id="dashPillars" style="display:flex;flex-direction:column;gap:16px">
         <div class="sect"><span class="s">✦</span><span class="t">I quattro pilastri</span><span class="l"></span></div>
         <div class="pillars">
           <div class="pillar press" onclick="setScreen('trading')"><span class="ace" style="color:var(--text)"><b>A</b><i>♠</i></span><span class="label" style="color:var(--text)">Trading</span><span class="cap accent">Apri →</span></div>
           <div class="pillar press" onclick="setScreen('crm')"><span class="ace accent"><b>A</b><i>♥</i></span><span class="label" style="color:var(--text)">Network</span><span class="cap accent">Apri →</span></div>
           <div class="pillar press" onclick="setScreen('formazione')"><span class="ace low accent"><b>A</b><i>♦</i></span><span class="label" style="color:var(--text)">Formazione</span><span class="cap accent">Apri →</span></div>
           <div class="pillar press" onclick="setScreen('community')"><span class="ace low" style="color:var(--text)"><b>A</b><i>♣</i></span><span class="label" style="color:var(--text)">Community</span><span class="cap accent">Apri →</span></div>
+        </div>
         </div>
         <button class="btn sec" onclick="setScreen('login')">Esci</button>
         <p class="cap" style="text-align:center">Contenuti a scopo educativo e informativo. Nessuna promessa di rendimento né consulenza finanziaria personalizzata.</p>
@@ -531,6 +577,8 @@
 
           <!-- Ricerca + filtri: restano agganciati in alto mentre scorri -->
           <div class="stick" id="crmStick">
+            <!-- Solo l'admin: sceglie di chi vedere il CRM -->
+            <div id="crmOwnerBox" style="display:none"></div>
             <div class="search">
               <span class="mag">⌕</span>
               <input id="crmQ" placeholder="Cerca nome, email, telefono…" oninput="renderCrm()" autocomplete="off">
@@ -620,37 +668,104 @@
       <!-- CALCOLATORI -->
       <section class="view" data-view="calc">
         <div id="cMenu" class="list">
-          <div class="card press" onclick="cSub('lot')"><h3 class="heading">Calcolatore lottaggio</h3><p class="cap">Dimensione della posizione per strumento (Forex, oro, indici, cripto), rischio % e stop loss.</p></div>
-          <div class="card press" onclick="cSub('comp')"><h3 class="heading">Interesse composto</h3><p class="cap">Proiezione del montante con versamenti periodici.</p></div>
+          <div class="phead"><h2>Calcolatori</h2><p>Due strumenti per decidere con i numeri, non a sensazione.</p></div>
+          <div class="ctool" style="color:#C8102E" onclick="cSub('lot')">
+            <span class="ci">⚖</span>
+            <span class="cm"><b>Lottaggio e rischio</b><span>Quanto aprire in base al capitale, al rischio % e allo stop</span></span>
+            <span class="chev" style="color:#4a4a52;font-size:19px">›</span>
+          </div>
+          <div class="ctool" style="color:#C9A227" onclick="cSub('comp')">
+            <span class="ci">📈</span>
+            <span class="cm"><b>Interesse composto</b><span>Come cresce un capitale con versamenti costanti nel tempo</span></span>
+            <span class="chev" style="color:#4a4a52;font-size:19px">›</span>
+          </div>
           <p class="cap">Strumenti a scopo educativo. I risultati sono stime, non consulenza finanziaria.</p>
         </div>
 
         <div id="cLot" style="display:none" class="list">
           <button class="btn sec sm" style="align-self:flex-start" onclick="cSub('menu')">‹ Calcolatori</button>
-          <div class="field"><span class="label">Strumento</span><select id="lotInstr" class="sel" onchange="onInstr()"></select></div>
+
+          <!-- Risultato in cima: è la risposta che stai cercando -->
+          <div class="hero" id="lotHero"></div>
+
+          <!-- Semaforo del rischio -->
+          <div class="card" style="gap:10px">
+            <div class="between"><span class="label">Rischio per operazione</span><span id="lotRiskTag" style="font-size:12px;font-weight:800"></span></div>
+            <div class="gauge">
+              <div class="gtrack">
+                <i style="flex:1;background:#2E8B57"></i><i style="flex:1;background:#C9A227"></i>
+                <i style="flex:1;background:#D97706"></i><i style="flex:2;background:#D21F3C"></i>
+              </div>
+              <div class="gmark"><i id="lotMark" style="left:0%"></i></div>
+              <div class="gscale"><span>0%</span><span>1%</span><span>2%</span><span>3%</span><span>5%+</span></div>
+            </div>
+            <p class="cap" id="lotRiskTip"></p>
+          </div>
+
+          <div class="sect"><span class="s">✦</span><span class="t">Strumento</span><span class="l"></span></div>
+          <div class="field"><select id="lotInstr" class="sel" onchange="onInstr()"></select></div>
           <div class="card" style="gap:5px">
             <div class="resline"><span class="muted">Categoria</span><span id="iGroup">—</span></div>
             <div class="resline"><span class="muted">Contratto (1 lotto)</span><span id="iContract">—</span></div>
             <div class="resline"><span class="muted">Valore <span class="uA">pip</span>/lotto</span><span id="iPip">—</span></div>
           </div>
-          <div class="field"><span class="label">Saldo conto</span><input id="lotSaldo" value="10000" oninput="calcLot()"></div>
-          <div class="field"><span class="label">Valuta conto</span><input id="lotVal" value="EUR" oninput="calcLot()"></div>
-          <div class="field"><span class="label">Rischio %</span><input id="lotRisk" value="1" oninput="calcLot()"></div>
-          <div class="field"><span class="label">Stop loss (<span class="uB">pips</span>)</span><input id="lotSl" value="20" oninput="calcLot()"></div>
-          <div class="field"><span class="label">Tasso <span id="iQuote">USD</span> → conto</span><input id="lotRate" value="1" oninput="calcLot()"><span class="cap" id="rateHint"></span></div>
-          <div class="card"><span class="label">Risultato</span><div id="lotRes"></div></div>
+
+          <div class="sect"><span class="s">✦</span><span class="t">I tuoi numeri</span><span class="l"></span></div>
+          <div class="presets">
+            <button class="preset" onclick="lotPreset(0.5)">Prudente 0,5%</button>
+            <button class="preset" onclick="lotPreset(1)">Standard 1%</button>
+            <button class="preset" onclick="lotPreset(2)">Aggressivo 2%</button>
+          </div>
+          <div class="row" style="gap:10px;align-items:flex-start">
+            <div class="field" style="flex:1"><span class="label">Saldo conto</span><input id="lotSaldo" value="10000" inputmode="decimal" oninput="calcLot()"></div>
+            <div class="field" style="width:98px"><span class="label">Valuta</span><input id="lotVal" value="EUR" oninput="calcLot()"></div>
+          </div>
+          <div class="row" style="gap:10px;align-items:flex-start">
+            <div class="field" style="flex:1"><span class="label">Rischio %</span><input id="lotRisk" value="1" inputmode="decimal" oninput="calcLot()"></div>
+            <div class="field" style="flex:1"><span class="label">Stop (<span class="uB">pips</span>)</span><input id="lotSl" value="20" inputmode="decimal" oninput="calcLot()"></div>
+          </div>
+          <div class="field"><span class="label">Tasso <span id="iQuote">USD</span> → conto</span><input id="lotRate" value="1" inputmode="decimal" oninput="calcLot()"><span class="cap" id="rateHint"></span></div>
+
+          <div class="sect"><span class="s">✦</span><span class="t">Dettaglio</span><span class="l"></span></div>
+          <div class="card"><div id="lotRes"></div></div>
           <p class="cap">Formula: Lotti = Rischio ÷ (Stop × valore <span class="uA">pip</span> per lotto). Le convenzioni (dimensione contratto, valore pip) variano per broker. Stima educativa, non consulenza finanziaria.</p>
         </div>
 
         <div id="cComp" style="display:none" class="list">
           <button class="btn sec sm" style="align-self:flex-start" onclick="cSub('menu')">‹ Calcolatori</button>
-          <div class="field"><span class="label">Capitale iniziale (€)</span><input id="cCap" value="5000" oninput="calcComp()"></div>
-          <div class="field"><span class="label">Versamento mensile (€)</span><input id="cVers" value="200" oninput="calcComp()"></div>
-          <div class="field"><span class="label">Tasso annuo %</span><input id="cRate" value="6" oninput="calcComp()"></div>
-          <div class="field"><span class="label">Anni</span><input id="cYears" value="10" oninput="calcComp()"></div>
-          <div class="card"><span class="label">Risultato</span><div id="compRes"></div></div>
-          <div class="card"><span class="label">Montante per anno</span><div id="compYears" style="margin-top:6px"></div></div>
-          <p class="cap">Proiezione a scopo educativo, non consulenza finanziaria. Nessuna garanzia di rendimento.</p>
+
+          <div class="hero" id="compHero"></div>
+
+          <!-- Grafico: quanto hai versato vs quanto hanno reso gli interessi -->
+          <div class="card" style="gap:10px">
+            <span class="label">Crescita anno per anno</span>
+            <div id="compChart"></div>
+            <div class="legend">
+              <span><i style="background:#4C8DD8"></i>Versato</span>
+              <span><i style="background:#C9A227"></i>Interessi</span>
+            </div>
+          </div>
+
+          <div class="kpis" id="compKpis"></div>
+
+          <div class="sect"><span class="s">✦</span><span class="t">I tuoi numeri</span><span class="l"></span></div>
+          <div class="presets">
+            <button class="preset" onclick="compPreset(100,5,10)">100 €/mese · 10 anni</button>
+            <button class="preset" onclick="compPreset(200,6,20)">200 €/mese · 20 anni</button>
+            <button class="preset" onclick="compPreset(500,6,30)">500 €/mese · 30 anni</button>
+          </div>
+          <div class="row" style="gap:10px;align-items:flex-start">
+            <div class="field" style="flex:1"><span class="label">Capitale iniziale €</span><input id="cCap" value="5000" inputmode="decimal" oninput="calcComp()"></div>
+            <div class="field" style="flex:1"><span class="label">Ogni mese €</span><input id="cVers" value="200" inputmode="decimal" oninput="calcComp()"></div>
+          </div>
+          <div class="row" style="gap:10px;align-items:flex-start">
+            <div class="field" style="flex:1"><span class="label">Tasso annuo %</span><input id="cRate" value="6" inputmode="decimal" oninput="calcComp()"></div>
+            <div class="field" style="flex:1"><span class="label">Anni</span><input id="cYears" value="10" inputmode="decimal" oninput="calcComp()"></div>
+          </div>
+
+          <div class="sect"><span class="s">✦</span><span class="t">Montante per anno</span><span class="l"></span></div>
+          <div class="card" style="padding:6px 14px"><div id="compYears"></div></div>
+          <p class="cap">Il tasso è un'ipotesi che scegli tu: i mercati non danno rendimenti costanti. Proiezione a scopo educativo, non consulenza finanziaria. Nessuna garanzia di rendimento.</p>
         </div>
       </section>
 
@@ -663,11 +778,8 @@
           <div class="bar" style="align-self:stretch"><i id="rankBar" style="width:0%"></i></div>
           <div id="rankBreak" style="align-self:stretch"></div>
         </div>
-        <div class="sect"><span class="s">✦</span><span class="t">Classifica della rete</span><span class="l"></span></div>
-        <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">1</span><div class="crest" style="width:40px;height:40px;font-size:17px">9</div><div style="flex:1"><h3 class="heading">Leader Demo</h3><p class="cap">Leader</p></div><span class="label gold">490 pt</span></div>
-        <div class="card" style="flex-direction:row;align-items:center;gap:12px;border-color:var(--accent)"><span class="label muted" style="width:22px;text-align:center">2</span><div class="crest" style="width:40px;height:40px;font-size:17px">7</div><div style="flex:1"><h3 class="heading">Admin Demo · tu</h3><p class="cap">Amministratore</p></div><span class="label gold">200 pt</span></div>
-        <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">3</span><div class="crest" style="width:40px;height:40px;font-size:17px">5</div><div style="flex:1"><h3 class="heading">Collaboratore Demo</h3><p class="cap">Collaboratore</p></div><span class="label gold">95 pt</span></div>
-        <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">4</span><div class="crest" style="width:40px;height:40px;font-size:17px">4</div><div style="flex:1"><h3 class="heading">Marco Blu</h3><p class="cap">Collaboratore</p></div><span class="label gold">75 pt</span></div>
+        <!-- La classifica generale è di chi guida la rete: nascosta al collaboratore -->
+        <div id="rankBoard"></div>
         <p class="cap" style="text-align:center">Avanzamento a scopo motivazionale. Le metriche di trading (in percentuale) arrivano dall'integrazione MT5.</p>
       </section>
 
@@ -859,31 +971,51 @@
   const ROLE_LABEL = {admin:'Amministratore',leader:'Leader',collaborator:'Collaboratore'};
   const ROLE_NAME = {admin:'Admin',leader:'Leader',collaborator:'Collaboratore'};
 
-  // tab esterne (comodità desktop)
-  const tabs = document.getElementById('tabs');
-  [['login','Login'],...SCREENS].forEach(([id,label])=>{
-    const b=document.createElement('button'); b.className='iv-tab'; b.textContent=label; b.dataset.s=id;
-    b.onclick=()=>setScreen(id); tabs.appendChild(b);
-  });
+  /**
+   * Permessi per ruolo (rispecchiano le RLS dell'app):
+   * - lo scadenzario dei rinnovi è di chi guida la rete (leader e admin);
+   * - il pannello admin è solo dell'admin.
+   */
+  function canSee(v){
+    if(v==='renewals') return role!=='collaborator';
+    if(v==='admin')    return role==='admin';
+    return true;
+  }
 
-  // menu a tendina interno
+  const tabs = document.getElementById('tabs');
   const navMenu = document.getElementById('navMenu');
-  MENU.forEach(([id,glyph,label])=>{
-    const b=document.createElement('button');
-    const red = (glyph==='♥'||glyph==='♦');
-    b.innerHTML='<span class="s" style="color:'+(red?'var(--accent)':'var(--muted)')+'">'+glyph+'</span>'+label;
-    b.onclick=()=>{ setScreen(id); };
-    navMenu.appendChild(b);
-  });
-  const sep=document.createElement('div'); sep.className='sep'; navMenu.appendChild(sep);
-  const out=document.createElement('button'); out.className='logout'; out.innerHTML='<span class="s">⎋</span>Esci';
-  out.onclick=()=>{ setScreen('login'); }; navMenu.appendChild(out);
+
+  /** Ricostruisce tab e menu in base al ruolo: le voci non permesse non compaiono. */
+  function renderNav(){
+    tabs.innerHTML='';
+    [['login','Login'],...SCREENS].filter(([id])=>id==='login'||canSee(id)).forEach(([id,label])=>{
+      const b=document.createElement('button'); b.className='iv-tab'; b.textContent=label; b.dataset.s=id;
+      b.onclick=()=>setScreen(id); tabs.appendChild(b);
+    });
+    const cur=document.querySelector('.view.on');
+    if(cur) document.querySelectorAll('.iv-tab').forEach(t=>t.classList.toggle('on', t.dataset.s===cur.dataset.view));
+
+    navMenu.innerHTML='';
+    MENU.filter(([id])=>canSee(id)).forEach(([id,glyph,label])=>{
+      const b=document.createElement('button');
+      const red = (glyph==='♥'||glyph==='♦');
+      b.innerHTML='<span class="s" style="color:'+(red?'var(--accent)':'var(--muted)')+'">'+glyph+'</span>'+label;
+      b.onclick=()=>{ setScreen(id); };
+      navMenu.appendChild(b);
+    });
+    const sep=document.createElement('div'); sep.className='sep'; navMenu.appendChild(sep);
+    const out=document.createElement('button'); out.className='logout'; out.innerHTML='<span class="s">⎋</span>Esci';
+    out.onclick=()=>{ setScreen('login'); }; navMenu.appendChild(out);
+  }
+  renderNav();
 
   function toggleMenu(e){ if(e) e.stopPropagation(); navMenu.classList.toggle('on'); }
   function closeMenu(){ navMenu.classList.remove('on'); }
   document.addEventListener('click',(e)=>{ if(!e.target.closest('.navwrap')) closeMenu(); });
 
   function setScreen(id, back){
+    // Rete di sicurezza: anche raggiunta di lato, una schermata non permessa non si apre.
+    if(id!=='login' && !canSee(id)){ toast('Sezione riservata a leader e amministratori'); id='dashboard'; }
     const cur = document.querySelector('.view.on') ? document.querySelector('.view.on').dataset.view : null;
     if(!back && cur && cur!==id && id!=='login') history.push(cur);
     if(id==='login') history=[];
@@ -913,8 +1045,12 @@
   document.querySelectorAll('.rb').forEach(r=>r.onclick=()=>{
     role=r.dataset.role;
     document.querySelectorAll('.rb').forEach(x=>x.classList.toggle('on',x===r));
-    renderDashboard(); renderAdmin();
+    renderNav();
     document.getElementById('reteBtn').style.display = (role==='collaborator')?'none':'';
+    // Se il ruolo appena scelto non può stare dov'è, torna alla dashboard.
+    const cur=document.querySelector('.view.on');
+    if(cur && cur.dataset.view!=='login' && !canSee(cur.dataset.view)) setScreen('dashboard');
+    else { renderDashboard(); renderAdmin(); if(cur && cur.dataset.view==='crm') renderCrm(); if(cur && cur.dataset.view==='rank') renderRank(); }
   });
 
   /** Anello di avanzamento: cerchio di fondo + arco proporzionale. */
@@ -931,17 +1067,25 @@
   const RANK_STEP=40;
   const LESSONS_DONE=12;
 
-  /** Numeri della rete ricavati dai contatti veri della demo. */
-  function netStats(){
-    const clienti=CONTACTS.filter(c=>c.stage==='cliente').length;
-    const rinnovi=CONTACTS.filter(c=>c.renewalIn!=null).length;
-    const ritardo=CONTACTS.filter(c=>['contattato','appuntamento'].includes(c.stage) && c.days>14).length;
-    const nuovi=CONTACTS.filter(c=>c.stage==='nuovo').length;
-    const appunt=CONTACTS.filter(c=>c.stage==='appuntamento').length;
+  /** I contatti di cui sono titolare (base del mio rank). */
+  function myContacts(){ return CONTACTS.filter(c=>c.owner===meKey()); }
+
+  /**
+   * Numeri ricavati da un insieme di contatti.
+   * Visibili → KPI e azioni della dashboard; miei → punti del rank.
+   */
+  function netStats(list){
+    list = list || visibleContacts();
+    const clienti=list.filter(c=>c.stage==='cliente').length;
+    const rinnovi=list.filter(c=>c.renewalIn!=null).length;
+    const ritardo=list.filter(isLate).length;
+    const nuovi=list.filter(c=>c.stage==='nuovo').length;
+    const appunt=list.filter(c=>c.stage==='appuntamento').length;
+    const totale=list.length;
     const punti=LESSONS_DONE*10 + clienti*5 + rinnovi*3;
     const idx=Math.min(RANKS.length-1, Math.floor(punti/RANK_STEP));
     const base=idx*RANK_STEP, next=(idx+1)*RANK_STEP;
-    return {clienti,rinnovi,ritardo,nuovi,appunt,punti,idx,
+    return {clienti,rinnovi,ritardo,nuovi,appunt,totale,punti,idx,
       pct: idx>=RANKS.length-1 ? 1 : (punti-base)/RANK_STEP,
       mancano: Math.max(0,next-punti)};
   }
@@ -949,22 +1093,28 @@
   function renderDashboard(){
     document.getElementById('greet').textContent='Ciao, '+ROLE_NAME[role];
     document.getElementById('rolePill').textContent=ROLE_LABEL[role];
-    const s=netStats();
+    const s=netStats();            // ciò che il ruolo può vedere
+    const mine=netStats(myContacts()); // il rank si basa solo sui contatti miei
+
+    // Il collaboratore lavora sui pilastri: glieli mettiamo subito sotto il saluto.
+    document.getElementById('dashPillars').style.order = (role==='collaborator') ? '-1' : '';
 
     // Anello + barra del rank
     document.getElementById('dashRing').innerHTML =
-      ringSvg(78, s.pct, '#C9A227') +
-      '<span class="val"><b>'+RANKS[s.idx]+'</b><i>rank</i></span>';
+      ringSvg(78, mine.pct, '#C9A227') +
+      '<span class="val"><b>'+RANKS[mine.idx]+'</b><i>rank</i></span>';
     document.getElementById('dashRankTxt').innerHTML =
-      '<b style="color:var(--text)">'+s.punti+' punti</b> · '+
-      (s.idx>=RANKS.length-1 ? 'sei un Asso' : 'mancano '+s.mancano+' per '+RANKS[s.idx+1]);
-    document.getElementById('dashRankBar').style.width=(s.pct*100).toFixed(0)+'%';
+      '<b style="color:var(--text)">'+mine.punti+' punti</b> · '+
+      (mine.idx>=RANKS.length-1 ? 'sei un Asso' : 'mancano '+mine.mancano+' per '+RANKS[mine.idx+1]);
+    document.getElementById('dashRankBar').style.width=(mine.pct*100).toFixed(0)+'%';
 
-    // Tre numeri che contano
+    // Tre numeri che contano (sul perimetro visibile al ruolo)
     document.getElementById('dashKpis').innerHTML=
-      kpi(CONTACTS.length,'Contatti','var(--text)')+
+      kpi(s.totale,'Contatti','var(--text)')+
       kpi(s.ritardo,'Da ricontattare', s.ritardo? 'var(--accent)':'var(--text)')+
-      kpi(s.rinnovi,'Rinnovi attivi','var(--gold)');
+      (canSee('renewals')
+        ? kpi(s.rinnovi,'Rinnovi attivi','var(--gold)')
+        : kpi(s.clienti,'Clienti','var(--success)'));
 
     // Azioni di oggi: ognuna porta dove serve, già filtrata
     const items=[];
@@ -974,7 +1124,7 @@
       "goCrm('appuntamento')"]);
     if(s.nuovi) items.push(['✦','var(--text)',s.nuovi+' nuovi da qualificare','Capisci il motivo prima di presentare',
       "goCrm('nuovo')"]);
-    items.push(['◈','var(--gold)',s.rinnovi+' rinnovi da presidiare','Avviso push prima della scadenza',"setScreen('renewals')"]);
+    if(canSee('renewals')) items.push(['◈','var(--gold)',s.rinnovi+' rinnovi da presidiare','Avviso push prima della scadenza',"setScreen('renewals')"]);
     if(role==='admin') items.push(['⚙','var(--muted)','Gestisci ruoli e gerarchia','Pannello amministratore',"setScreen('admin')"]);
     else if(role==='leader') items.push(['♦','var(--accent)','Avanzamento formazione della rete','Vedi chi è indietro',"setScreen('formazione')"]);
     else items.push(['♦','var(--accent)','Continua la formazione','Riprendi da dove eri rimasto',"setScreen('formazione')"]);
@@ -1019,7 +1169,7 @@
 
   /* ===== Scadenzario: i rinnovi dei clienti, raggruppati per urgenza ===== */
   function renderRenewals(){
-    const items=CONTACTS.filter(c=>c.renewalIn!=null).sort((a,b)=>a.renewalIn-b.renewalIn);
+    const items=visibleContacts().filter(c=>c.renewalIn!=null).sort((a,b)=>a.renewalIn-b.renewalIn);
     const scaduti=items.filter(c=>c.renewalIn<0).length;
     const entro30=items.filter(c=>c.renewalIn>=0&&c.renewalIn<=30).length;
 
@@ -1050,8 +1200,18 @@
   }
 
   /* ===== Rank: anello + scomposizione dei punti ===== */
+  /** Punti di una persona, con la stessa formula usata per me. */
+  function pointsOf(ownerKey, lessons){
+    const list=CONTACTS.filter(c=>c.owner===ownerKey);
+    return lessons*10 + list.filter(c=>c.stage==='cliente').length*5 + list.filter(c=>c.renewalIn!=null).length*3;
+  }
+  // Lezioni degli altri (dato dimostrativo). Per me vale sempre LESSONS_DONE,
+  // così anello, scomposizione dei punti e riga in classifica dicono lo stesso numero.
+  const LESSONS_BY_OWNER={me:12, leader:20, collab:8, marco:5};
+  function lessonsOf(k){ return k===meKey() ? LESSONS_DONE : (LESSONS_BY_OWNER[k]||0); }
+
   function renderRank(){
-    const s=netStats();
+    const s=netStats(myContacts());
     document.getElementById('rankRing').innerHTML =
       ringSvg(132, s.pct, '#C9A227') +
       '<span class="val"><b style="font-size:44px">'+RANKS[s.idx]+'</b><i>il tuo rank</i></span>';
@@ -1063,6 +1223,29 @@
       row('Lezioni completate ×10','<b>'+(LESSONS_DONE*10)+'</b>')+
       row('Clienti ×5','<b>'+(s.clienti*5)+'</b>')+
       row('Rinnovi attivi ×3','<b>'+(s.rinnovi*3)+'</b>');
+
+    // Classifica generale: solo leader e admin. Il collaboratore vede il proprio percorso.
+    const board=document.getElementById('rankBoard');
+    if(role==='collaborator'){
+      board.innerHTML='<div class="sect"><span class="s">✦</span><span class="t">Il tuo percorso</span><span class="l"></span></div>'+
+        '<div class="card"><p class="cap">La classifica della rete è visibile a leader e amministratori. '+
+        'Qui vedi il tuo avanzamento: ogni lezione completata, ogni cliente e ogni rinnovo attivo ti avvicinano al rank successivo.</p></div>';
+      return;
+    }
+    const board_rows=OWNERS.map(o=>({ ...o, pt:pointsOf(o.k, lessonsOf(o.k)) }))
+      .sort((a,b)=>b.pt-a.pt);
+    const me=meKey();
+    board.innerHTML='<div class="sect"><span class="s">✦</span><span class="t">Classifica della rete</span><span class="l"></span></div>'+
+      board_rows.map((o,i)=>{
+        const idx=Math.min(RANKS.length-1, Math.floor(o.pt/RANK_STEP));
+        const isMe=o.k===me;
+        return '<div class="crow"'+(isMe?' style="background:#ffffff08"':'')+'>'+
+          '<span class="label muted" style="width:20px;text-align:center;flex:0 0 auto">'+(i+1)+'</span>'+
+          '<span class="crest" style="width:38px;height:38px;font-size:16px">'+RANKS[idx]+'</span>'+
+          '<span class="mid"><span class="nm">'+esc(o.label)+(isMe?' · tu':'')+'</span>'+
+          '<span class="sub">'+o.role+'</span></span>'+
+          '<span class="label gold">'+o.pt+' pt</span></div>';
+      }).join('');
   }
   function renderAdmin(){
     const gate=document.getElementById('adminGate'), body=document.getElementById('adminBody');
@@ -1394,6 +1577,7 @@
     const last=n.split(' ').slice(1).join('').toLowerCase().replace(/'/g,'');
     return {
       id:i, name:n, product:PRODUCTS[i%PRODUCTS.length], stage,
+      owner:['me','leader','collab','marco'][i%4],
       email:first+'.'+last+'@email.it',
       phone:'+39 3'+(20+i%60)+' '+(1000000+i*37219).toString().slice(0,7),
       days:(i*13)%92,                                  // giorni dall'ultimo contatto
@@ -1421,6 +1605,29 @@
 
   const crmState={q:'',stage:'tutti',sort:'az'};
 
+  /* — Proprietà dei contatti e visibilità per ruolo (rispecchia le RLS dell'app) —
+     collaboratore: solo i propri · leader: i propri + quelli dei collaboratori
+     admin: tutti, con un selettore per isolare il CRM di una singola persona. */
+  const OWNERS=[
+    {k:'me',     label:'Admin Demo',         role:'Amministratore'},
+    {k:'leader', label:'Leader Demo',        role:'Leader'},
+    {k:'collab', label:'Collaboratore Demo', role:'Collaboratore'},
+    {k:'marco',  label:'Marco Blu',          role:'Collaboratore'}
+  ];
+  const OWNER=Object.fromEntries(OWNERS.map(o=>[o.k,o]));
+  const TEAM_OF_LEADER=['leader','collab','marco'];
+  let crmOwner='tutti';                       // usato solo dall'admin
+
+  /** Chi sono io, in base al ruolo selezionato in alto. */
+  function meKey(){ return role==='admin'?'me':(role==='leader'?'leader':'collab'); }
+
+  /** I contatti che il ruolo corrente ha il diritto di vedere. */
+  function visibleContacts(){
+    if(role==='admin') return crmOwner==='tutti' ? CONTACTS : CONTACTS.filter(c=>c.owner===crmOwner);
+    if(role==='leader') return CONTACTS.filter(c=>TEAM_OF_LEADER.includes(c.owner));
+    return CONTACTS.filter(c=>c.owner===meKey());
+  }
+
   function initials(n){ const p=n.split(' '); return ((p[0]||'')[0]||'')+((p[1]||'')[0]||''); }
   function since(d){ return d===0?'oggi':(d===1?'ieri':d+' giorni fa'); }
   function mark(text,q){
@@ -1434,7 +1641,7 @@
 
   function crmFiltered(){
     const q=crmState.q.trim().toLowerCase();
-    let out=CONTACTS.filter(c=>{
+    let out=visibleContacts().filter(c=>{
       if(crmState.stage==='ritardo'){ if(!isLate(c)) return false; }
       else if(crmState.stage!=='tutti' && c.stage!==crmState.stage) return false;
       if(!q) return true;
@@ -1452,29 +1659,48 @@
     crmState.q=qEl.value; crmState.sort=document.getElementById('crmSort').value;
     document.getElementById('crmClr').classList.toggle('on', crmState.q.length>0);
 
+    // Perimetro visibile a questo ruolo: tutti i conteggi si basano su questo.
+    const scope=visibleContacts();
+
+    // Selettore del titolare: solo l'admin, che vede i CRM di tutta la rete.
+    const ownBox=document.getElementById('crmOwnerBox');
+    if(role==='admin'){
+      ownBox.style.display='';
+      ownBox.innerHTML='<select class="sortsel" style="height:34px;width:100%;padding-right:28px" '+
+        'onchange="setCrmOwner(this.value)" aria-label="CRM di">'+
+        '<option value="tutti"'+(crmOwner==='tutti'?' selected':'')+'>👁 Tutta la rete · '+CONTACTS.length+' contatti</option>'+
+        OWNERS.map(o=>{
+          const n=CONTACTS.filter(c=>c.owner===o.k).length;
+          return '<option value="'+o.k+'"'+(crmOwner===o.k?' selected':'')+'>'+o.label+' ('+o.role+') · '+n+'</option>';
+        }).join('')+'</select>';
+    } else {
+      ownBox.style.display='none';
+      ownBox.innerHTML='';
+    }
+
     // Statistiche per stato (toccabili)
     document.getElementById('crmStats').innerHTML=STAGES.map(s=>{
-      const n=CONTACTS.filter(c=>c.stage===s.k).length;
+      const n=scope.filter(c=>c.stage===s.k).length;
       const on=crmState.stage===s.k?' on':'';
       return '<div class="stat'+on+'" onclick="setCrmStage(\''+s.k+'\')"><b style="color:'+s.color+'">'+n+'</b><span>'+s.label+'</span></div>';
     }).join('');
 
     // Filtri sticky
-    const late=CONTACTS.filter(isLate).length;
+    const late=scope.filter(isLate).length;
     document.getElementById('crmSegs').innerHTML=
-      '<button class="seg'+(crmState.stage==='tutti'?' on':'')+'" onclick="setCrmStage(\'tutti\')">Tutti<b>'+CONTACTS.length+'</b></button>'+
+      '<button class="seg'+(crmState.stage==='tutti'?' on':'')+'" onclick="setCrmStage(\'tutti\')">Tutti<b>'+scope.length+'</b></button>'+
       (late?'<button class="seg'+(crmState.stage==='ritardo'?' on':'')+'" onclick="setCrmStage(\'ritardo\')"'+
         (crmState.stage==='ritardo'?'':' style="border-color:#5A2430;color:#E0637A"')+'>⚠ Da ricontattare<b>'+late+'</b></button>':'')+
       STAGES.map(s=>{
-        const n=CONTACTS.filter(c=>c.stage===s.k).length;
+        const n=scope.filter(c=>c.stage===s.k).length;
         return '<button class="seg'+(crmState.stage===s.k?' on':'')+'" onclick="setCrmStage(\''+s.k+'\')">'+s.label+'<b>'+n+'</b></button>';
       }).join('');
 
     const rows=crmFiltered();
     const q=crmState.q.trim().toLowerCase();
     document.getElementById('crmCount').textContent =
-      rows.length===CONTACTS.length ? CONTACTS.length+' contatti'
-      : rows.length+' di '+CONTACTS.length;
+      rows.length===scope.length ? scope.length+' contatti'
+      : rows.length+' di '+scope.length;
 
     const list=document.getElementById('crmList');
     if(!rows.length){
@@ -1491,12 +1717,15 @@
         if(l!==letter){ letter=l; html+='<div class="alpha">'+l+'</div>'; }
       }
       const s=STAGE[c.stage];
+      // Se l'admin sta guardando tutta la rete, serve sapere di chi è il contatto.
+      const own=(role==='admin'&&crmOwner==='tutti')
+        ? ' · <span style="color:var(--gold)">'+esc(OWNER[c.owner].label)+'</span>' : '';
       html+='<div class="crow" onclick="openDetail('+c.id+')">'+
         '<span class="av" style="color:'+s.color+'">'+esc(initials(c.name))+'</span>'+
         '<span class="mid">'+
           '<span class="nm">'+mark(c.name,q)+'</span>'+
           '<span class="sub"><span class="dot" style="background:'+s.color+';margin-right:6px"></span>'+
-            s.label+' · '+esc(c.product)+'</span>'+
+            s.label+' · '+esc(c.product)+own+'</span>'+
         '</span>'+
         '<span class="chev">›</span></div>';
     });
@@ -1508,6 +1737,8 @@
   }
 
   function setCrmStage(k){ crmState.stage=(crmState.stage===k&&k!=='tutti')?'tutti':k; renderCrm(); }
+  /** Admin: passa dal CRM di tutta la rete a quello di una singola persona. */
+  function setCrmOwner(k){ crmOwner=k; renderCrm(); }
   function clearCrmQ(){ const e=document.getElementById('crmQ'); e.value=''; renderCrm(); e.focus(); }
   function resetCrm(){ document.getElementById('crmQ').value=''; crmState.stage='tutti'; renderCrm(); }
 
@@ -1549,8 +1780,9 @@
       stage:'nuovo',
       email: document.getElementById('npEmail').value.trim() || '—',
       phone: document.getElementById('npPhone').value.trim() || '—',
-      days:0, renewalIn:null
+      days:0, renewalIn:null, owner:meKey()   // il prospect nasce mio
     });
+    if(role==='admin') crmOwner='tutti';
     ['npName','npProd','npEmail','npPhone'].forEach(id=>document.getElementById(id).value='');
     closeCrm(); crmSub('list'); crmState.stage='nuovo'; document.getElementById('crmQ').value='';
     renderCrm(); toast('Prospect aggiunto');
@@ -1614,34 +1846,116 @@
           rate=parseNum(v('lotRate')), acct=(v('lotVal')||'EUR').toUpperCase();
     const el=document.getElementById('lotRes');
     const ok=[balance,riskPercent,stop,rate].every(Number.isFinite)&&balance>0&&riskPercent>0&&stop>0&&rate>0;
-    if(!ok){ el.innerHTML='<p class="cap">Compila i campi con valori validi (&gt; 0).</p>'; return; }
+    if(!ok){
+      el.innerHTML='<p class="cap">Compila i campi con valori validi (&gt; 0).</p>';
+      const h=document.getElementById('lotHero'); h.style.color='#2E2E33';
+      h.innerHTML='<span class="lb">Lotti da aprire</span><span class="big muted">—</span>'+
+        '<span class="sb">Inserisci saldo, rischio % e stop per vedere il risultato.</span>';
+      document.getElementById('lotMark').style.left='0%';
+      document.getElementById('lotRiskTag').textContent='—';
+      document.getElementById('lotRiskTip').textContent='';
+      return;
+    }
     const pipQuote = I.pip*I.contract;      // valore pip/punto per lotto, in valuta quotata
     const pipAcct  = pipQuote*rate;         // convertito nella valuta del conto
     const riskAmount = balance*(riskPercent/100);
     const lots = riskAmount/(stop*pipAcct);
     const units = lots*I.contract;
     const unitS=I.unit, unitP=(I.unit==='pip'?'pips':'punti');
-    const lotsTxt = lots<0.01 ? '&lt; 0,01 (micro)' : fmt(lots,2);
+    const lotsTxt = lots<0.01 ? '&lt; 0,01' : fmt(lots,2);
     el.innerHTML =
       row('Rischio', fmt(riskAmount)+' '+acct)+
       row('Valore '+unitS+'/lotto', fmt(pipAcct)+' '+acct)+
-      row('Lotti', '<b class="gold" style="font-size:18px">'+lotsTxt+'</b>')+
       row((I.group==='Forex'?'Unità':'Quantità'), fmt(units, I.contract>=100?0:2)+(I.group==='Metalli'?' oz':(I.group==='Energia'?' barili':'')))+
       row('Perdita stimata a '+stop+' '+unitP, fmt(lots*stop*pipAcct)+' '+acct);
+
+    // Risposta in evidenza
+    const hero=document.getElementById('lotHero');
+    hero.style.color='#C9A227';
+    hero.innerHTML='<span class="lb">Lotti da aprire</span>'+
+      '<span class="big" style="color:var(--gold)">'+lotsTxt+'</span>'+
+      '<span class="sb">Su '+v('lotInstr')+', rischiando <b style="color:var(--text)">'+fmt(riskAmount)+' '+acct+
+      '</b> con stop a '+stop+' '+unitP+(lots<0.01?'<br>Sotto il lotto minimo: riduci lo stop o aumenta il capitale.':'')+'</span>';
+
+    // Semaforo del rischio: 5% = fondo scala
+    const pct=Math.min(riskPercent,5)/5*100;
+    document.getElementById('lotMark').style.left=pct.toFixed(1)+'%';
+    const tag=document.getElementById('lotRiskTag'), tip=document.getElementById('lotRiskTip');
+    let lvl,col,txt;
+    if(riskPercent<=0.5){ lvl='Prudente'; col='#2E8B57'; txt='Rischio contenuto: servono molte operazioni negative di fila per intaccare il capitale.'; }
+    else if(riskPercent<=1){ lvl='Standard'; col='#C9A227'; txt='La fascia più usata da chi dà priorità alla continuità sul lungo periodo.'; }
+    else if(riskPercent<=2){ lvl='Aggressivo'; col='#D97706'; txt='Le serie negative pesano molto di più: richiede regole scritte e disciplina.'; }
+    else { lvl='Molto alto'; col='#D21F3C'; txt='A questo livello poche operazioni negative consecutive erodono gran parte del conto.'; }
+    tag.textContent=lvl+' · '+fmt(riskPercent,2)+'%'; tag.style.color=col;
+    tip.textContent=txt;
+  }
+  /** Presetti del rischio: aggiornano il campo e ricalcolano. */
+  function lotPreset(p){ document.getElementById('lotRisk').value=String(p).replace('.',','); calcLot(); }
+
+  /** Barre impilate: quota versata (blu) e interessi maturati (oro), anno per anno. */
+  function stackChart(per, w, h){
+    const pad=18, bw=(w-pad*2)/per.length, max=Math.max(...per.map(x=>x[1]))||1;
+    let bars='', labels='';
+    per.forEach(([yy,bal,contr],i)=>{
+      const x=pad+i*bw+bw*0.16, cw=bw*0.68;
+      const hb=(bal/max)*(h-pad*2), hc=(contr/max)*(h-pad*2);
+      const yTop=h-pad-hb, yC=h-pad-hc;
+      bars+='<rect x="'+x.toFixed(1)+'" y="'+yTop.toFixed(1)+'" width="'+cw.toFixed(1)+'" height="'+Math.max(0,hb-hc).toFixed(1)+
+            '" fill="#C9A227" rx="2"/>'+
+            '<rect x="'+x.toFixed(1)+'" y="'+yC.toFixed(1)+'" width="'+cw.toFixed(1)+'" height="'+hc.toFixed(1)+
+            '" fill="#4C8DD8" rx="2"/>';
+      // etichetta ogni tanto, per non affollare l'asse
+      const step=Math.ceil(per.length/6);
+      if(i===0||i===per.length-1||i%step===0)
+        labels+='<text x="'+(x+cw/2).toFixed(1)+'" y="'+(h-5)+'" font-size="9" fill="#8A8A90" text-anchor="middle">'+yy+'</text>';
+    });
+    return '<svg class="chart" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+
+      '<line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" stroke="#2E2E33" stroke-width="1"/>'+
+      bars+labels+'</svg>';
   }
 
   function calcComp(){
     const p=parseNum(v('cCap')), m=parseNum(v('cVers')), ar=parseNum(v('cRate')), y=parseNum(v('cYears'));
     const ok=[p,m,ar,y].every(Number.isFinite)&&p>=0&&m>=0&&y>0&&y<=100;
-    const res=document.getElementById('compRes'), yrs=document.getElementById('compYears');
-    if(!ok){ res.innerHTML='<p class="cap">Compila i campi (anni tra 1 e 100).</p>'; yrs.innerHTML=''; return; }
+    const hero=document.getElementById('compHero'), yrs=document.getElementById('compYears');
+    const chart=document.getElementById('compChart'), kp=document.getElementById('compKpis');
+    if(!ok){
+      hero.style.color='#2E2E33';
+      hero.innerHTML='<span class="lb">Montante finale</span><span class="big muted">—</span>'+
+        '<span class="sb">Compila i campi (anni tra 1 e 100).</span>';
+      yrs.innerHTML=''; chart.innerHTML=''; kp.innerHTML='';
+      return;
+    }
     const r=ar/100/12; let bal=p, contr=p; const per=[]; const months=Math.round(y*12);
-    for(let i=1;i<=months;i++){ bal=bal*(1+r)+m; contr+=m; if(i%12===0)per.push([i/12,bal]); }
-    res.innerHTML=
-      row('Montante finale','<b class="gold" style="font-size:18px">'+fmt(bal)+' €</b>')+
-      row('Totale versato', fmt(contr)+' €')+
-      row('Interessi maturati', fmt(bal-contr)+' €');
-    yrs.innerHTML=per.map(([yy,bb])=>'<div class="resline" style="padding:7px 0;border-bottom:1px solid var(--border)"><span class="cap">Anno '+yy+'</span><span class="cap">'+fmt(bb)+' €</span></div>').join('');
+    for(let i=1;i<=months;i++){ bal=bal*(1+r)+m; contr+=m; if(i%12===0)per.push([i/12,bal,contr]); }
+    const interessi=bal-contr;
+    const quota=contr>0 ? interessi/bal*100 : 0;
+
+    hero.style.color='#C9A227';
+    hero.innerHTML='<span class="lb">Montante finale</span>'+
+      '<span class="big" style="color:var(--gold)">'+fmt(bal,0)+' €</span>'+
+      '<span class="sb">Dopo '+fmt(y,0)+' anni al '+fmt(ar,2)+'% annuo ipotizzato</span>';
+
+    chart.innerHTML=stackChart(per,320,150);
+
+    kp.innerHTML=
+      kpi(fmt(contr,0)+' €','Versato','#4C8DD8')+
+      kpi(fmt(interessi,0)+' €','Interessi','var(--gold)')+
+      kpi(fmt(quota,0)+'%','Quota interessi','var(--success)');
+
+    yrs.innerHTML=per.map(([yy,bb,cc])=>
+      '<div class="resline" style="padding:8px 0;border-bottom:1px solid var(--border)">'+
+      '<span class="cap">Anno '+yy+'</span>'+
+      '<span style="font-size:12.5px"><span class="muted">'+fmt(cc,0)+' + </span>'+
+      '<span class="gold">'+fmt(bb-cc,0)+'</span>'+
+      '<b style="margin-left:8px;font-variant-numeric:tabular-nums">'+fmt(bb,0)+' €</b></span></div>').join('');
+  }
+  /** Presetti: versamento mensile, tasso, anni. */
+  function compPreset(m,r,y){
+    document.getElementById('cVers').value=m;
+    document.getElementById('cRate').value=r;
+    document.getElementById('cYears').value=y;
+    calcComp();
   }
 
   /* ===== init ===== */

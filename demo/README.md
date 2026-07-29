@@ -17,6 +17,7 @@ richiede installazioni, account o connessione a Supabase.
 | Sezione | Interazione reale nella demo |
 | --- | --- |
 | Login | Accedi → dashboard (selettore **ruolo** in alto: admin / leader / collaboratore) |
+| Permessi | Cambiando ruolo cambia davvero l'app: il **collaboratore** non vede Scadenzario, pannello Admin né classifica di rete, e trova i **quattro pilastri in cima**; il **leader** vede sé e i propri collaboratori; l'**admin** vede il CRM di **tutta la rete** con un selettore per isolare la singola persona |
 | Navigazione | Pulsante **Indietro** e **menu a tendina** (☰) con tutte le sezioni |
 | Agente AI | **Scrivi e invia**: risponde su vendita, marketing, network, investimenti e trading; fuori tema rifiuta. Mostra le **aree di competenza** attivate e le fonti |
 | Agente AI — voce | **Reale, non simulata**: «▶ Ascolta» legge la risposta in italiano, «🔊 Lettura» le legge tutte, 🎤 detta la domanda (Chrome/Edge) |
@@ -25,7 +26,7 @@ richiede installazioni, account o connessione a Supabase.
 | Network ♥ | **52 contatti**: ricerca istantanea (nome, email, telefono, prodotto) con evidenziazione, filtri di stato, filtro **⚠ Da ricontattare**, ordinamento A→Z / attività / stato, indice alfabetico, scheda contatto con azioni rapide e cambio stato. **+ Nuovo** aggiunge davvero; **Importa** CSV/Excel |
 | Scadenzario | Rinnovi dei clienti raggruppati per urgenza (scaduti / 7 / 30 giorni / oltre), con KPI in testa |
 | Formazione ♦ | Corsi con **anello di avanzamento**, lezione → video, calendario, avanzamento della rete |
-| Calcolatori | **Calcolo reale**: lottaggio **per strumento** (EUR/USD, XAU/USD, US30, BTC/USD…) e interesse composto |
+| Calcolatori | **Calcolo reale**. Lottaggio: risultato in evidenza, **semaforo del rischio** (prudente → molto alto) e presetti 0,5/1/2%, **per strumento** (EUR/USD, XAU/USD, US30, BTC/USD…). Interesse composto: **grafico a barre** che separa versato e interessi, KPI e montante anno per anno |
 | Rank | Rank a carte (2 → Asso) con **anello di avanzamento** e scomposizione dei punti, più la classifica |
 | Community ♣ | Feedback della squadra |
 | Admin | Gestione ruoli e gerarchia (visibile solo col ruolo admin) |
