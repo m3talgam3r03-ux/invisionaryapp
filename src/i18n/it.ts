@@ -9,6 +9,7 @@
  * dei ruoli, TypeScript segnala qui le voci mancanti.
  */
 import type { Role } from '@/theme';
+import type { RenewalAction, RenewalStatus } from '@/types/models';
 
 /** Come si chiamano i ruoli quando li legge una persona. */
 export const ROLE_LABEL: Record<Role, string> = {
@@ -53,10 +54,16 @@ export const t = {
       testo: 'Chiedi all’assistente: risposte basate sui contenuti della piattaforma.',
       azione: 'Apri l’agente',
     },
+    /** Per il collaboratore la sezione è «i miei rinnovi»: la rete non la vede. */
     scadenzario: {
-      titolo: 'Scadenzario rinnovi',
-      testo: 'Tieni d’occhio le scadenze e ricevi un avviso prima del rinnovo.',
+      titolo: 'Scadenzario della rete',
+      testo: 'Le scadenze della rete, con le richieste da approvare in cima.',
       azione: 'Apri scadenzario',
+    },
+    scadenzarioMio: {
+      titolo: 'I miei rinnovi',
+      testo: 'Le tue scadenze e un avviso prima che arrivino.',
+      azione: 'Apri i miei rinnovi',
     },
     calcolatori: {
       titolo: 'Calcolatori',
@@ -89,6 +96,74 @@ export const t = {
     nessunLeaderDisponibile:
       'Nessun leader disponibile: assegna prima il ruolo «Leader» a un utente.',
     salvataggioFallito: 'Salvataggio non riuscito.',
+  },
+
+  rinnovi: {
+    titoloMiei: 'I miei rinnovi',
+    titoloRete: 'Scadenzario della rete',
+    sottotitoloMiei: 'Le tue scadenze. Le modifiche passano dall’approvazione del tuo leader.',
+    sottotitoloRete: 'Le scadenze della rete, con le richieste da approvare in cima.',
+    nuovo: '+ Nuovo rinnovo',
+    caricamento: 'Caricamento scadenzario…',
+    erroreElenco: 'Impossibile caricare i rinnovi',
+    nessuno: 'Nessun rinnovo',
+    nessunoSuggerimento: 'Aggiungi una scadenza per iniziare a monitorarla.',
+    daApprovare: 'Da approvare',
+    inScadenza: 'In scadenza',
+    resto: 'Tutti gli altri',
+    nonTrovato: 'Rinnovo non trovato.',
+
+    stato: {
+      attivo: 'Attivo',
+      in_attesa_approvazione: 'In attesa di approvazione',
+      scaduto: 'Scaduto',
+      annullato: 'Annullato',
+    } satisfies Record<RenewalStatus, string>,
+
+    urgenza: {
+      scadutoDa: (g: number) => `Scaduto da ${g} ${g === 1 ? 'giorno' : 'giorni'}`,
+      scadeOggi: 'Scade oggi',
+      tra: (g: number) => `Tra ${g} ${g === 1 ? 'giorno' : 'giorni'}`,
+    },
+
+    approva: {
+      titolo: 'Rinnova',
+      inAttesa: 'Questo rinnovo attende la tua approvazione.',
+      inAttesaAltri: 'In attesa di approvazione dal tuo leader.',
+      richiestoIl: (data: string) => `Richiesto il ${data}`,
+      unPeriodo: (data: string, giorni: number) => `+${giorni} giorni → ${data}`,
+      recupero: (data: string) => `Recupera fino a ${data}`,
+      spiegaRitardo: (periodi: number) =>
+        `Questa scadenza è arretrata di ${periodi} periodi: «+1 periodo» la lascerebbe ancora nel passato. Scegli tu quale data usare.`,
+      spiegaSomma: 'La nuova scadenza parte dalla scadenza precedente, non da oggi: così un’approvazione in ritardo non fa perdere giorni.',
+      conferma: 'Approva rinnovo',
+      nonAutorizzato: 'Solo il leader del proprietario, o un amministratore, può approvare.',
+    },
+
+    storico: {
+      titolo: 'Storico',
+      vuoto: 'Nessuna modifica registrata.',
+      azione: {
+        creato: 'Creato',
+        rinnovo_richiesto: 'Rinnovo richiesto',
+        approvato: 'Approvato',
+        rifiutato: 'Rifiutato',
+        data_modificata: 'Data modificata',
+        annullato: 'Annullato',
+      } satisfies Record<RenewalAction, string>,
+      da: (vecchia: string, nuova: string) => `${vecchia} → ${nuova}`,
+    },
+
+    form: {
+      salva: 'Salva modifiche',
+      crea: 'Crea rinnovo',
+      elimina: 'Elimina rinnovo',
+      eliminaConferma: 'Eliminare definitivamente il rinnovo?',
+      salvataggioFallito: 'Salvataggio non riuscito.',
+      creazioneFallita: 'Creazione non riuscita.',
+      avvisoRichiesta:
+        'Salvando, la modifica va in approvazione al tuo leader: la scadenza cambia solo dopo il suo via libera.',
+    },
   },
 
   formazione: {

@@ -22,6 +22,10 @@ export default function Dashboard() {
   }
 
   const firstName = profile?.full_name?.split(' ')[0] || t.dashboard.benvenuto;
+  // Chi non vede la rete trova «I miei rinnovi» al posto dello scadenzario.
+  const scadenzario = can(profile, 'renewals.network')
+    ? t.dashboard.scadenzario
+    : t.dashboard.scadenzarioMio;
 
   return (
     <Screen scroll>
@@ -64,14 +68,14 @@ export default function Dashboard() {
         <Button title={t.dashboard.agente.azione} onPress={() => router.push('/agente')} />
       </Card>
 
-      {/* Azione rapida: scadenzario rinnovi (CRM) */}
+      {/* Rinnovi: al collaboratore solo i propri, senza lo scadenzario della rete */}
       <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">{t.dashboard.scadenzario.titolo}</ThemedText>
+        <ThemedText variant="heading">{scadenzario.titolo}</ThemedText>
         <ThemedText tone="muted" variant="caption">
-          {t.dashboard.scadenzario.testo}
+          {scadenzario.testo}
         </ThemedText>
         <Button
-          title={t.dashboard.scadenzario.azione}
+          title={scadenzario.azione}
           variant="secondary"
           onPress={() => router.push('/renewals')}
         />

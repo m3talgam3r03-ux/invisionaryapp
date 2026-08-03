@@ -222,6 +222,120 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
     });
   });
 
+  // --- approvazione dei rinnovi --------------------------------------------
+
+  describe('approvazione', () => {
+    it('la modifica di un collaboratore diventa una richiesta, non una decisione', async () => {
+      const creato = await admin
+        .from('renewals')
+        .insert({
+          owner_id: id.collaboratore,
+          prodotto: 'RLS Test approvazione',
+          current_due_date: '2026-03-01',
+          interval_days: 30,
+          status: 'attivo',
+        })
+        .select('id')
+        .single();
+      if (creato.error) throw creato.error;
+      const rid = creato.data.id;
+
+      // Il collaboratore prova a spostarsi la scadenza e a dichiararla attiva.
+      await client.collaboratore
+        .from('renewals')
+        .update({ current_due_date: '2026-12-31', status: 'attivo' })
+        .eq('id', rid);
+
+      const { data: dopo } = await admin
+        .from('renewals')
+        .select('status, requested_by, approved_by')
+        .eq('id', rid)
+        .single();
+
+      expect(dopo!.status, 'il guardiano deve declassare la modifica a richiesta').toBe(
+        'in_attesa_approvazione',
+      );
+      expect(dopo!.requested_by).toBe(id.collaboratore);
+      expect(dopo!.approved_by, 'nessuno si auto-approva').toBeNull();
+
+      await admin.from('renewals').delete().eq('id', rid);
+    });
+
+    it('il leader approva e il database registra chi e quando', async () => {
+      const creato = await admin
+        .from('renewals')
+        .insert({
+          owner_id: id.collaboratore,
+          prodotto: 'RLS Test approvazione leader',
+          current_due_date: '2026-03-01',
+          interval_days: 30,
+          status: 'in_attesa_approvazione',
+        })
+        .select('id')
+        .single();
+      if (creato.error) throw creato.error;
+      const rid = creato.data.id;
+
+      const { error } = await client.leader
+        .from('renewals')
+        .update({ current_due_date: '2026-03-31', status: 'attivo' })
+        .eq('id', rid);
+      expect(error).toBeNull();
+
+      const { data: dopo } = await admin
+        .from('renewals')
+        .select('status, current_due_date, approved_by, approved_at')
+        .eq('id', rid)
+        .single();
+
+      expect(dopo!.status).toBe('attivo');
+      expect(dopo!.current_due_date).toBe('2026-03-31'); // +30 sulla scadenza, non su oggi
+      expect(dopo!.approved_by, 'l’approvatore lo scrive il database').toBe(id.leader);
+      expect(dopo!.approved_at).not.toBeNull();
+
+      await admin.from('renewals').delete().eq('id', rid);
+    });
+
+    it('ogni transizione lascia una riga nello storico', async () => {
+      const creato = await admin
+        .from('renewals')
+        .insert({
+          owner_id: id.collaboratore,
+          prodotto: 'RLS Test storico',
+          current_due_date: '2026-05-01',
+          interval_days: 30,
+          status: 'attivo',
+        })
+        .select('id')
+        .single();
+      if (creato.error) throw creato.error;
+      const rid = creato.data.id;
+
+      await client.collaboratore
+        .from('renewals')
+        .update({ current_due_date: '2026-06-01' })
+        .eq('id', rid);
+
+      const { data: storico } = await admin
+        .from('renewal_history')
+        .select('action, actor_id')
+        .eq('renewal_id', rid)
+        .order('created_at');
+
+      expect(storico!.map((r) => r.action)).toContain('creato');
+      expect(storico!.map((r) => r.action)).toContain('rinnovo_richiesto');
+
+      await admin.from('renewals').delete().eq('id', rid);
+    });
+
+    it('lo storico è di sola lettura anche per l’admin autenticato', async () => {
+      const { error } = await client.admin
+        .from('renewal_history')
+        .insert({ renewal_id: crypto.randomUUID(), action: 'approvato' });
+      expect(error, 'nessuno scrive lo storico a mano: lo scrivono i trigger').not.toBeNull();
+    });
+  });
+
   // --- escalation di privilegi ---------------------------------------------
 
   describe('anti escalation', () => {
