@@ -105,6 +105,8 @@ export type Lesson = {
   titolo: string;
   youtube_id: string;
   ordine: number;
+  /** Durata indicativa in minuti; non tutte le lezioni la dichiarano. */
+  duration_min: number | null;
   created_at: string;
 };
 

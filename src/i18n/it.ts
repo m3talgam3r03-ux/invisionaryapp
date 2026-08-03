@@ -189,5 +189,9 @@ export const t = {
       intro: 'Avanzamento formazione della tua rete.',
       nessunMembro: 'Nessun membro della rete da mostrare.',
     },
+    avanzamentoGlobale: 'Il tuo avanzamento',
+    lezioniSu: (fatte: number, totale: number) => `${fatte} di ${totale} lezioni`,
+    completato: 'Completato',
+    durata: (min: number) => `${min} min`,
   },
 } as const;

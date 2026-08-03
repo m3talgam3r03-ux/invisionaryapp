@@ -9,48 +9,58 @@ export type NetworkMember = {
   full_name: string;
   role: Role;
   completed: number;
+  total: number;
+  percent: number;
 };
 
 export type NetworkProgress = {
-  totalLessons: number;
   members: NetworkMember[];
 };
 
 /**
  * Avanzamento formazione della rete visibile all'utente.
- * La RLS decide il perimetro: il leader vede sé + i propri collaboratori, l'admin tutti.
+ *
+ * Le percentuali arrivano già calcolate dalla vista `v_avanzamento_globale`:
+ * prima venivano ricostruite qui contando le righe, che è lo stesso conto fatto
+ * in un posto sbagliato. Il perimetro lo decide la RLS — la vista usa
+ * security_invoker, quindi il leader vede sé e i propri collaboratori, l'admin
+ * tutti, e nessuno vede oltre.
  */
 export function useNetworkProgress() {
   return useQuery({
     queryKey: ['network-progress'],
     queryFn: async (): Promise<NetworkProgress> => {
-      const [profilesRes, lessonsRes] = await Promise.all([
+      const [profilesRes, avanzamentoRes] = await Promise.all([
         supabase.from('profiles').select('id, full_name, role').order('full_name'),
-        supabase.from('lessons').select('id', { count: 'exact', head: true }),
+        supabase.from('v_avanzamento_globale').select('user_id, completate, totale, percentuale'),
       ]);
       if (profilesRes.error) throw profilesRes.error;
-      if (lessonsRes.error) throw lessonsRes.error;
+      if (avanzamentoRes.error) throw avanzamentoRes.error;
 
-      const members = (profilesRes.data ?? []) as Pick<NetworkMember, 'id' | 'full_name' | 'role'>[];
-      const ids = members.map((m) => m.id);
+      const perUtente = new Map(
+        (avanzamentoRes.data ?? []).map((r) => [
+          r.user_id as string,
+          {
+            completed: r.completate as number,
+            total: r.totale as number,
+            percent: r.percentuale as number,
+          },
+        ]),
+      );
 
-      const counts = new Map<string, number>();
-      if (ids.length > 0) {
-        const { data: progress, error } = await supabase
-          .from('lesson_progress')
-          .select('user_id')
-          .in('user_id', ids);
-        if (error) throw error;
-        for (const row of progress ?? []) {
-          const uid = row.user_id as string;
-          counts.set(uid, (counts.get(uid) ?? 0) + 1);
-        }
-      }
+      const members = (profilesRes.data ?? []).map((p) => {
+        const a = perUtente.get(p.id as string);
+        return {
+          id: p.id as string,
+          full_name: p.full_name as string,
+          role: p.role as Role,
+          completed: a?.completed ?? 0,
+          total: a?.total ?? 0,
+          percent: a?.percent ?? 0,
+        };
+      });
 
-      return {
-        totalLessons: lessonsRes.count ?? 0,
-        members: members.map((m) => ({ ...m, completed: counts.get(m.id) ?? 0 })),
-      };
+      return { members };
     },
   });
 }

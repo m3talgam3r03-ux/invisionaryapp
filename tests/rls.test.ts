@@ -426,6 +426,64 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
     });
   });
 
+  // --- avanzamento formazione ----------------------------------------------
+
+  describe('viste di avanzamento', () => {
+    it('il collaboratore vede solo il proprio avanzamento', async () => {
+      const { data, error } = await client.collaboratore
+        .from('v_avanzamento_globale')
+        .select('user_id');
+      expect(error).toBeNull();
+      expect(
+        data!.map((r) => r.user_id),
+        'security_invoker deve applicare la RLS di profiles',
+      ).toEqual([id.collaboratore]);
+    });
+
+    it('il leader vede sé e i propri collaboratori, non l’admin', async () => {
+      const { data, error } = await client.leader.from('v_avanzamento_globale').select('user_id');
+      expect(error).toBeNull();
+      const visti = new Set(data!.map((r) => r.user_id));
+      expect(visti.has(id.leader)).toBe(true);
+      expect(visti.has(id.collaboratore)).toBe(true);
+      expect(visti.has(id.admin), 'la vista non deve scavalcare la RLS').toBe(false);
+    });
+
+    it('le percentuali sono coerenti con i conteggi', async () => {
+      const { data } = await client.collaboratore
+        .from('v_avanzamento_globale')
+        .select('completate, totale, percentuale')
+        .single();
+      const atteso =
+        data!.totale === 0 ? 0 : Math.round((data!.completate / data!.totale) * 100);
+      expect(data!.percentuale).toBe(atteso);
+    });
+
+    it('nessuno può segnare una lezione per conto di un altro', async () => {
+      const { data: lezione } = await admin.from('lessons').select('id').limit(1).maybeSingle();
+      if (!lezione) return; // senza seed formativo non c'è nulla da provare
+
+      // Il collaboratore prova a intestare il completamento al leader.
+      await client.collaboratore
+        .from('lesson_progress')
+        .insert({ lesson_id: lezione.id, user_id: id.leader });
+
+      const { data: righe } = await admin
+        .from('lesson_progress')
+        .select('user_id')
+        .eq('lesson_id', lezione.id)
+        .eq('user_id', id.leader);
+
+      expect(righe, 'il guardiano riporta user_id a chi scrive').toEqual([]);
+
+      await admin
+        .from('lesson_progress')
+        .delete()
+        .eq('lesson_id', lezione.id)
+        .eq('user_id', id.collaboratore);
+    });
+  });
+
   // --- escalation di privilegi ---------------------------------------------
 
   describe('anti escalation', () => {
