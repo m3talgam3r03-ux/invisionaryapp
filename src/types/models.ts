@@ -48,7 +48,6 @@ export type Renewal = {
   approved_at: string | null;
   approved_by: string | null;
   note: string | null;
-  reminder_sent_at: string | null;
   created_at: string;
 };
 

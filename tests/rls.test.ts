@@ -336,6 +336,96 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
     });
   });
 
+  // --- promemoria -----------------------------------------------------------
+
+  describe('promemoria', () => {
+    /** Crea un rinnovo del collaboratore con scadenza fra `giorni` giorni. */
+    async function rinnovoFraGiorni(giorni: number) {
+      const d = new Date();
+      d.setDate(d.getDate() + giorni);
+      const iso = d.toISOString().slice(0, 10);
+      const { data, error } = await admin
+        .from('renewals')
+        .insert({
+          owner_id: id.collaboratore,
+          prodotto: 'RLS Test promemoria',
+          current_due_date: iso,
+          interval_days: 30,
+          status: 'attivo',
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+      return data.id as string;
+    }
+
+    it('un rinnovo lontano non è ancora da avvisare', async () => {
+      const rid = await rinnovoFraGiorni(20);
+      const { data, error } = await admin.rpc('rinnovi_da_avvisare');
+      expect(error).toBeNull();
+      expect((data as { renewal_id: string }[]).map((r) => r.renewal_id)).not.toContain(rid);
+      await admin.from('renewals').delete().eq('id', rid);
+    });
+
+    it('a cinque giorni dalla scadenza è dovuto lo scaglione -7', async () => {
+      const rid = await rinnovoFraGiorni(5);
+      const { data } = await admin.rpc('rinnovi_da_avvisare');
+      const riga = (data as { renewal_id: string; offsets_coperti: number[] }[]).find(
+        (r) => r.renewal_id === rid,
+      );
+      expect(riga, 'deve comparire fra quelli da avvisare').toBeDefined();
+      expect(riga!.offsets_coperti).toEqual([7]);
+      await admin.from('renewals').delete().eq('id', rid);
+    });
+
+    it('registrato l’invio, non ricompare', async () => {
+      const rid = await rinnovoFraGiorni(5);
+      await admin.from('renewal_reminders').insert({ renewal_id: rid, offset_days: 7 });
+
+      const { data } = await admin.rpc('rinnovi_da_avvisare');
+      expect((data as { renewal_id: string }[]).map((r) => r.renewal_id)).not.toContain(rid);
+      await admin.from('renewals').delete().eq('id', rid);
+    });
+
+    it('il doppio invio è impossibile: la chiave primaria lo rifiuta', async () => {
+      const rid = await rinnovoFraGiorni(5);
+      await admin.from('renewal_reminders').insert({ renewal_id: rid, offset_days: 7 });
+      const { error } = await admin
+        .from('renewal_reminders')
+        .insert({ renewal_id: rid, offset_days: 7 });
+      expect(error, 'la seconda insert deve essere rifiutata').not.toBeNull();
+      await admin.from('renewals').delete().eq('id', rid);
+    });
+
+    it('spostare la scadenza fa ripartire il ciclo di avvisi', async () => {
+      const rid = await rinnovoFraGiorni(5);
+      await admin.from('renewal_reminders').insert({ renewal_id: rid, offset_days: 7 });
+
+      const nuova = new Date();
+      nuova.setDate(nuova.getDate() + 40);
+      await admin
+        .from('renewals')
+        .update({ current_due_date: nuova.toISOString().slice(0, 10) })
+        .eq('id', rid);
+
+      const { data } = await admin
+        .from('renewal_reminders')
+        .select('offset_days')
+        .eq('renewal_id', rid);
+      expect(data, 'il trigger deve aver azzerato i promemoria').toEqual([]);
+      await admin.from('renewals').delete().eq('id', rid);
+    });
+
+    it('un utente autenticato non può scrivere nei promemoria', async () => {
+      const rid = await rinnovoFraGiorni(5);
+      const { error } = await client.collaboratore
+        .from('renewal_reminders')
+        .insert({ renewal_id: rid, offset_days: 1 });
+      expect(error, 'i promemoria li scrive solo la Edge Function').not.toBeNull();
+      await admin.from('renewals').delete().eq('id', rid);
+    });
+  });
+
   // --- escalation di privilegi ---------------------------------------------
 
   describe('anti escalation', () => {

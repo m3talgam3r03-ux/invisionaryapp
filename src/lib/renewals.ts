@@ -74,10 +74,11 @@ export function useUpdateRenewal() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...input }: RenewalInput & { id: string }): Promise<Renewal> => {
-      // Se si cambia la scadenza/stato, azzera reminder_sent_at per un nuovo ciclo di avvisi.
+      // Se cambia la scadenza il ciclo di avvisi riparte da solo: ci pensa il
+      // trigger renewals_reset_reminders (migrazione 0013).
       const { data, error } = await supabase
         .from('renewals')
-        .update({ ...input, reminder_sent_at: null })
+        .update(input)
         .eq('id', id)
         .select()
         .single();
@@ -110,12 +111,7 @@ export function useApproveRenewal() {
     }): Promise<Renewal> => {
       const { data, error } = await supabase
         .from('renewals')
-        .update({
-          current_due_date: nuovaScadenza,
-          status: 'attivo',
-          // Nuova scadenza = nuovo ciclo di avvisi.
-          reminder_sent_at: null,
-        })
+        .update({ current_due_date: nuovaScadenza, status: 'attivo' })
         .eq('id', id)
         .select()
         .single();

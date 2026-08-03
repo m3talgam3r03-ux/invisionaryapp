@@ -116,10 +116,27 @@ supabase functions deploy renewal-reminders
 
 `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` sono già disponibili nell'ambiente della function.
 
-**Schedulazione (cron):** dal Dashboard → *Edge Functions → renewal-reminders → Schedules*
-imposta un cron giornaliero (es. `0 8 * * *`). In alternativa, via SQL (pg_cron + pg_net):
+### Quando parte cosa (migrazione 0013)
+
+| Avviso | A chi | Quando |
+| --- | --- | --- |
+| Promemoria scadenza | al proprietario del rinnovo | a **−7, −3 e −1 giorni** |
+| Riepilogo della rete | ai leader | **una volta a settimana** |
+
+Quali rinnovi siano da avvisare lo decide `rinnovi_da_avvisare()` nel database, non
+la Edge Function: la regola è una sola e si può verificare con una query.
+
+Il doppio invio è impossibile per costruzione: `renewal_reminders` ha come chiave
+primaria `(renewal_id, offset_days)`, quindi una seconda esecuzione nello stesso
+giorno non manda nulla. Se il cron salta dei giorni, all'arrivo si manda **un solo**
+avviso e si registrano tutti gli scaglioni saltati, invece di sparare tre notifiche
+uguali. Spostando la scadenza il ciclo riparte da capo (lo fa un trigger).
+
+**Schedulazione (cron).** Servono **due** pianificazioni. Dal Dashboard →
+*Edge Functions → renewal-reminders → Schedules*, oppure via SQL (pg_cron + pg_net):
 
 ```sql
+-- Promemoria: ogni giorno alle 8
 select cron.schedule(
   'renewal-reminders-daily',
   '0 8 * * *',
@@ -128,6 +145,27 @@ select cron.schedule(
        headers := jsonb_build_object('Authorization', 'Bearer <SERVICE_ROLE_KEY>')
      ); $$
 );
+
+-- Riepilogo ai leader: ogni lunedì alle 8
+select cron.schedule(
+  'renewal-summary-weekly',
+  '0 8 * * 1',
+  $$ select net.http_post(
+       url := 'https://<PROJECT-REF>.functions.supabase.co/renewal-reminders',
+       headers := jsonb_build_object(
+         'Authorization', 'Bearer <SERVICE_ROLE_KEY>',
+         'Content-Type', 'application/json'
+       ),
+       body := '{"modo":"riepilogo"}'::jsonb
+     ); $$
+);
+```
+
+**Verificare senza mandare push:**
+
+```sql
+select * from public.rinnovi_da_avvisare();   -- chi riceverebbe il promemoria oggi
+select * from public.riepilogo_rinnovi_leader();
 ```
 
 **Test manuale:**
