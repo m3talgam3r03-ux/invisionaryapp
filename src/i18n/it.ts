@@ -19,6 +19,15 @@ export const ROLE_LABEL: Record<Role, string> = {
 };
 
 export const t = {
+  /** Etichette della barra in basso: corte, stanno sotto un'icona. */
+  nav: {
+    home: 'Home',
+    trading: 'Trading',
+    network: 'Network',
+    formazione: 'Formazione',
+    community: 'Community',
+  },
+
   comune: {
     caricamento: 'Caricamento…',
     caricamentoProfilo: 'Caricamento profilo…',
