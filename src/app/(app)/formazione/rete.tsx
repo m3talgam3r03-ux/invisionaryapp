@@ -3,14 +3,10 @@ import { View, type DimensionValue } from 'react-native';
 
 import { Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
+import { ROLE_LABEL, t } from '@/i18n/it';
 import { useNetworkProgress } from '@/lib/network';
-import { spacing, useTheme, type Role } from '@/theme';
-
-const ROLE_LABEL: Record<Role, string> = {
-  admin: 'Amministratore',
-  leader: 'Leader',
-  collaborator: 'Collaboratore',
-};
+import { can } from '@/lib/permissions';
+import { spacing, useTheme } from '@/theme';
 
 export default function Rete() {
   const { profile, isProfileLoading } = useAuth();
@@ -20,30 +16,30 @@ export default function Rete() {
   if (isProfileLoading && !profile) {
     return (
       <Screen>
-        <ThemedText tone="muted">Caricamento…</ThemedText>
+        <ThemedText tone="muted">{t.comune.caricamento}</ThemedText>
       </Screen>
     );
   }
 
-  // Riservato a leader/admin.
-  if (profile?.role === 'collaborator') {
+  // Riservato a chi guida la rete.
+  if (!can(profile, 'network.progress')) {
     return <Redirect href="/formazione" />;
   }
 
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
       <ThemedText tone="muted" variant="caption">
-        Avanzamento formazione della tua rete.
+        {t.formazione.rete.intro}
       </ThemedText>
 
-      {isLoading && <ThemedText tone="muted">Caricamento…</ThemedText>}
+      {isLoading && <ThemedText tone="muted">{t.comune.caricamento}</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
-          {error instanceof Error ? error.message : 'Errore nel caricamento.'}
+          {error instanceof Error ? error.message : t.comune.errore}
         </ThemedText>
       )}
       {data?.members.length === 0 && (
-        <ThemedText tone="muted">Nessun membro della rete da mostrare.</ThemedText>
+        <ThemedText tone="muted">{t.formazione.rete.nessunMembro}</ThemedText>
       )}
 
       {data?.members.map((m) => {
@@ -52,7 +48,7 @@ export default function Rete() {
           <Card key={m.id} style={{ gap: spacing.sm }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
               <ThemedText variant="heading" style={{ flex: 1 }}>
-                {m.full_name || 'Senza nome'}
+                {m.full_name || t.comune.senzaNome}
               </ThemedText>
               <ThemedText tone="gold" variant="label">
                 {m.completed}/{data.totalLessons}

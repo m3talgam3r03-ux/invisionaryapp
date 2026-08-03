@@ -13,6 +13,7 @@ import {
   type SeedProgress,
 } from '@/lib/documents';
 import { DOMAIN_IDS, domainLabel, type DomainId } from '@/lib/domains';
+import { can } from '@/lib/permissions';
 import { radius, spacing, useTheme } from '@/theme';
 
 export default function Documenti() {
@@ -37,7 +38,7 @@ export default function Documenti() {
       </Screen>
     );
   }
-  if (profile?.role !== 'admin') {
+  if (!can(profile, 'knowledge.manage')) {
     return <Redirect href="/agente" />;
   }
 

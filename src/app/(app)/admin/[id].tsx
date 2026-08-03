@@ -4,14 +4,10 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button, Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
+import { ROLE_LABEL, t } from '@/i18n/it';
 import { useAllProfiles, useProfileById, useUpdateProfile } from '@/lib/admin';
+import { can, canBeAssignedAsLeader, expectsLeader } from '@/lib/permissions';
 import { ROLES, radius, spacing, useTheme, type Role } from '@/theme';
-
-const ROLE_LABEL: Record<Role, string> = {
-  admin: 'Amministratore',
-  leader: 'Leader',
-  collaborator: 'Collaboratore',
-};
 
 export default function AdminUserDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,46 +27,48 @@ export default function AdminUserDetail() {
     }
   }, [target]);
 
-  if (me && me.role !== 'admin') {
+  if (me && !can(me, 'admin.panel')) {
     return <Redirect href="/" />;
   }
   if (isLoading || !role) {
     return (
       <Screen>
-        <ThemedText tone="muted">Caricamento…</ThemedText>
+        <ThemedText tone="muted">{t.comune.caricamento}</ThemedText>
       </Screen>
     );
   }
   if (isError || !target) {
     return (
       <Screen>
-        <ThemedText tone="error">Utente non trovato.</ThemedText>
+        <ThemedText tone="error">{t.admin.utenteNonTrovato}</ThemedText>
       </Screen>
     );
   }
 
-  const leaders = (allProfiles ?? []).filter((p) => p.role === 'leader' && p.id !== target.id);
+  const leaders = (allProfiles ?? []).filter(
+    (p) => canBeAssignedAsLeader(p.role) && p.id !== target.id,
+  );
 
   function save() {
     if (!role) return;
     update.mutate(
-      { id: target!.id, role, leader_id: role === 'collaborator' ? leaderId : null },
+      { id: target!.id, role, leader_id: expectsLeader(role) ? leaderId : null },
       { onSuccess: () => router.back() },
     );
   }
 
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
-      <ThemedText variant="title">{target.full_name || 'Senza nome'}</ThemedText>
+      <ThemedText variant="title">{target.full_name || t.comune.senzaNome}</ThemedText>
       {me?.id === target.id && (
         <ThemedText tone="gold" variant="caption">
-          Stai modificando il tuo profilo.
+          {t.admin.staiModificandoTe}
         </ThemedText>
       )}
 
       <Card style={{ gap: spacing.md }}>
         <ThemedText variant="label" tone="muted">
-          Ruolo
+          {t.admin.campoRuolo}
         </ThemedText>
         <View style={styles.chips}>
           {ROLES.map((r) => (
@@ -79,17 +77,21 @@ export default function AdminUserDetail() {
         </View>
       </Card>
 
-      {role === 'collaborator' && (
+      {expectsLeader(role) && (
         <Card style={{ gap: spacing.md }}>
           <ThemedText variant="label" tone="muted">
-            Leader
+            {t.admin.campoLeader}
           </ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-            <Chip label="— Nessuno" selected={leaderId === null} onPress={() => setLeaderId(null)} />
+            <Chip
+              label={t.admin.nessunLeader}
+              selected={leaderId === null}
+              onPress={() => setLeaderId(null)}
+            />
             {leaders.map((l) => (
               <Chip
                 key={l.id}
-                label={l.full_name || 'Senza nome'}
+                label={l.full_name || t.comune.senzaNome}
                 selected={leaderId === l.id}
                 onPress={() => setLeaderId(l.id)}
               />
@@ -97,7 +99,7 @@ export default function AdminUserDetail() {
           </ScrollView>
           {leaders.length === 0 && (
             <ThemedText tone="muted" variant="caption">
-              Nessun leader disponibile: assegna prima il ruolo «Leader» a un utente.
+              {t.admin.nessunLeaderDisponibile}
             </ThemedText>
           )}
         </Card>
@@ -105,11 +107,11 @@ export default function AdminUserDetail() {
 
       {update.isError && (
         <ThemedText tone="error" variant="caption">
-          {update.error instanceof Error ? update.error.message : 'Salvataggio non riuscito.'}
+          {update.error instanceof Error ? update.error.message : t.admin.salvataggioFallito}
         </ThemedText>
       )}
 
-      <Button title="Salva" onPress={save} loading={update.isPending} />
+      <Button title={t.comune.salva} onPress={save} loading={update.isPending} />
     </Screen>
   );
 }

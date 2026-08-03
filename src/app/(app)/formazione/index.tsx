@@ -3,27 +3,29 @@ import { Pressable, View } from 'react-native';
 
 import { Button, Card, EmptyState, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
+import { t } from '@/i18n/it';
 import { useCourses } from '@/lib/courses';
+import { can } from '@/lib/permissions';
 import { spacing } from '@/theme';
 
 export default function FormazioneIndex() {
   const { data: courses, isLoading, isError, error } = useCourses();
   const { profile } = useAuth();
   const router = useRouter();
-  const canSeeNetwork = profile?.role === 'leader' || profile?.role === 'admin';
+  const canSeeNetwork = can(profile, 'network.progress');
 
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
         <Button
-          title="Calendario"
+          title={t.formazione.calendario}
           variant="secondary"
           style={{ flex: 1 }}
           onPress={() => router.push('/formazione/calendario')}
         />
         {canSeeNetwork && (
           <Button
-            title="Avanzamento rete"
+            title={t.formazione.avanzamentoRete}
             variant="secondary"
             style={{ flex: 1 }}
             onPress={() => router.push('/formazione/rete')}
@@ -31,23 +33,21 @@ export default function FormazioneIndex() {
         )}
       </View>
 
-      {isLoading && <ThemedText tone="muted">Caricamento corsi…</ThemedText>}
+      {isLoading && <ThemedText tone="muted">{t.formazione.caricamentoCorsi}</ThemedText>}
 
       {isError && (
         <View style={{ gap: spacing.sm }}>
-          <ThemedText tone="error">Impossibile caricare i corsi.</ThemedText>
+          <ThemedText tone="error">{t.formazione.erroreCorsi}</ThemedText>
           <ThemedText tone="muted" variant="caption">
-            {error instanceof Error ? error.message : 'Errore sconosciuto'} — verifica .env e la
-            migrazione 0004.
+            {t.formazione.erroreCorsiDettaglio(
+              error instanceof Error ? error.message : t.formazione.erroreSconosciuto,
+            )}
           </ThemedText>
         </View>
       )}
 
       {courses?.length === 0 && (
-        <EmptyState
-          title="Nessun corso"
-          hint="I corsi vengono gestiti dall'amministratore. Puoi caricare il seed dimostrativo."
-        />
+        <EmptyState title={t.formazione.nessunCorso} hint={t.formazione.nessunCorsoSuggerimento} />
       )}
 
       {courses?.map((c) => (

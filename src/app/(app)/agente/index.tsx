@@ -20,6 +20,7 @@ import { useSpeech } from '@/hooks/use-speech';
 import { mergeDictation } from '@/lib/dictation';
 import { askAgent, type ChatMessage } from '@/lib/ai';
 import { createConversation, getLatestConversationId, loadMessages, saveMessage } from '@/lib/conversations';
+import { can } from '@/lib/permissions';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { radius, spacing, typography, useTheme } from '@/theme';
 
@@ -40,7 +41,7 @@ export default function Agente() {
   const { colors } = useTheme();
   const { profile } = useAuth();
   const router = useRouter();
-  const isAdmin = profile?.role === 'admin';
+  const canManageKnowledge = can(profile, 'knowledge.manage');
 
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [input, setInput] = useState('');
@@ -178,7 +179,7 @@ export default function Agente() {
             {autoRead ? '🔊 Lettura attiva' : '🔇 Lettura'}
           </ThemedText>
         </Pressable>
-        {isAdmin && (
+        {canManageKnowledge && (
           <Pressable onPress={() => router.push('/agente/documenti')} accessibilityRole="button">
             <ThemedText tone="muted" variant="caption">
               Base di conoscenza ›

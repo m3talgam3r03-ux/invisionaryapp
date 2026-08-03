@@ -4,13 +4,9 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Crest } from '@/components/Crest';
 import { Button, Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
-import { PILLARS, RED_SUITS, type Role, radius, spacing, useTheme } from '@/theme';
-
-const ROLE_LABEL: Record<Role, string> = {
-  admin: 'Amministratore',
-  leader: 'Leader',
-  collaborator: 'Collaboratore',
-};
+import { ROLE_LABEL, t } from '@/i18n/it';
+import { can } from '@/lib/permissions';
+import { PILLARS, RED_SUITS, radius, spacing, useTheme } from '@/theme';
 
 export default function Dashboard() {
   const { profile, isProfileLoading, signOut } = useAuth();
@@ -20,12 +16,12 @@ export default function Dashboard() {
   if (isProfileLoading && !profile) {
     return (
       <Screen>
-        <ThemedText tone="muted">Caricamento profilo…</ThemedText>
+        <ThemedText tone="muted">{t.comune.caricamentoProfilo}</ThemedText>
       </Screen>
     );
   }
 
-  const firstName = profile?.full_name?.split(' ')[0] || 'Benvenuto';
+  const firstName = profile?.full_name?.split(' ')[0] || t.dashboard.benvenuto;
 
   return (
     <Screen scroll>
@@ -35,7 +31,7 @@ export default function Dashboard() {
           <Crest size={58} />
         </Pressable>
         <View style={{ flex: 1, gap: spacing.xs }}>
-          <ThemedText variant="title">Ciao, {firstName}</ThemedText>
+          <ThemedText variant="title">{t.dashboard.saluto(firstName)}</ThemedText>
           {profile && (
             <View style={[styles.badge, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
               <ThemedText variant="caption" tone="muted">
@@ -46,69 +42,65 @@ export default function Dashboard() {
         </View>
       </View>
 
-      {/* Sezione specifica per ruolo */}
-      {profile?.role === 'admin' && (
+      {/* Riquadro che cambia con il ruolo: il testo arriva da i18n, l'azione dai permessi */}
+      {profile && (
         <Card style={{ gap: spacing.md }}>
-          <ThemedText variant="heading">Pannello amministratore</ThemedText>
+          <ThemedText variant="heading">{t.dashboard.perRuolo[profile.role].titolo}</ThemedText>
           <ThemedText tone="muted" variant="caption">
-            Gestione utenti, ruoli e autorizzazioni della rete.
+            {t.dashboard.perRuolo[profile.role].testo}
           </ThemedText>
-          <Button title="Apri pannello admin" onPress={() => router.push('/admin')} />
-        </Card>
-      )}
-
-      {profile?.role === 'leader' && (
-        <Card style={{ gap: spacing.sm }}>
-          <ThemedText variant="heading">La mia rete</ThemedText>
-          <ThemedText tone="muted" variant="caption">
-            Qui vedrai i tuoi collaboratori, i loro rinnovi e l'avanzamento formazione.
-          </ThemedText>
-        </Card>
-      )}
-
-      {profile?.role === 'collaborator' && (
-        <Card style={{ gap: spacing.sm }}>
-          <ThemedText variant="heading">Il mio spazio</ThemedText>
-          <ThemedText tone="muted" variant="caption">
-            Clienti, rinnovi e formazione: tutto in un unico posto.
-          </ThemedText>
+          {can(profile, 'admin.panel') && (
+            <Button title={t.dashboard.perRuolo.admin.azione} onPress={() => router.push('/admin')} />
+          )}
         </Card>
       )}
 
       {/* Agente AI (feature di punta) */}
       <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">Agente AI</ThemedText>
+        <ThemedText variant="heading">{t.dashboard.agente.titolo}</ThemedText>
         <ThemedText tone="muted" variant="caption">
-          Chiedi all'assistente: risposte basate sui contenuti della piattaforma.
+          {t.dashboard.agente.testo}
         </ThemedText>
-        <Button title="Apri l'agente" onPress={() => router.push('/agente')} />
+        <Button title={t.dashboard.agente.azione} onPress={() => router.push('/agente')} />
       </Card>
 
       {/* Azione rapida: scadenzario rinnovi (CRM) */}
       <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">Scadenzario rinnovi</ThemedText>
+        <ThemedText variant="heading">{t.dashboard.scadenzario.titolo}</ThemedText>
         <ThemedText tone="muted" variant="caption">
-          Tieni d'occhio le scadenze e ricevi un avviso prima del rinnovo.
+          {t.dashboard.scadenzario.testo}
         </ThemedText>
-        <Button title="Apri scadenzario" variant="secondary" onPress={() => router.push('/renewals')} />
+        <Button
+          title={t.dashboard.scadenzario.azione}
+          variant="secondary"
+          onPress={() => router.push('/renewals')}
+        />
       </Card>
 
       {/* Azione rapida: calcolatori */}
       <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">Calcolatori</ThemedText>
+        <ThemedText variant="heading">{t.dashboard.calcolatori.titolo}</ThemedText>
         <ThemedText tone="muted" variant="caption">
-          Lottaggio e interesse composto — strumenti a scopo educativo.
+          {t.dashboard.calcolatori.testo}
         </ThemedText>
-        <Button title="Apri calcolatori" variant="secondary" onPress={() => router.push('/calcolatori')} />
+        <Button
+          title={t.dashboard.calcolatori.azione}
+          variant="secondary"
+          onPress={() => router.push('/calcolatori')}
+        />
       </Card>
 
       {/* Rank a carte */}
       <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">Rank & classifica</ThemedText>
+        <ThemedText variant="heading">{t.dashboard.rank.titolo}</ThemedText>
         <ThemedText tone="muted" variant="caption">
-          Il tuo avanzamento nella rete: diventa un Asso.
+          {t.dashboard.rank.testo}
         </ThemedText>
-        <Button title="Vedi il tuo rank" variant="secondary" onPress={() => router.push('/rank')} />
+        <Button
+          title={t.dashboard.rank.azione}
+          variant="secondary"
+          onPress={() => router.push('/rank')}
+        />
       </Card>
 
       {/* I quattro pilastri: Network è attivo (CRM), gli altri arrivano nelle prossime milestone */}
@@ -132,7 +124,7 @@ export default function Dashboard() {
               </ThemedText>
               <ThemedText variant="label">{p.label}</ThemedText>
               <ThemedText tone={active ? 'accent' : 'muted'} variant="caption">
-                {active ? 'Apri →' : 'In arrivo'}
+                {active ? t.dashboard.pilastroApri : t.dashboard.pilastroInArrivo}
               </ThemedText>
             </Card>
           );
@@ -152,11 +144,10 @@ export default function Dashboard() {
         })}
       </View>
 
-      <Button title="Esci" variant="secondary" onPress={() => void signOut()} />
+      <Button title={t.comune.esci} variant="secondary" onPress={() => void signOut()} />
 
       <ThemedText tone="muted" variant="caption" style={styles.disclaimer}>
-        Contenuti a scopo educativo e informativo. Nessuna promessa di rendimento né consulenza
-        finanziaria personalizzata.
+        {t.dashboard.disclaimer}
       </ThemedText>
     </Screen>
   );

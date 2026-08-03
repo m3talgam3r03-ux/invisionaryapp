@@ -4,15 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
+import { ROLE_LABEL, t } from '@/i18n/it';
 import { useAllProfiles } from '@/lib/admin';
-import { spacing, useTheme, type Role } from '@/theme';
+import { can, expectsLeader } from '@/lib/permissions';
+import { spacing, useTheme } from '@/theme';
 import type { Profile } from '@/types/models';
-
-const ROLE_LABEL: Record<Role, string> = {
-  admin: 'Amministratore',
-  leader: 'Leader',
-  collaborator: 'Collaboratore',
-};
 
 export default function AdminUsers() {
   const { profile, isProfileLoading } = useAuth();
@@ -23,7 +19,7 @@ export default function AdminUsers() {
   if (isProfileLoading && !profile) {
     return null;
   }
-  if (profile?.role !== 'admin') {
+  if (!can(profile, 'admin.panel')) {
     return <Redirect href="/" />;
   }
 
@@ -41,19 +37,18 @@ export default function AdminUsers() {
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         ListHeaderComponent={
           <ThemedText tone="muted" variant="caption" style={{ marginBottom: spacing.md }}>
-            Assegna ruoli e gerarchia. I nuovi utenti si registrano come collaboratori; creazione ed
-            eliminazione account avvengono da Supabase.
+            {t.admin.introElenco}
           </ThemedText>
         }
         ListEmptyComponent={
           isLoading ? (
-            <ThemedText tone="muted">Caricamento utenti…</ThemedText>
+            <ThemedText tone="muted">{t.admin.caricamentoUtenti}</ThemedText>
           ) : isError ? (
             <ThemedText tone="error" variant="caption">
-              {error instanceof Error ? error.message : 'Errore nel caricamento.'}
+              {error instanceof Error ? error.message : t.comune.errore}
             </ThemedText>
           ) : (
-            <ThemedText tone="muted">Nessun utente.</ThemedText>
+            <ThemedText tone="muted">{t.admin.nessunUtente}</ThemedText>
           )
         }
         renderItem={({ item }) => (
@@ -82,15 +77,15 @@ function UserRow({
       <Card style={{ gap: spacing.xs }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           <ThemedText variant="heading" style={{ flex: 1 }}>
-            {profile.full_name || 'Senza nome'}
+            {profile.full_name || t.comune.senzaNome}
           </ThemedText>
           <ThemedText tone="gold" variant="label">
             {ROLE_LABEL[profile.role]}
           </ThemedText>
         </View>
-        {profile.role === 'collaborator' && (
+        {expectsLeader(profile.role) && (
           <ThemedText tone="muted" variant="caption">
-            Leader: {leaderName ?? 'non assegnato'}
+            {t.admin.leaderDi(leaderName ?? t.admin.leaderNonAssegnato)}
           </ThemedText>
         )}
       </Card>
