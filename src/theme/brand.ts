@@ -41,7 +41,7 @@ export const RANKS = [
 export type Rank = (typeof RANKS)[number];
 
 /** Ruoli utente della piattaforma. */
-export const ROLES = ['admin', 'leader', 'collaborator'] as const;
+export const ROLES = ['admin', 'leader', 'collaboratore'] as const;
 export type Role = (typeof ROLES)[number];
 
 /** Semi "rossi" (cuori e quadri) — renderizzati con il colore accent. */

@@ -3,15 +3,10 @@ import { View, type DimensionValue } from 'react-native';
 import { RankBadge } from '@/components/RankBadge';
 import { Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
+import { ROLE_LABEL } from '@/i18n/it';
 import { useLeaderboard, useMyStats } from '@/lib/leaderboard';
 import { rankForPoints, rankLabel } from '@/lib/rank';
-import { spacing, useTheme, type Role } from '@/theme';
-
-const ROLE_LABEL: Record<Role, string> = {
-  admin: 'Amministratore',
-  leader: 'Leader',
-  collaborator: 'Collaboratore',
-};
+import { spacing, useTheme } from '@/theme';
 
 export default function RankScreen() {
   const { session } = useAuth();

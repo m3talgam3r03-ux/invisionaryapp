@@ -17,7 +17,7 @@
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
 export type UserContext = {
-  role: 'admin' | 'leader' | 'collaborator';
+  role: 'admin' | 'leader' | 'collaboratore';
   firstName: string | null;
   daysSinceJoin: number | null;
   lessonsCompleted: number;
@@ -66,7 +66,7 @@ export async function loadUserContext(
       .eq('status', 'active')
       .gte('scadenza', today)
       .lte('scadenza', limit30),
-    profile.role === 'collaborator'
+    profile.role === 'collaboratore'
       ? Promise.resolve({ count: null })
       : admin.from('profiles').select('id', { count: 'exact', head: true }).eq('leader_id', userId),
     admin.from('trading_accounts').select('id', { count: 'exact', head: true }).eq('owner_id', userId),
@@ -85,7 +85,7 @@ export async function loadUserContext(
     clients: count(clients),
     renewalsActive: count(renewalsActive),
     renewalsExpiring30d: count(renewalsSoon),
-    teamSize: profile.role === 'collaborator' ? null : count(team),
+    teamSize: profile.role === 'collaboratore' ? null : count(team),
     hasTradingAccount: count(trading) > 0,
   };
 }

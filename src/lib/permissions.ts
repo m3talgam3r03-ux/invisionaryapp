@@ -67,7 +67,7 @@ export function can(user: Profile | null | undefined, action: Action, resource?:
 
 /** Solo i collaboratori hanno un leader assegnato. */
 export function expectsLeader(role: Role): boolean {
-  return role === 'collaborator';
+  return role === 'collaboratore';
 }
 
 /** Solo chi ha ruolo leader può essere assegnato come leader di qualcun altro. */

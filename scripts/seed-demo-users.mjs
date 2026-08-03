@@ -30,7 +30,7 @@ const PASSWORD = 'Invisionary!23';
 const DEMO = [
   { role: 'admin', email: 'admin@invisionary.demo', full_name: 'Admin Demo' },
   { role: 'leader', email: 'leader@invisionary.demo', full_name: 'Leader Demo' },
-  { role: 'collaborator', email: 'collab@invisionary.demo', full_name: 'Collaboratore Demo' },
+  { role: 'collaboratore', email: 'collab@invisionary.demo', full_name: 'Collaboratore Demo' },
 ];
 
 async function findUserByEmail(email) {
@@ -74,8 +74,8 @@ async function main() {
     supabase.from('profiles').update({ full_name: 'Leader Demo', role: 'leader' }).eq('id', ids.leader),
     supabase
       .from('profiles')
-      .update({ full_name: 'Collaboratore Demo', role: 'collaborator', leader_id: ids.leader })
-      .eq('id', ids.collaborator),
+      .update({ full_name: 'Collaboratore Demo', role: 'collaboratore', leader_id: ids.leader })
+      .eq('id', ids.collaboratore),
   ];
   for (const p of updates) {
     const { error } = await p;

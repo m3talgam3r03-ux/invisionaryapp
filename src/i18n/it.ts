@@ -14,7 +14,7 @@ import type { Role } from '@/theme';
 export const ROLE_LABEL: Record<Role, string> = {
   admin: 'Amministratore',
   leader: 'Leader',
-  collaborator: 'Collaboratore',
+  collaboratore: 'Collaboratore',
 };
 
 export const t = {
@@ -42,7 +42,7 @@ export const t = {
         testo: 'Qui vedrai i tuoi collaboratori, i loro rinnovi e l’avanzamento formazione.',
         azione: null,
       },
-      collaborator: {
+      collaboratore: {
         titolo: 'Il mio spazio',
         testo: 'Clienti, rinnovi e formazione: tutto in un unico posto.',
         azione: null,
