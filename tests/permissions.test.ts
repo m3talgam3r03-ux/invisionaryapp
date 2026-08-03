@@ -70,6 +70,43 @@ describe('can() — lettura dei dati di un membro', () => {
   });
 });
 
+describe('can() — scadenzario della rete', () => {
+  it('lo vedono admin e leader, il collaboratore vede solo i propri rinnovi', () => {
+    expect(can(admin, 'renewals.network')).toBe(true);
+    expect(can(leader, 'renewals.network')).toBe(true);
+    expect(can(collaboratore, 'renewals.network')).toBe(false);
+  });
+});
+
+describe('can() — approvazione dei rinnovi', () => {
+  it('il leader approva i rinnovi dei propri collaboratori', () => {
+    expect(can(leader, 'renewals.approve', { ownerId: 'collab-1', leaderId: 'leader-1' })).toBe(true);
+  });
+
+  it('il leader NON approva i collaboratori di un altro leader', () => {
+    expect(can(leader, 'renewals.approve', { ownerId: 'collab-9', leaderId: 'leader-altro' })).toBe(
+      false,
+    );
+  });
+
+  it('un collaboratore non si auto-approva', () => {
+    expect(can(collaboratore, 'renewals.approve', { ownerId: 'collab-1' })).toBe(false);
+  });
+
+  it('nemmeno un leader si auto-approva', () => {
+    expect(can(leader, 'renewals.approve', { ownerId: 'leader-1' })).toBe(false);
+  });
+
+  it('l’admin approva chiunque, compreso se stesso: sopra di lui non c’è nessuno', () => {
+    expect(can(admin, 'renewals.approve', { ownerId: 'collab-1', leaderId: 'leader-1' })).toBe(true);
+    expect(can(admin, 'renewals.approve', { ownerId: 'admin-1' })).toBe(true);
+  });
+
+  it('senza sapere di chi è il rinnovo, nega', () => {
+    expect(can(leader, 'renewals.approve')).toBe(false);
+  });
+});
+
 describe('can() — utente non caricato', () => {
   it('nel dubbio nega tutto', () => {
     for (const azione of ['admin.panel', 'knowledge.manage', 'network.progress'] as const) {

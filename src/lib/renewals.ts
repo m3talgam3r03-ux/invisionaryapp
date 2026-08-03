@@ -1,12 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { Renewal, RenewalInput, RenewalWithClient } from '@/types/models';
+import type {
+  Renewal,
+  RenewalHistoryEntry,
+  RenewalInput,
+  RenewalWithClient,
+} from '@/types/models';
 
 import { supabase } from './supabase';
 
 const KEY = 'renewals';
 
-/** Scadenzario: rinnovi ordinati per data di scadenza (crescente), con nome cliente. */
+/**
+ * Scadenzario: rinnovi ordinati per scadenza crescente, con nome cliente.
+ * Il perimetro lo decide la RLS — il collaboratore riceve solo i propri.
+ */
 export function useRenewals() {
   return useQuery({
     queryKey: [KEY],
@@ -14,9 +22,26 @@ export function useRenewals() {
       const { data, error } = await supabase
         .from('renewals')
         .select('*, client:clients(nome)')
-        .order('scadenza', { ascending: true });
+        .order('current_due_date', { ascending: true });
       if (error) throw error;
       return (data ?? []) as RenewalWithClient[];
+    },
+  });
+}
+
+/** Storico di un rinnovo, dal più recente. Sola lettura: lo scrivono i trigger. */
+export function useRenewalHistory(renewalId: string | undefined) {
+  return useQuery({
+    queryKey: [KEY, renewalId, 'history'],
+    enabled: Boolean(renewalId),
+    queryFn: async (): Promise<RenewalHistoryEntry[]> => {
+      const { data, error } = await supabase
+        .from('renewal_history')
+        .select('*')
+        .eq('renewal_id', renewalId as string)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as RenewalHistoryEntry[];
     },
   });
 }
@@ -53,6 +78,44 @@ export function useUpdateRenewal() {
       const { data, error } = await supabase
         .from('renewals')
         .update({ ...input, reminder_sent_at: null })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Renewal;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: [KEY] });
+      qc.invalidateQueries({ queryKey: [KEY, variables.id] });
+    },
+  });
+}
+
+/**
+ * Approva un rinnovo portandolo a `nuovaScadenza`.
+ * Chi non ha il diritto di approvare non riceve un errore: il guardiano del
+ * database riclassifica la modifica come richiesta di approvazione. Per questo
+ * l'interfaccia mostra il pulsante solo a chi può (`can(…, 'renewals.approve')`),
+ * ma la decisione vera resta in Postgres.
+ */
+export function useApproveRenewal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      nuovaScadenza,
+    }: {
+      id: string;
+      nuovaScadenza: string;
+    }): Promise<Renewal> => {
+      const { data, error } = await supabase
+        .from('renewals')
+        .update({
+          current_due_date: nuovaScadenza,
+          status: 'attivo',
+          // Nuova scadenza = nuovo ciclo di avvisi.
+          reminder_sent_at: null,
+        })
         .eq('id', id)
         .select()
         .single();

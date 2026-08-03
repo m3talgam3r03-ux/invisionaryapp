@@ -21,6 +21,10 @@ export type Action =
   | 'knowledge.manage'
   /** Vedere l'avanzamento formazione della propria rete. */
   | 'network.progress'
+  /** Vedere lo scadenzario di tutta la rete, non solo i propri rinnovi. */
+  | 'renewals.network'
+  /** Approvare il rinnovo di qualcuno (richiede `resource`). */
+  | 'renewals.approve'
   /** Leggere i dati di un membro della rete (richiede `resource`). */
   | 'member.read';
 
@@ -48,7 +52,20 @@ export function can(user: Profile | null | undefined, action: Action, resource?:
       return user.role === 'admin';
 
     case 'network.progress':
+    case 'renewals.network':
       return user.role === 'admin' || user.role === 'leader';
+
+    // Rispecchia can_approve_renewal() del database.
+    // L'admin è l'autorità finale e approva anche i propri rinnovi: sopra di lui
+    // non c'è nessuno, e negarglielo li bloccherebbe per sempre.
+    // Tutti gli altri approvano solo rinnovi altrui, e solo dei propri
+    // collaboratori diretti.
+    case 'renewals.approve': {
+      if (!resource) return false;
+      if (user.role === 'admin') return true;
+      if (resource.ownerId === user.id) return false;
+      return user.role === 'leader' && resource.leaderId === user.id;
+    }
 
     // Rispecchia can_read_member() del database: sono io, è un mio
     // collaboratore, oppure sono admin.

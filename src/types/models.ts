@@ -29,7 +29,7 @@ export type ClientInput = {
   note?: string | null;
 };
 
-export const RENEWAL_STATUS = ['active', 'renewed', 'lost'] as const;
+export const RENEWAL_STATUS = ['attivo', 'in_attesa_approvazione', 'scaduto', 'annullato'] as const;
 export type RenewalStatus = (typeof RENEWAL_STATUS)[number];
 
 /** Riga della tabella `renewals` (scadenzario). */
@@ -38,9 +38,16 @@ export type Renewal = {
   client_id: string | null;
   owner_id: string;
   prodotto: string | null;
-  scadenza: string; // data ISO YYYY-MM-DD
-  alert_days_before: number;
+  /** Scadenza corrente, ISO YYYY-MM-DD. Il rinnovo somma su QUESTA, non su oggi. */
+  current_due_date: string;
+  /** Durata del rinnovo in giorni (default 30). */
+  interval_days: number;
   status: RenewalStatus;
+  requested_at: string | null;
+  requested_by: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
+  note: string | null;
   reminder_sent_at: string | null;
   created_at: string;
 };
@@ -54,9 +61,31 @@ export type RenewalWithClient = Renewal & {
 export type RenewalInput = {
   client_id?: string | null;
   prodotto?: string | null;
-  scadenza: string;
-  alert_days_before?: number;
+  current_due_date: string;
+  interval_days?: number;
   status?: RenewalStatus;
+  note?: string | null;
+};
+
+export const RENEWAL_ACTIONS = [
+  'creato',
+  'rinnovo_richiesto',
+  'approvato',
+  'rifiutato',
+  'data_modificata',
+  'annullato',
+] as const;
+export type RenewalAction = (typeof RENEWAL_ACTIONS)[number];
+
+/** Riga di `renewal_history`: append-only, una per transizione. */
+export type RenewalHistoryEntry = {
+  id: string;
+  renewal_id: string;
+  action: RenewalAction;
+  old_due_date: string | null;
+  new_due_date: string | null;
+  actor_id: string | null;
+  created_at: string;
 };
 
 // --- Formazione -------------------------------------------------------------

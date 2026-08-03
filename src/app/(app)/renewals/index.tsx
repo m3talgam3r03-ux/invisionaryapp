@@ -9,10 +9,14 @@ import { spacing, useTheme } from '@/theme';
 import type { RenewalStatus, RenewalWithClient } from '@/types/models';
 
 const STATUS_LABEL: Record<RenewalStatus, string> = {
-  active: 'Attivo',
-  renewed: 'Rinnovato',
-  lost: 'Perso',
+  attivo: 'Attivo',
+  in_attesa_approvazione: 'In attesa di approvazione',
+  scaduto: 'Scaduto',
+  annullato: 'Annullato',
 };
+
+/** Giorni di preavviso per l'evidenza in oro. Gli avvisi push sono a -7/-3/-1. */
+const GIORNI_PREAVVISO = 7;
 
 export default function RenewalsList() {
   const { data, isLoading, isError, error, refetch, isRefetching } = useRenewals();
@@ -61,8 +65,8 @@ export default function RenewalsList() {
 }
 
 function RenewalRow({ renewal, onPress }: { renewal: RenewalWithClient; onPress: () => void }) {
-  const days = daysUntil(renewal.scadenza);
-  const isActive = renewal.status === 'active';
+  const days = daysUntil(renewal.current_due_date);
+  const isActive = renewal.status === 'attivo';
 
   // Urgenza (solo per i rinnovi attivi): scaduto → error, in avviso → gold, altrimenti muted.
   let urgencyTone: 'error' | 'gold' | 'muted' = 'muted';
@@ -74,7 +78,7 @@ function RenewalRow({ renewal, onPress }: { renewal: RenewalWithClient; onPress:
     urgencyTone = isActive ? 'error' : 'muted';
     urgencyText = 'Scade oggi';
   } else {
-    urgencyTone = isActive && days <= renewal.alert_days_before ? 'gold' : 'muted';
+    urgencyTone = isActive && days <= GIORNI_PREAVVISO ? 'gold' : 'muted';
     urgencyText = `Tra ${days} g`;
   }
 
@@ -92,7 +96,7 @@ function RenewalRow({ renewal, onPress }: { renewal: RenewalWithClient; onPress:
           </ThemedText>
         </View>
         <ThemedText tone="muted" variant="caption">
-          {formatDateIT(renewal.scadenza)}
+          {formatDateIT(renewal.current_due_date)}
           {renewal.prodotto && renewal.client?.nome ? ` · ${renewal.prodotto}` : ''}
           {!isActive ? ` · ${STATUS_LABEL[renewal.status]}` : ''}
         </ThemedText>

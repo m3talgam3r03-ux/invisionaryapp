@@ -8,9 +8,10 @@ import { radius, spacing, useTheme } from '@/theme';
 import { RENEWAL_STATUS, type RenewalInput, type RenewalStatus } from '@/types/models';
 
 const STATUS_LABEL: Record<RenewalStatus, string> = {
-  active: 'Attivo',
-  renewed: 'Rinnovato',
-  lost: 'Perso',
+  attivo: 'Attivo',
+  in_attesa_approvazione: 'In attesa di approvazione',
+  scaduto: 'Scaduto',
+  annullato: 'Annullato',
 };
 
 type RenewalFormProps = {
@@ -25,9 +26,9 @@ export function RenewalForm({ initial, submitLabel, loading, onSubmit }: Renewal
   const [clientId, setClientId] = useState<string | null>(initial?.client_id ?? null);
   const [clientName, setClientName] = useState<string | null>(initial?.clientName ?? null);
   const [prodotto, setProdotto] = useState(initial?.prodotto ?? '');
-  const [scadenza, setScadenza] = useState(initial?.scadenza ?? '');
-  const [alertDays, setAlertDays] = useState(String(initial?.alert_days_before ?? 30));
-  const [status, setStatus] = useState<RenewalStatus>(initial?.status ?? 'active');
+  const [scadenza, setScadenza] = useState(initial?.current_due_date ?? '');
+  const [alertDays, setAlertDays] = useState(String(initial?.interval_days ?? 30));
+  const [status, setStatus] = useState<RenewalStatus>(initial?.status ?? 'attivo');
   const [error, setError] = useState<string | null>(null);
 
   function submit() {
@@ -35,13 +36,13 @@ export function RenewalForm({ initial, submitLabel, loading, onSubmit }: Renewal
       setError('Inserisci una data di scadenza valida (AAAA-MM-GG).');
       return;
     }
-    const parsedAlert = parseInt(alertDays, 10);
+    const durata = parseInt(alertDays, 10);
     setError(null);
     onSubmit({
       client_id: clientId,
       prodotto: prodotto.trim() || null,
-      scadenza,
-      alert_days_before: Number.isFinite(parsedAlert) && parsedAlert >= 0 ? parsedAlert : 30,
+      current_due_date: scadenza,
+      interval_days: Number.isFinite(durata) && durata > 0 ? durata : 30,
       status,
     });
   }
@@ -66,12 +67,15 @@ export function RenewalForm({ initial, submitLabel, loading, onSubmit }: Renewal
         errorText={error ?? undefined}
       />
       <TextField
-        label="Giorni di preavviso"
+        label="Durata del rinnovo (giorni)"
         value={alertDays}
         onChangeText={setAlertDays}
         keyboardType="number-pad"
         placeholder="30"
       />
+      <ThemedText tone="muted" variant="caption" style={{ marginTop: -spacing.md }}>
+        Di quanto avanza la scadenza a ogni rinnovo approvato.
+      </ThemedText>
 
       <View style={{ gap: spacing.sm }}>
         <ThemedText variant="label" tone="muted">
