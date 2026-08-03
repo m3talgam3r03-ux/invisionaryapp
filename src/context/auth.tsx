@@ -52,10 +52,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const profile = profileQuery.data ?? null;
+
+  // Il ruolo viaggia anche dentro il token (migrazione 0011) e le policy RLS lo
+  // leggono da lì. Ma il token si rinnova ogni ora: se un admin cambia il ruolo
+  // a qualcuno, per quella persona il claim resta indietro fino al rinnovo.
+  // Qui confrontiamo il claim con la riga di `profiles`, che è la verità: se
+  // divergono, chiediamo subito un token nuovo. Così la finestra si chiude alla
+  // prima apertura dell'app invece di durare un'ora.
+  useEffect(() => {
+    if (!session || !profile) return;
+    const claim = (session.user.app_metadata as { role?: string } | undefined)?.role;
+    // claim assente = hook non ancora attivo: non è una divergenza, si ripiega
+    // sulla tabella (vedi is_admin() nella 0011).
+    if (!claim || claim === profile.role) return;
+    void supabase.auth.refreshSession();
+  }, [session, profile]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
-      profile: profileQuery.data ?? null,
+      profile,
       isLoading,
       isProfileLoading: profileQuery.isLoading,
       signIn: async (email, password) => {
@@ -76,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await supabase.auth.signOut();
       },
     }),
-    [session, isLoading, profileQuery.data, profileQuery.isLoading],
+    [session, isLoading, profile, profileQuery.isLoading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

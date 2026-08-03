@@ -48,12 +48,56 @@ Crea (password comune `Invisionary!23`):
 
 ## Modello RLS (sintesi)
 
-- **collaborator** → vede/modifica solo le proprie righe (`owner_id = auth.uid()`).
+- **collaboratore** → vede/modifica solo le proprie righe (`owner_id = auth.uid()`).
 - **leader** → vede anche i propri collaboratori (`leader_id = auth.uid()`), in sola lettura.
 - **admin** → accesso completo; unico a poter cambiare ruoli e gerarchia.
 
 Le funzioni `is_admin()` / `can_read_member()` sono `SECURITY DEFINER` per evitare
 la ricorsione nelle policy.
+
+## Ruolo nel token (migrazione 0011) — richiede un passaggio manuale
+
+La `0011` crea l'hook `custom_access_token_hook`, che copia `profiles.role` dentro
+`app_metadata.role` del JWT: così le policy leggono il ruolo dal token invece di
+interrogare `profiles` a ogni riga.
+
+**L'hook va attivato a mano**, la migrazione non può farlo:
+
+1. Supabase → **Authentication → Hooks**
+2. **Customize Access Token (JWT) Claims** → abilita
+3. Scegli la funzione `public.custom_access_token_hook`
+4. Fai logout/login: i token nuovi conterranno il claim
+
+> Applicare la migrazione **senza** attivare l'hook non rompe nulla: `is_admin()`
+> usa il claim solo se c'è e altrimenti ripiega su `profiles`. Vale anche per le
+> sessioni emesse prima dell'attivazione, che continuano a funzionare.
+
+**Il claim può restare indietro.** Il token dura circa un'ora: se un admin cambia
+il ruolo a qualcuno, per quella persona il claim resta quello vecchio fino al
+rinnovo. L'app se ne accorge da sola — `AuthProvider` confronta il claim con la
+riga di `profiles` e, se divergono, chiede subito un token nuovo. Per questo le
+operazioni delicate restano comunque protette da `is_admin()`, che a quel punto
+rilegge il valore aggiornato.
+
+### Verificare che funzioni
+
+```sql
+-- da un client autenticato (non dal SQL Editor, che non ha un JWT utente)
+select public.jwt_role();   -- deve restituire admin | leader | collaboratore
+```
+
+## Test automatici delle policy
+
+`tests/rls.test.ts` verifica dal vivo che ogni ruolo veda esattamente le righe
+attese. Vanno eseguiti su un **progetto di prova** (scrivono e cancellano dati):
+
+```powershell
+$env:SUPABASE_SERVICE_ROLE_KEY="<service_role key>"
+npm test
+```
+
+Senza la chiave i test RLS si saltano con un avviso; quelli del modulo permessi
+(`tests/permissions.test.ts`) girano sempre.
 
 ## Notifiche push e reminder rinnovi (Milestone 4)
 
