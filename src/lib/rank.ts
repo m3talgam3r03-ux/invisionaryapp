@@ -1,51 +1,40 @@
-import { RANKS, type Rank } from '@/theme';
-
 /**
- * Sistema di rank a carte (2 → Asso) per l'avanzamento della rete.
- * Punteggio trasparente e configurabile: lezioni completate, clienti, rinnovi attivi.
- * L'oro è riservato a rank/traguardi (regola di brand).
+ * Rank a carte (2 → Asso): solo la presentazione.
+ *
+ * ⚠️ Pesi e soglie NON sono qui: stanno in `rank_rules` e `rank_tiers` sul
+ * database (migrazione 0015) e li modifica l'admin senza un rilascio.
+ *
+ * Di conseguenza nemmeno «qual è il livello massimo» è una costante del codice:
+ * lo dice il database. Il segnale è `punti_al_prossimo` nullo — non c'è un
+ * livello oltre — ed è quello che usa l'interfaccia.
+ *
+ * Nessun import da `@/theme`: questo modulo resta puro e testabile senza
+ * caricare React Native.
  */
-export const RANK_WEIGHTS = { lesson: 10, client: 5, renewal: 3 } as const;
 
-export type StatCounts = { lessons: number; clients: number; renewals: number };
-
-export function computePoints(c: StatCounts): number {
-  return (
-    c.lessons * RANK_WEIGHTS.lesson +
-    c.clients * RANK_WEIGHTS.client +
-    c.renewals * RANK_WEIGHTS.renewal
-  );
-}
-
-/** Punti cumulativi necessari per raggiungere ciascun rank (indice 0 = "2"). */
-export const RANK_THRESHOLDS = [0, 30, 70, 120, 180, 260, 360, 480, 620, 800, 1020, 1300, 1700];
-
-/** Nomi italiani per le figure. */
-const RANK_NAME: Partial<Record<Rank, string>> = { A: 'Asso', K: 'Re', Q: 'Donna', J: 'Jack' };
-export function rankLabel(r: Rank): string {
-  return RANK_NAME[r] ?? r;
-}
-
-export type RankInfo = {
-  index: number;
-  rank: Rank;
-  isMax: boolean;
-  nextRank: Rank | null;
-  progress: number; // 0..1 verso il rank successivo
-  toNext: number; // punti mancanti al rank successivo
-  points: number;
+/** Nomi italiani per le figure; i numeri restano tali. */
+const NOME_FIGURA: Record<string, string> = {
+  A: 'Asso',
+  K: 'Re',
+  Q: 'Donna',
+  J: 'Jack',
 };
 
-export function rankForPoints(points: number): RankInfo {
-  let i = 0;
-  for (let k = 0; k < RANK_THRESHOLDS.length; k++) {
-    if (points >= RANK_THRESHOLDS[k]) i = k;
-    else break;
-  }
-  const isMax = i === RANKS.length - 1;
-  const base = RANK_THRESHOLDS[i];
-  const next = isMax ? base : RANK_THRESHOLDS[i + 1];
-  const progress = isMax ? 1 : Math.max(0, Math.min(1, (points - base) / (next - base)));
-  const toNext = isMax ? 0 : Math.max(0, next - points);
-  return { index: i, rank: RANKS[i], isMax, nextRank: isMax ? null : RANKS[i + 1], progress, toNext, points };
+/**
+ * Come si legge un livello. I livelli sono configurabili: se un giorno non
+ * fossero più carte, il nome passa così com'è invece di rompersi.
+ */
+export function rankLabel(nome: string): string {
+  return NOME_FIGURA[nome] ?? nome;
+}
+
+/**
+ * Quanto si è avanti verso il livello successivo, da 0 a 1.
+ * `puntiAlProssimo` nullo significa che si è in cima alla scala.
+ */
+export function progressoVersoProssimo(punti: number, puntiAlProssimo: number | null): number {
+  if (puntiAlProssimo === null || puntiAlProssimo <= 0) return 1;
+  const traguardo = punti + puntiAlProssimo;
+  if (traguardo <= 0) return 0;
+  return Math.max(0, Math.min(1, punti / traguardo));
 }

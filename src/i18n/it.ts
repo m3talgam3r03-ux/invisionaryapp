@@ -175,6 +175,28 @@ export const t = {
     },
   },
 
+  rank: {
+    tuoRank: 'Il tuo rank',
+    calcolo: 'Calcolo del rank…',
+    punti: (n: number) => `${n} ${n === 1 ? 'punto' : 'punti'}`,
+    massimo: 'Sei un Asso — livello massimo della scala.',
+    prossimo: (nome: string, mancanti: number) =>
+      `Prossimo: ${nome} · ${mancanti} ${mancanti === 1 ? 'punto' : 'punti'} al traguardo.`,
+    classifica: 'Classifica della rete',
+    caricamentoClassifica: 'Caricamento classifica…',
+    io: ' · tu',
+    comeSiCalcola: 'Come si calcola',
+    metriche: {
+      lezioni_completate: 'Lezioni completate',
+      clienti_acquisiti: 'Clienti acquisiti',
+      clienti_attivi: 'Clienti attivi',
+      rinnovi_attivi: 'Rinnovi attivi',
+    },
+    pesoNullo: 'non conteggiata',
+    disclaimer:
+      'Avanzamento a scopo motivazionale. Nessuna promessa di rendimento né di risultati economici.',
+  },
+
   formazione: {
     calendario: 'Calendario',
     avanzamentoRete: 'Avanzamento rete',

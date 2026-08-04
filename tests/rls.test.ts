@@ -484,6 +484,89 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
     });
   });
 
+  // --- rank -----------------------------------------------------------------
+
+  describe('classifica', () => {
+    it('la vista materializzata non è raggiungibile direttamente', async () => {
+      // È il punto critico: Postgres non applica la RLS alle matview, quindi se
+      // fosse leggibile mostrerebbe i punti di tutti. Deve essere negata.
+      const { error } = await client.collaboratore.from('mv_rank_metriche').select('user_id');
+      expect(error, 'la matview non deve essere accessibile agli utenti').not.toBeNull();
+    });
+
+    it('il collaboratore vede solo se stesso in classifica', async () => {
+      const { data, error } = await client.collaboratore.rpc('classifica');
+      expect(error).toBeNull();
+      expect((data as { user_id: string }[]).map((r) => r.user_id)).toEqual([id.collaboratore]);
+    });
+
+    it('il leader vede sé e i propri collaboratori, non l’admin', async () => {
+      const { data, error } = await client.leader.rpc('classifica');
+      expect(error).toBeNull();
+      const visti = new Set((data as { user_id: string }[]).map((r) => r.user_id));
+      expect(visti.has(id.leader)).toBe(true);
+      expect(visti.has(id.collaboratore)).toBe(true);
+      expect(visti.has(id.admin), 'il filtro can_read_member è l’unica protezione qui').toBe(false);
+    });
+
+    it('è ordinata per punti decrescenti', async () => {
+      const { data } = await client.admin.rpc('classifica');
+      const punti = (data as { punti: number }[]).map((r) => Number(r.punti));
+      const ordinati = [...punti].sort((a, b) => b - a);
+      expect(punti).toEqual(ordinati);
+    });
+
+    it('cambiare un peso ricalcola i punti senza toccare il codice', async () => {
+      // È la Definition of Done della milestone.
+      const prima = await client.admin.rpc('classifica');
+      const puntiPrima = Number(
+        (prima.data as { user_id: string; punti: number }[]).find(
+          (r) => r.user_id === id.collaboratore,
+        )!.punti,
+      );
+
+      const { data: regola } = await admin
+        .from('rank_rules')
+        .select('id, points_per_unit')
+        .eq('metric', 'lezioni_completate')
+        .single();
+
+      await admin
+        .from('rank_rules')
+        .update({ points_per_unit: Number(regola!.points_per_unit) + 100 })
+        .eq('id', regola!.id);
+
+      const dopo = await client.admin.rpc('classifica');
+      const riga = (dopo.data as { user_id: string; punti: number; lezioni_completate: number }[]).find(
+        (r) => r.user_id === id.collaboratore,
+      )!;
+      const atteso = puntiPrima + 100 * riga.lezioni_completate;
+      expect(Number(riga.punti)).toBe(atteso);
+
+      // Ripristino il peso originale.
+      await admin
+        .from('rank_rules')
+        .update({ points_per_unit: regola!.points_per_unit })
+        .eq('id', regola!.id);
+    });
+
+    it('solo l’admin modifica le regole del punteggio', async () => {
+      const { data: regola } = await admin.from('rank_rules').select('id').limit(1).single();
+      const { data: modificate } = await client.collaboratore
+        .from('rank_rules')
+        .update({ points_per_unit: 999 })
+        .eq('id', regola!.id)
+        .select('id');
+      expect(modificate, 'la RLS filtra: nessuna riga aggiornata').toEqual([]);
+    });
+
+    it('le regole sono leggibili da tutti: il punteggio deve essere trasparente', async () => {
+      const { data, error } = await client.collaboratore.from('rank_rules').select('metric');
+      expect(error).toBeNull();
+      expect(data!.length).toBeGreaterThan(0);
+    });
+  });
+
   // --- escalation di privilegi ---------------------------------------------
 
   describe('anti escalation', () => {

@@ -178,6 +178,43 @@ supabase functions invoke renewal-reminders --no-verify-jwt
 > `alert_days_before` giorni → push all'owner → `reminder_sent_at` valorizzato (niente doppioni).
 > Modificare scadenza o stato di un rinnovo azzera `reminder_sent_at` per un nuovo ciclo.
 
+## Rank: regole configurabili e ricalcolo (migrazione 0015)
+
+I pesi del punteggio stanno in `rank_rules` e i livelli in `rank_tiers`: si
+modificano dal database (o dal pannello admin) **senza rilasciare l'app**.
+
+```sql
+-- Quanto vale una lezione completata
+update public.rank_rules set points_per_unit = 15 where metric = 'lezioni_completate';
+```
+
+Il nuovo peso vale **subito**: i pesi si applicano alla lettura. Quello che si
+aggiorna su pianificazione sono le *metriche* (quante lezioni, quanti clienti…),
+che stanno in una vista materializzata perché contarle a ogni apertura di
+schermata sarebbe sprecato.
+
+**Ricalcolo orario** delle metriche:
+
+```sql
+select cron.schedule(
+  'refresh-rank-hourly',
+  '0 * * * *',
+  $$ select public.refresh_rank(); $$
+);
+```
+
+> ⚠️ **Le viste materializzate non supportano la RLS.** Postgres non applica le
+> policy a una matview: per questo `mv_rank_metriche` **non è accessibile** agli
+> utenti e si esce solo dalla funzione `classifica()`, che filtra con
+> `can_read_member()`. Quel filtro *è* la protezione — se un giorno si concedesse
+> `select` sulla matview, i punti di tutti diventerebbero pubblici.
+
+Verifica del perimetro:
+
+```sql
+select * from public.classifica();   -- da un client autenticato, non dal SQL Editor
+```
+
 ## Agente AI — RAG (fase successiva)
 
 Architettura: **embedding domanda (Voyage AI) → retrieval su pgvector → generazione con Claude**.
