@@ -1,20 +1,12 @@
 import { Stack } from 'expo-router';
 
-import { darkColors } from '@/theme';
+import { modalScreenOptions, stackScreenOptions } from '@/theme';
 
 export default function CommunityLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: true,
-        headerStyle: { backgroundColor: darkColors.surface },
-        headerTintColor: darkColors.text,
-        headerTitleStyle: { color: darkColors.text },
-        contentStyle: { backgroundColor: darkColors.background },
-      }}
-    >
+    <Stack screenOptions={stackScreenOptions}>
       <Stack.Screen name="index" options={{ title: 'Community' }} />
-      <Stack.Screen name="nuovo" options={{ title: 'Nuovo feedback' }} />
+      <Stack.Screen name="nuovo" options={{ ...modalScreenOptions, title: 'Nuovo post' }} />
     </Stack>
   );
 }

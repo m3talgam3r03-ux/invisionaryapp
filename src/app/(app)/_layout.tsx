@@ -34,19 +34,25 @@ export default function AppLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textMuted,
+        // Stesso colore del contenuto e un filetto al posto dell'ombra: la barra
+        // appartiene alla schermata invece di galleggiarci sopra.
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: 64,
+          elevation: 0,
+          height: 60,
           paddingTop: spacing.xs,
-          paddingBottom: spacing.sm,
+          paddingBottom: spacing.xs,
         },
+        // Etichette piccole sotto icone grandi: si naviga guardando le icone,
+        // l'etichetta serve solo a togliere il dubbio la prima volta.
         tabBarLabelStyle: {
           fontSize: 10,
-          letterSpacing: 0.4,
+          letterSpacing: 0.2,
           fontWeight: '600',
         },
+        tabBarItemStyle: { paddingVertical: 2 },
       }}
     >
       <Tabs.Screen
