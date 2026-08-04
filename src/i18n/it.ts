@@ -9,7 +9,7 @@
  * dei ruoli, TypeScript segnala qui le voci mancanti.
  */
 import type { Role } from '@/theme';
-import type { RenewalAction, RenewalStatus } from '@/types/models';
+import type { ContactStato, RenewalAction, RenewalStatus } from '@/types/models';
 
 /** Come si chiamano i ruoli quando li legge una persona. */
 export const ROLE_LABEL: Record<Role, string> = {
@@ -105,6 +105,43 @@ export const t = {
     nessunLeaderDisponibile:
       'Nessun leader disponibile: assegna prima il ruolo «Leader» a un utente.',
     salvataggioFallito: 'Salvataggio non riuscito.',
+  },
+
+  crm: {
+    titolo: 'Contatti',
+    nuovo: '+ Nuovo contatto',
+    importa: 'Importa',
+    cerca: 'Cerca nome, contatto o prodotto',
+    caricamento: 'Caricamento contatti…',
+    nessuno: 'Nessun contatto',
+    nessunoSuggerimento: 'Aggiungi il primo contatto o importa una lista.',
+    nessunRisultato: 'Nessun contatto con questi filtri.',
+    azzeraFiltri: 'Azzera i filtri',
+    tutti: 'Tutti',
+    fermoDa: (g: number) => `Fermi da ${g}+ giorni`,
+    maiContattato: 'Mai contattato',
+    ultimoContatto: (quando: string) => `Ultimo contatto: ${quando}`,
+
+    stato: {
+      nuovo: 'Nuovo',
+      contattato: 'Contattato',
+      appuntamento: 'Appuntamento',
+      cliente: 'Cliente',
+      perso: 'Perso',
+    } satisfies Record<ContactStato, string>,
+
+    campoStato: 'Fase',
+    campoTag: 'Tag',
+    campoOrigine: 'Origine',
+    origineManuale: 'Inserito a mano',
+    origineImport: 'Importato',
+
+    storico: {
+      titolo: 'Storico',
+      vuoto: 'Nessun passaggio registrato.',
+      creato: (stato: string) => `Creato come «${stato}»`,
+      passaggio: (da: string, a: string) => `${da} → ${a}`,
+    },
   },
 
   rinnovi: {

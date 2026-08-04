@@ -1,16 +1,30 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, Linking, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import {
+  FlatList,
+  Linking,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { StatoBadge } from '@/components/StatoBadge';
 import { Avatar, EmptyState, SearchField, ThemedText } from '@/components/ui';
-import { useClients } from '@/lib/clients';
+import { t } from '@/i18n/it';
+import { useClients, useClientsPerStato } from '@/lib/clients';
 import { byName, matchesQuery, parseContact } from '@/lib/contact';
 import { radius, spacing, useTheme } from '@/theme';
-import type { Client } from '@/types/models';
+import { CONTACT_STATI, type Client, type ContactStato } from '@/types/models';
 
 export default function ClientsList() {
-  const { data, isLoading, isError, error, refetch, isRefetching } = useClients();
+  const [stato, setStato] = useState<ContactStato | null>(null);
+  const { data, isLoading, isError, error, refetch, isRefetching } = useClients(
+    stato ? { stati: [stato] } : {},
+  );
+  const { data: conteggi } = useClientsPerStato();
   const router = useRouter();
   const { colors } = useTheme();
   const [query, setQuery] = useState('');
@@ -27,14 +41,37 @@ export default function ClientsList() {
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.header}>
-        <SearchField value={query} onChangeText={setQuery} placeholder="Cerca nome, contatto, prodotto…" />
+        <SearchField value={query} onChangeText={setQuery} placeholder={t.crm.cerca} />
+
+        {/* Le fasi della trattativa: toccarne una restringe l'elenco */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chips}
+        >
+          <FiltroChip
+            label={t.crm.tutti}
+            attivo={stato === null}
+            onPress={() => setStato(null)}
+          />
+          {CONTACT_STATI.map((s) => (
+            <FiltroChip
+              key={s}
+              label={t.crm.stato[s]}
+              conteggio={conteggi?.[s]}
+              attivo={stato === s}
+              onPress={() => setStato(stato === s ? null : s)}
+            />
+          ))}
+        </ScrollView>
+
         <View style={styles.metaRow}>
           <ThemedText tone="muted" variant="caption">
             {query
               ? `${clients.length} di ${total}`
               : total === 1
-                ? '1 cliente'
-                : `${total} clienti`}
+                ? '1 contatto'
+                : `${total} contatti`}
           </ThemedText>
           <Pressable
             onPress={() => router.push('/clients/import')}
@@ -106,6 +143,40 @@ export default function ClientsList() {
   );
 }
 
+function FiltroChip({
+  label,
+  conteggio,
+  attivo,
+  onPress,
+}: {
+  label: string;
+  conteggio?: number;
+  attivo: boolean;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: attivo }}
+      style={{
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs,
+        borderRadius: radius.pill,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: attivo ? colors.text : colors.border,
+        backgroundColor: attivo ? colors.text : colors.surface,
+      }}
+    >
+      <ThemedText variant="caption" style={{ color: attivo ? colors.background : colors.textMuted }}>
+        {label}
+        {conteggio != null && conteggio > 0 ? ` ${conteggio}` : ''}
+      </ThemedText>
+    </Pressable>
+  );
+}
+
 function ClientRow({ client, onPress }: { client: Client; onPress: () => void }) {
   const { colors } = useTheme();
   const contact = parseContact(client.contatto);
@@ -124,7 +195,7 @@ function ClientRow({ client, onPress }: { client: Client; onPress: () => void })
     <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
       <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Avatar name={client.nome} />
-        <View style={{ flex: 1, gap: 2 }}>
+        <View style={{ flex: 1, gap: 3 }}>
           <ThemedText variant="heading" numberOfLines={1}>
             {client.nome}
           </ThemedText>
@@ -133,6 +204,7 @@ function ClientRow({ client, onPress }: { client: Client; onPress: () => void })
               {subtitle}
             </ThemedText>
           ) : null}
+          <StatoBadge stato={client.stato} compatto />
         </View>
         {contact.tel && (
           <Pressable
@@ -172,6 +244,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  chips: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   list: {
     paddingHorizontal: spacing.lg,

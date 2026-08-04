@@ -3,10 +3,14 @@ import { useState } from 'react';
 import { Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { ClientForm } from '@/components/ClientForm';
+import { StatoBadge } from '@/components/StatoBadge';
 import { Avatar, Button, Card, EmptyState, Screen, ThemedText } from '@/components/ui';
-import { useClient, useDeleteClient, useUpdateClient } from '@/lib/clients';
+import { t } from '@/i18n/it';
+import { useClient, useClientHistory, useDeleteClient, useUpdateClient } from '@/lib/clients';
 import { parseContact } from '@/lib/contact';
+import { formatDateIT } from '@/lib/date';
 import { radius, spacing, useTheme } from '@/theme';
+import type { ContactStatusHistoryEntry } from '@/types/models';
 
 /** Conferma cross-platform (Alert su native, confirm su web). */
 function confirmDelete(nome: string, onConfirm: () => void) {
@@ -25,6 +29,7 @@ export default function ClientDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { data: client, isLoading, isError } = useClient(id);
+  const { data: storico } = useClientHistory(id);
   const update = useUpdateClient();
   const remove = useDeleteClient();
   const [editing, setEditing] = useState(false);
@@ -88,6 +93,12 @@ export default function ClientDetail() {
             {client.prodotto}
           </ThemedText>
         ) : null}
+        <StatoBadge stato={client.stato} />
+        {client.ultimo_contatto_at && (
+          <ThemedText tone="muted" variant="caption">
+            {t.crm.ultimoContatto(formatDateIT(client.ultimo_contatto_at.slice(0, 10)))}
+          </ThemedText>
+        )}
       </View>
 
       {/* Azioni rapide: è la ragione per cui si apre una scheda dal telefono. */}
@@ -121,6 +132,9 @@ export default function ClientDetail() {
         </Card>
       ) : null}
 
+      {/* Dove si è mosso il contatto: serve a capire dove si perde la rete */}
+      <Storico righe={storico ?? []} />
+
       <Button title="Modifica" onPress={() => setEditing(true)} />
 
       {/* Eliminare non è un'azione costruttiva: niente colore d'accento. */}
@@ -139,6 +153,37 @@ export default function ClientDetail() {
         </ThemedText>
       </Pressable>
     </Screen>
+  );
+}
+
+function Storico({ righe }: { righe: ContactStatusHistoryEntry[] }) {
+  return (
+    <View style={{ gap: spacing.sm }}>
+      <ThemedText variant="label" tone="muted">
+        {t.crm.storico.titolo}
+      </ThemedText>
+
+      {righe.length === 0 ? (
+        <ThemedText tone="muted" variant="caption">
+          {t.crm.storico.vuoto}
+        </ThemedText>
+      ) : (
+        righe.map((r) => (
+          <Card key={r.id} style={{ gap: spacing.xs }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+              <ThemedText variant="caption" style={{ flex: 1 }}>
+                {r.da_stato
+                  ? t.crm.storico.passaggio(t.crm.stato[r.da_stato], t.crm.stato[r.a_stato])
+                  : t.crm.storico.creato(t.crm.stato[r.a_stato])}
+              </ThemedText>
+              <ThemedText tone="muted" variant="caption">
+                {formatDateIT(r.created_at.slice(0, 10))}
+              </ThemedText>
+            </View>
+          </Card>
+        ))
+      )}
+    </View>
   );
 }
 

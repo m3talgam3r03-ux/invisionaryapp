@@ -23,6 +23,8 @@ export type Action =
   | 'network.progress'
   /** Vedere lo scadenzario di tutta la rete, non solo i propri rinnovi. */
   | 'renewals.network'
+  /** Filtrare il CRM per proprietario: presuppone di vedere più di sé stessi. */
+  | 'clients.network'
   /** Approvare il rinnovo di qualcuno (richiede `resource`). */
   | 'renewals.approve'
   /** Leggere i dati di un membro della rete (richiede `resource`). */
@@ -53,6 +55,7 @@ export function can(user: Profile | null | undefined, action: Action, resource?:
 
     case 'network.progress':
     case 'renewals.network':
+    case 'clients.network':
       return user.role === 'admin' || user.role === 'leader';
 
     // Rispecchia can_approve_renewal() del database.

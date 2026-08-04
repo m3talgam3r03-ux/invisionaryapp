@@ -11,6 +11,10 @@ export type Profile = {
   created_at: string;
 };
 
+/** Fasi della trattativa, in ordine di avanzamento. */
+export const CONTACT_STATI = ['nuovo', 'contattato', 'appuntamento', 'cliente', 'perso'] as const;
+export type ContactStato = (typeof CONTACT_STATI)[number];
+
 /** Riga della tabella `clients` (CRM). */
 export type Client = {
   id: string;
@@ -19,6 +23,11 @@ export type Client = {
   contatto: string | null;
   prodotto: string | null;
   note: string | null;
+  stato: ContactStato;
+  /** `manuale`, `import`, oppure `funnel:<slug>`. */
+  origine: string;
+  tags: string[];
+  ultimo_contatto_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -29,6 +38,19 @@ export type ClientInput = {
   contatto?: string | null;
   prodotto?: string | null;
   note?: string | null;
+  stato?: ContactStato;
+  origine?: string;
+  tags?: string[];
+};
+
+/** Riga di `contact_status_history`: chi ha spostato il contatto, da dove a dove. */
+export type ContactStatusHistoryEntry = {
+  id: string;
+  client_id: string;
+  da_stato: ContactStato | null;
+  a_stato: ContactStato;
+  actor_id: string | null;
+  created_at: string;
 };
 
 export const RENEWAL_STATUS = ['attivo', 'in_attesa_approvazione', 'scaduto', 'annullato'] as const;
