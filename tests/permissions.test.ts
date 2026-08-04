@@ -11,7 +11,14 @@ import { can, canBeAssignedAsLeader, expectsLeader } from '@/lib/permissions';
 import type { Profile } from '@/types/models';
 
 function profilo(role: Profile['role'], id = 'me', leaderId: string | null = null): Profile {
-  return { id, full_name: 'Tizio', role, leader_id: leaderId, created_at: '2026-01-01T00:00:00Z' };
+  return {
+    id,
+    full_name: 'Tizio',
+    role,
+    leader_id: leaderId,
+    vip_call_host: false,
+    created_at: '2026-01-01T00:00:00Z',
+  };
 }
 
 const admin = profilo('admin', 'admin-1');

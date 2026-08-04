@@ -567,6 +567,228 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
     });
   });
 
+  // --- classifica trader ----------------------------------------------------
+
+  describe('classifica trader', () => {
+    let contoId: string;
+
+    /** Un'operazione chiusa: due deal legati dallo stesso position_id. */
+    async function operazione(opts: {
+      posizione: string;
+      risultato: number;
+      durataSecondi: number;
+      giorniFa?: number;
+    }) {
+      const apertura = new Date();
+      apertura.setDate(apertura.getDate() - (opts.giorniFa ?? 1));
+      const chiusura = new Date(apertura.getTime() + opts.durataSecondi * 1000);
+
+      const { error } = await admin.from('trades').insert([
+        {
+          account_id: contoId,
+          owner_id: id.collaboratore,
+          external_id: `RLSTEST-${opts.posizione}-in`,
+          position_id: opts.posizione,
+          entry_type: 'DEAL_ENTRY_IN',
+          type: 'DEAL_TYPE_BUY',
+          symbol: 'EURUSD',
+          profit: 0,
+          time: apertura.toISOString(),
+        },
+        {
+          account_id: contoId,
+          owner_id: id.collaboratore,
+          external_id: `RLSTEST-${opts.posizione}-out`,
+          position_id: opts.posizione,
+          entry_type: 'DEAL_ENTRY_OUT',
+          type: 'DEAL_TYPE_SELL',
+          symbol: 'EURUSD',
+          profit: opts.risultato,
+          time: chiusura.toISOString(),
+        },
+      ]);
+      if (error) throw error;
+    }
+
+    beforeAll(async () => {
+      const { data, error } = await admin
+        .from('trading_accounts')
+        .insert({
+          owner_id: id.collaboratore,
+          name: 'RLS Test conto',
+          provider: 'metaapi',
+          metaapi_account_id: 'rls-test-account', // conto "verificato"
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+      contoId = data.id;
+    });
+
+    afterAll(async () => {
+      await admin.from('trades').delete().like('external_id', 'RLSTEST-%');
+      if (contoId) await admin.from('trading_accounts').delete().eq('id', contoId);
+    });
+
+    it('ricompone le operazioni dai deal e ne calcola la durata', async () => {
+      await operazione({ posizione: 'p-durata', risultato: 10, durataSecondi: 300 });
+
+      const { data, error } = await admin
+        .from('v_operazioni')
+        .select('position_id, risultato, durata_secondi')
+        .eq('position_id', 'p-durata')
+        .single();
+
+      expect(error).toBeNull();
+      expect(Number(data!.risultato)).toBe(10);
+      expect(Number(data!.durata_secondi)).toBe(300);
+    });
+
+    it('un’operazione ancora aperta non compare: manca il deal di uscita', async () => {
+      await admin.from('trades').insert({
+        account_id: contoId,
+        owner_id: id.collaboratore,
+        external_id: 'RLSTEST-aperta-in',
+        position_id: 'p-aperta',
+        entry_type: 'DEAL_ENTRY_IN',
+        symbol: 'EURUSD',
+        time: new Date().toISOString(),
+      });
+
+      const { data } = await admin
+        .from('v_operazioni')
+        .select('position_id')
+        .eq('position_id', 'p-aperta');
+      expect(data).toEqual([]);
+    });
+
+    it('sotto la soglia di operazioni si resta non classificati', async () => {
+      // Poche operazioni, tutte vincenti: win rate 100% ma fuori classifica.
+      const { data } = await client.admin.rpc('classifica_trader');
+      const riga = (data as { user_id: string; classificato: boolean; operazioni: number }[]).find(
+        (r) => r.user_id === id.collaboratore,
+      );
+      expect(riga).toBeDefined();
+      expect(riga!.operazioni).toBeLessThan(20);
+      expect(riga!.classificato, 'poche operazioni non fanno una classifica').toBe(false);
+    });
+
+    it('le operazioni sotto la durata minima non contano', async () => {
+      const prima = await client.admin.rpc('classifica_trader');
+      const opPrima = (prima.data as { user_id: string; operazioni: number }[]).find(
+        (r) => r.user_id === id.collaboratore,
+      )!.operazioni;
+
+      // 30 secondi: sotto la soglia di 60, deve essere ignorata.
+      await operazione({ posizione: 'p-veloce', risultato: 50, durataSecondi: 30 });
+
+      const dopo = await client.admin.rpc('classifica_trader');
+      const opDopo = (dopo.data as { user_id: string; operazioni: number }[]).find(
+        (r) => r.user_id === id.collaboratore,
+      )!.operazioni;
+
+      expect(opDopo, 'lo scalping artificiale non deve gonfiare il conteggio').toBe(opPrima);
+    });
+
+    it('le operazioni di un conto non collegato non contano', async () => {
+      const { data: conto } = await admin
+        .from('trading_accounts')
+        .insert({ owner_id: id.collaboratore, name: 'RLS Test non collegato' })
+        .select('id')
+        .single();
+
+      const prima = await client.admin.rpc('classifica_trader');
+      const opPrima = (prima.data as { user_id: string; operazioni: number }[]).find(
+        (r) => r.user_id === id.collaboratore,
+      )!.operazioni;
+
+      const t0 = new Date();
+      t0.setDate(t0.getDate() - 1);
+      await admin.from('trades').insert([
+        {
+          account_id: conto!.id,
+          owner_id: id.collaboratore,
+          external_id: 'RLSTEST-manuale-in',
+          position_id: 'p-manuale',
+          entry_type: 'DEAL_ENTRY_IN',
+          time: t0.toISOString(),
+        },
+        {
+          account_id: conto!.id,
+          owner_id: id.collaboratore,
+          external_id: 'RLSTEST-manuale-out',
+          position_id: 'p-manuale',
+          entry_type: 'DEAL_ENTRY_OUT',
+          profit: 999,
+          time: new Date(t0.getTime() + 600_000).toISOString(),
+        },
+      ]);
+
+      const dopo = await client.admin.rpc('classifica_trader');
+      const opDopo = (dopo.data as { user_id: string; operazioni: number }[]).find(
+        (r) => r.user_id === id.collaboratore,
+      )!.operazioni;
+
+      expect(opDopo, 'solo i conti verificati entrano in classifica').toBe(opPrima);
+
+      await admin.from('trades').delete().like('external_id', 'RLSTEST-manuale-%');
+      await admin.from('trading_accounts').delete().eq('id', conto!.id);
+    });
+
+    it('la classifica non espone importi né rendimenti', async () => {
+      // È un vincolo di prodotto: verificarlo sulle colonne, non a occhio.
+      const { data } = await client.admin.rpc('classifica_trader');
+      const righe = data as Record<string, unknown>[];
+      if (righe.length === 0) return;
+      const colonne = Object.keys(righe[0]);
+      for (const vietata of ['profit', 'netProfit', 'net_profit', 'balance', 'equity', 'return_pct']) {
+        expect(colonne, `la classifica non deve esporre ${vietata}`).not.toContain(vietata);
+      }
+    });
+
+    it('il collaboratore non può darsi il badge delle call VIP', async () => {
+      await client.collaboratore
+        .from('profiles')
+        .update({ vip_call_host: true })
+        .eq('id', id.collaboratore);
+
+      const { data } = await admin
+        .from('profiles')
+        .select('vip_call_host')
+        .eq('id', id.collaboratore)
+        .single();
+      expect(data!.vip_call_host, 'il trigger deve ripristinarlo').toBe(false);
+    });
+
+    it('un podio congelato non cambia se arrivano nuove operazioni', async () => {
+      const mese = new Date();
+      mese.setMonth(mese.getMonth() - 1, 1);
+      const meseISO = mese.toISOString().slice(0, 10);
+
+      await admin.from('leaderboard_snapshots').delete().eq('periodo', meseISO);
+      await admin.from('leaderboard_snapshots').insert({
+        periodo: meseISO,
+        posizione: 1,
+        user_id: id.collaboratore,
+        win_rate: 75,
+        trade_count: 40,
+      });
+
+      // Un secondo congelamento non deve sovrascrivere il primo.
+      await admin.rpc('congela_podio', { mese: meseISO });
+
+      const { data } = await admin
+        .from('leaderboard_snapshots')
+        .select('user_id, win_rate')
+        .eq('periodo', meseISO)
+        .eq('posizione', 1)
+        .single();
+
+      expect(Number(data!.win_rate), 'la storia non si riscrive').toBe(75);
+      await admin.from('leaderboard_snapshots').delete().eq('periodo', meseISO);
+    });
+  });
+
   // --- escalation di privilegi ---------------------------------------------
 
   describe('anti escalation', () => {

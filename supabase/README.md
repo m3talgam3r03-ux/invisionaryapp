@@ -215,6 +215,51 @@ Verifica del perimetro:
 select * from public.classifica();   -- da un client autenticato, non dal SQL Editor
 ```
 
+## Classifica trader (migrazione 0016)
+
+Ordinata sul **win rate** — quota di operazioni chiuse in utile — non sul
+rendimento. In classifica **non compaiono mai importi né percentuali di
+guadagno**: è un vincolo di prodotto, e un test lo verifica sulle colonne.
+
+I vincoli anti-manipolazione sono nel database, non nell'interfaccia:
+
+| Vincolo | Dove |
+| --- | --- |
+| Solo conti collegati a MetaApi | `metaapi_account_id is not null` |
+| Operazioni sotto i 60 secondi escluse | `trading_config.durata_minima_secondi` |
+| Almeno 20 operazioni nel mese | `trading_config.min_trade_periodo` |
+| Parità: profit factor → n. operazioni → anzianità | `order by` di `classifica_trader()` |
+
+Le soglie si cambiano senza rilascio:
+
+```sql
+update public.trading_config set min_trade_periodo = 30 where id;
+```
+
+> ⚠️ **Serve `position_id`.** `trades` contiene i *deal* MetaApi, che sono eventi
+> puntuali: ingresso e uscita sono righe distinte. Senza `position_id` non si sa
+> né l'esito né la durata di un'operazione. La colonna la popola `mt5-sync`: dopo
+> aver applicato la 0016 **rideploya la function e risincronizza**, altrimenti le
+> operazioni già importate restano senza e la classifica resta vuota.
+
+```bash
+npx supabase functions deploy mt5-sync
+```
+
+**Podio mensile congelato.** A inizio mese si fotografano i primi tre del mese
+appena chiuso: la storia non si riscrive quando arrivano nuovi trade.
+
+```sql
+select cron.schedule(
+  'congela-podio-mensile',
+  '0 3 1 * *',                    -- il primo del mese alle 3
+  $$ select public.congela_podio(); $$
+);
+```
+
+Rieseguirlo è innocuo: il vincolo di unicità su `(periodo, posizione)` rifiuta
+il doppione invece di sovrascrivere.
+
 ## Agente AI — RAG (fase successiva)
 
 Architettura: **embedding domanda (Voyage AI) → retrieval su pgvector → generazione con Claude**.

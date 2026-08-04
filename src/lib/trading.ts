@@ -100,47 +100,66 @@ export function useSyncAccounts() {
   });
 }
 
+/**
+ * Una riga della classifica trader.
+ *
+ * ⚠️ Niente importi e niente percentuali di guadagno, per scelta di prodotto:
+ * escono solo la quota di operazioni chiuse in utile e quante ne sono state
+ * fatte. Profitti e rendimenti restano nel proprio conto, che è privato.
+ */
 export type TraderRanking = {
-  id: string;
-  name: string;
-  returnPct: number;
-  netProfit: number;
-  currency: string | null;
+  user_id: string;
+  full_name: string;
+  vip_call_host: boolean;
+  operazioni: number;
+  win_rate: number;
+  /** Falso finché non si raggiunge la soglia minima di operazioni del periodo. */
+  classificato: boolean;
 };
 
-/** Classifica trader per rendimento % (perimetro deciso dalla RLS). */
+/**
+ * Classifica trader per win rate del mese corrente.
+ *
+ * Il calcolo lo fa `classifica_trader()`, che applica anche i vincoli: solo
+ * conti collegati a MetaApi, operazioni sotto la durata minima escluse, soglia
+ * minima di operazioni, e parità risolta con profit factor. Il perimetro lo
+ * impone la stessa funzione con can_read_member().
+ */
 export function useTraderLeaderboard() {
   return useQuery({
     queryKey: ['trader-leaderboard'],
     queryFn: async (): Promise<TraderRanking[]> => {
-      const [accRes, trRes] = await Promise.all([
-        supabase.from('trading_accounts').select('id, name, login, server, balance, currency'),
-        supabase.from('trades').select('account_id, profit, commission, swap'),
-      ]);
-      if (accRes.error) throw accRes.error;
-      if (trRes.error) throw trRes.error;
+      const { data, error } = await supabase.rpc('classifica_trader');
+      if (error) throw error;
+      return (data ?? []) as TraderRanking[];
+    },
+  });
+}
 
-      const net = new Map<string, number>();
-      for (const t of trRes.data ?? []) {
-        const id = t.account_id as string | null;
-        if (!id) continue;
-        net.set(id, (net.get(id) ?? 0) + (Number(t.profit) || 0) + (Number(t.commission) || 0) + (Number(t.swap) || 0));
-      }
+export type PodioVoce = {
+  periodo: string;
+  posizione: number;
+  user_id: string;
+  win_rate: number;
+  trade_count: number;
+};
 
-      const rows: TraderRanking[] = (accRes.data ?? []).map((a) => {
-        const id = a.id as string;
-        const np = net.get(id) ?? 0;
-        const balance = Number(a.balance) || 0;
-        return {
-          id,
-          name: (a.name as string) || `${a.login}@${a.server}`,
-          netProfit: np,
-          returnPct: returnPct(np, balance),
-          currency: (a.currency as string) ?? null,
-        };
-      });
-      rows.sort((x, y) => y.returnPct - x.returnPct);
-      return rows;
+/**
+ * Podi mensili congelati. Una volta chiuso il mese non cambiano più: nuove
+ * operazioni non riscrivono la storia.
+ */
+export function usePodi(limite = 3) {
+  return useQuery({
+    queryKey: ['podi', limite],
+    queryFn: async (): Promise<PodioVoce[]> => {
+      const { data, error } = await supabase
+        .from('leaderboard_snapshots')
+        .select('periodo, posizione, user_id, win_rate, trade_count')
+        .order('periodo', { ascending: false })
+        .order('posizione', { ascending: true })
+        .limit(limite * 3);
+      if (error) throw error;
+      return (data ?? []) as PodioVoce[];
     },
   });
 }

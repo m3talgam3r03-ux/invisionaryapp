@@ -197,6 +197,27 @@ export const t = {
       'Avanzamento a scopo motivazionale. Nessuna promessa di rendimento né di risultati economici.',
   },
 
+  trading: {
+    classifica: {
+      titolo: 'Classifica trader',
+      sottotitolo: 'Ordinata sulla quota di operazioni chiuse in utile del mese in corso.',
+      caricamento: 'Caricamento classifica…',
+      vuota: 'Nessun trader da classificare.',
+      winRate: 'operazioni in utile',
+      operazioni: (n: number) => `${n} ${n === 1 ? 'operazione' : 'operazioni'}`,
+      nonClassificati: 'Non ancora in classifica',
+      sogliaSpiegazione: (min: number) =>
+        `Servono almeno ${min} operazioni nel mese per entrare in classifica: poche operazioni non dicono nulla sul metodo.`,
+      vipHost: 'Call VIP',
+      podio: 'Podi dei mesi scorsi',
+      podioVuoto: 'Nessun mese ancora chiuso.',
+      posizione: (n: number) => `${n}°`,
+      /** Il disclaimer non è opzionale e non va nascosto. */
+      disclaimer:
+        'Solo conti collegati in sola lettura. La classifica mostra la quota di operazioni in utile, mai importi né rendimenti: i risultati di altri non sono risultati ottenibili. Contenuti a scopo educativo, non consulenza finanziaria.',
+    },
+  },
+
   formazione: {
     calendario: 'Calendario',
     avanzamentoRete: 'Avanzamento rete',

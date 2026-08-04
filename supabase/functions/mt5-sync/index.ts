@@ -59,6 +59,10 @@ Deno.serve(async (req) => {
             swap: (d.swap as number) ?? null,
             entry_type: (d.entryType as string) ?? null,
             time: (d.time as string) ?? null,
+            // Lega ingresso e uscita della stessa operazione. Senza, un deal
+            // resta un evento isolato e non si può calcolare né l'esito né la
+            // durata (vedi v_operazioni, migrazione 0016).
+            position_id: d.positionId != null ? String(d.positionId) : null,
           }));
 
         if (rows.length > 0) {

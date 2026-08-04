@@ -6,6 +6,8 @@ export type Profile = {
   full_name: string;
   role: Role;
   leader_id: string | null;
+  /** Conduce le call VIP: lo assegna solo l'admin. */
+  vip_call_host: boolean;
   created_at: string;
 };
 
@@ -172,5 +174,7 @@ export type Trade = {
   swap: number | null;
   entry_type: string | null;
   time: string | null;
+  /** Lega ingresso e uscita della stessa operazione (MetaApi positionId). */
+  position_id: string | null;
   created_at: string;
 };
