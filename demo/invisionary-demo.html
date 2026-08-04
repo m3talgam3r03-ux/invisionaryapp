@@ -67,6 +67,20 @@
   .navmenu .sep{height:1px;background:var(--border);margin:6px 6px}
   .navmenu button.logout{color:var(--accent)}
 
+  /* Barra in basso: i quattro pilastri più la Home, come nell'app.
+     Stesso colore del contenuto e un filetto al posto dell'ombra: appartiene
+     alla schermata invece di galleggiarci sopra. */
+  .tabbar{display:flex;flex:0 0 auto;border-top:1px solid var(--border);background:var(--bg);
+    padding:6px 4px 8px}
+  .tabbar.hide{display:none}
+  .tab{flex:1;background:transparent;border:0;cursor:pointer;font-family:var(--sans);
+    display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--muted);
+    transition:color .15s}
+  .tab .ic{font-size:21px;line-height:1}
+  .tab .lb{font-size:9.5px;font-weight:600;letter-spacing:.02em}
+  .tab.on{color:var(--text)}
+  .tab.on .ic.red{color:var(--accent)}
+
   .iv-screen{flex:1;overflow-y:auto;overflow-x:hidden;padding:18px 18px 40px}
   .iv-screen::-webkit-scrollbar{width:8px}
   .iv-screen::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:8px}
@@ -429,7 +443,7 @@
   <div class="iv-intro">
     <div class="iv-kicker">Winning Dream Team</div>
     <h1 class="iv-title">Invisionary — anteprima app</h1>
-    <p class="iv-note">Anteprima <b>navigabile e interattiva</b>: barra con <b>Indietro</b> e <b>menu a tendina</b>, <b>agente AI</b> che risponde su network marketing, trading e imprenditoria, calcolatore lottaggio <b>per strumento</b> (Forex, oro, indici, cripto…), pulsanti del Trading e «+ Nuovo» del CRM funzionanti. Nella demo le risposte dell'agente sono precaricate; nell'app risponde <b>Claude</b> con la base di conoscenza della rete. La <b>voce è reale</b>: l'agente legge le risposte in italiano e puoi dettargli la domanda col microfono (Chrome/Edge).</p>
+    <p class="iv-note">Anteprima <b>navigabile e interattiva</b>: <b>barra in basso</b> con i quattro pilastri, come nell'app. CRM con <b>fasi della trattativa</b> e <b>storico dei passaggi</b> (si vede dove si perde un contatto, non solo che è perso), rinnovi con <b>approvazione</b>, <b>agente AI</b> che risponde su network marketing, trading e imprenditoria, calcolatore lottaggio <b>per strumento</b> (Forex, oro, indici, cripto…). Nella demo le risposte dell'agente sono precaricate; nell'app risponde <b>Claude</b> con la base di conoscenza della rete. La <b>voce è reale</b>: l'agente legge le risposte in italiano e puoi dettargli la domanda col microfono (Chrome/Edge).</p>
   </div>
 
   <div class="iv-controls">
@@ -835,6 +849,9 @@
 
     </div>
 
+    <!-- Barra in basso: Home + i quattro assi del logo -->
+    <div class="tabbar hide" id="tabbar"></div>
+
     <!-- MODALE: nuovo prospect -->
     <div class="modal" id="crmModal">
       <div class="sheet">
@@ -883,8 +900,12 @@
           </div>
         </div>
 
-        <span class="label">Sposta di stato</span>
+        <span class="label">Sposta di fase</span>
         <div class="segs" id="cdStages"></div>
+
+        <!-- Storico: nell'app lo scrive un trigger ed è in sola lettura -->
+        <div class="sect" style="margin-top:6px"><span class="s">✦</span><span class="t">Storico</span><span class="l"></span></div>
+        <div id="cdStorico"></div>
 
         <p class="cap">Dati personali trattati secondo GDPR (storage EU). Nella demo le azioni sono simulate.</p>
       </div>
@@ -1032,8 +1053,34 @@
     return true;
   }
 
+  /**
+   * Le schede in basso: Home più i quattro pilastri, che sono gli stessi
+   * quattro assi dell'iride del logo. Le altre sezioni si aprono dalla Home —
+   * oltre cinque voci le etichette non si leggono più.
+   */
+  const TABBAR = [
+    ['dashboard', '⌂', 'Home',       false],
+    ['trading',   '♠', 'Trading',    false],
+    ['crm',       '♥', 'Network',    true],
+    ['formazione','♦', 'Formazione', true],
+    ['community', '♣', 'Community',  false],
+  ];
+
   const tabs = document.getElementById('tabs');
   const navMenu = document.getElementById('navMenu');
+  const tabbar = document.getElementById('tabbar');
+
+  /** Disegna la barra in basso e segna quale scheda è attiva. */
+  function renderTabbar(vista){
+    tabbar.classList.toggle('hide', vista === 'login');
+    tabbar.innerHTML = TABBAR.map(([id, glifo, etichetta, rosso]) => {
+      const attiva = vista === id;
+      return '<button class="tab' + (attiva ? ' on' : '') + '" onclick="setScreen(\'' + id + '\')">' +
+        '<span class="ic' + (rosso ? ' red' : '') + '"' +
+        (rosso && !attiva ? ' style="color:var(--accent);opacity:.55"' : '') + '>' + glifo + '</span>' +
+        '<span class="lb">' + etichetta + '</span></button>';
+    }).join('');
+  }
 
   /** Ricostruisce tab e menu in base al ruolo: le voci non permesse non compaiono. */
   function renderNav(){
@@ -1073,6 +1120,7 @@
     document.querySelectorAll('.iv-tab').forEach(t=>t.classList.toggle('on', t.dataset.s===id));
     document.getElementById('screen').scrollTop=0;
     updateAppbar(id);
+    renderTabbar(id);
     closeMenu();
     if(id==='dashboard') renderDashboard();
     if(id==='renewals') renderRenewals();
@@ -1667,12 +1715,14 @@
      e scheda contatto. I dati sono d'esempio e restano in memoria. */
   function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+  // Colori come nell'app (StatoBadge): l'oro è riservato al traguardo — cliente —
+  // e il rosso alla perdita. Le fasi intermedie non gridano.
   const STAGES=[
     {k:'nuovo',        label:'Nuovo',        color:'#8A8A90'},
-    {k:'contattato',   label:'Contattato',   color:'#4C8DD8'},
-    {k:'appuntamento', label:'Appuntamento', color:'#C9A227'},
-    {k:'cliente',      label:'Cliente',      color:'#2E8B57'},
-    {k:'perso',        label:'Perso',        color:'#7A5560'}
+    {k:'contattato',   label:'Contattato',   color:'#8A8A90'},
+    {k:'appuntamento', label:'Appuntamento', color:'#F5F3EF'},
+    {k:'cliente',      label:'Cliente',      color:'#C9A227'},
+    {k:'perso',        label:'Perso',        color:'#D21F3C'}
   ];
   const STAGE=Object.fromEntries(STAGES.map(s=>[s.k,s]));
 
@@ -1705,9 +1755,27 @@
       // mescolo con il numero di giro per coprire tutte le fasce di urgenza
       renewalIn: stage==='cliente'
         ? [-6,-1,2,5,8,12,21,45,90,150][(i*7 + Math.floor(i/15)*3) % 10]
-        : null
+        : null,
+      // Come ci è arrivato: il percorso fino alla fase attuale, non solo il
+      // punto d'arrivo. È la differenza fra «è perso» e «l'ho perso dopo
+      // l'appuntamento».
+      storia: storiaFinoA(stage, (i*13)%92)
     };
   });
+
+  /** Ricostruisce i passaggi che portano alla fase attuale. */
+  function storiaFinoA(stage, giorniDaUltimo){
+    const percorso = ['nuovo','contattato','appuntamento'];
+    const fine = stage==='cliente' || stage==='perso'
+      ? percorso.concat(stage)
+      : percorso.slice(0, percorso.indexOf(stage)+1);
+    // Il primo passaggio è più lontano nel tempo, l'ultimo è l'ultimo contatto.
+    return fine.map((s,k)=>({
+      da: k===0 ? null : fine[k-1],
+      a: s,
+      giorniFa: giorniDaUltimo + (fine.length-1-k)*11
+    }));
+  }
 
   const DAY=86400000;
   function addDays(n){ const d=new Date(Date.now()+n*DAY); return d; }
@@ -1876,12 +1944,40 @@
     document.getElementById('cdRen').textContent=renewalDate(c)||'—';
     document.getElementById('cdStages').innerHTML=STAGES.map(st=>
       '<button class="seg'+(st.k===c.stage?' on':'')+'" onclick="setStage(\''+st.k+'\')">'+st.label+'</button>').join('');
+    renderStorico(c);
     document.getElementById('cdModal').classList.add('on');
   }
   function closeDetail(){ document.getElementById('cdModal').classList.remove('on'); cdId=null; }
+
+  /**
+   * Storico dei passaggi di fase.
+   * Nell'app lo scrive un trigger del database ed è in sola lettura per tutti:
+   * serve a capire DOVE si perde la rete, non solo che si è perso qualcuno.
+   */
+  function renderStorico(c){
+    const el=document.getElementById('cdStorico');
+    if(!el) return;
+    if(!c.storia || c.storia.length===0){
+      el.innerHTML='<p class="cap">Nessun passaggio registrato.</p>';
+      return;
+    }
+    el.innerHTML=[...c.storia].reverse().map(p=>{
+      const testo = p.da
+        ? esc(STAGE[p.da].label)+' → '+esc(STAGE[p.a].label)
+        : 'Creato come «'+esc(STAGE[p.a].label)+'»';
+      return '<div class="resline" style="padding:7px 0;border-bottom:1px solid var(--border)">'+
+        '<span class="cap">'+testo+'</span>'+
+        '<span class="cap muted">'+fmtDate(addDays(-p.giorniFa))+'</span></div>';
+    }).join('');
+  }
+
   function setStage(k){
     const c=CONTACTS.find(x=>x.id===cdId); if(!c) return;
-    c.stage=k; c.days=0; renderCrm(); openDetail(c.id); toast('Stato aggiornato: '+STAGE[k].label);
+    if(c.stage===k) return;
+    // Ogni passaggio lascia una traccia, come fa il trigger nel database.
+    (c.storia = c.storia || []).push({da:c.stage, a:k, giorniFa:0});
+    c.stage=k; c.days=0;
+    renderCrm(); openDetail(c.id); toast('Fase aggiornata: '+STAGE[k].label);
   }
   function quick(msg){ toast(msg+' (demo)'); }
 
