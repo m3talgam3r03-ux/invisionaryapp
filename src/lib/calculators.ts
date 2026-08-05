@@ -10,56 +10,10 @@ export function parseLocaleNumber(value: string): number {
   return Number(normalized);
 }
 
-// --- Calcolatore lottaggio (position sizing forex) --------------------------
-
-export type LotResult = {
-  riskAmount: number;
-  pipValuePerLotAccount: number;
-  lots: number;
-  units: number;
-};
-
-/** Dimensione pip in base alla coppia: 0.01 per le coppie JPY, altrimenti 0.0001. */
-export function pipSizeForPair(pair: string): number {
-  return /jpy/i.test(pair) ? 0.01 : 0.0001;
-}
-
-/**
- * Size della posizione: rischio in valuta / (stop loss in pip × valore pip per lotto).
- * `quoteToAccountRate` = tasso valuta quotata → valuta del conto (1 se coincidono).
- */
-export function computePositionSize(params: {
-  balance: number;
-  riskPercent: number;
-  stopLossPips: number;
-  pipSize: number;
-  quoteToAccountRate: number;
-  contractSize?: number;
-}): LotResult | null {
-  const contractSize = params.contractSize ?? 100_000; // lotto standard
-  const { balance, riskPercent, stopLossPips, pipSize, quoteToAccountRate } = params;
-
-  if (
-    !Number.isFinite(balance) ||
-    !Number.isFinite(riskPercent) ||
-    !Number.isFinite(stopLossPips) ||
-    !Number.isFinite(quoteToAccountRate) ||
-    balance <= 0 ||
-    riskPercent <= 0 ||
-    stopLossPips <= 0 ||
-    pipSize <= 0 ||
-    quoteToAccountRate <= 0
-  ) {
-    return null;
-  }
-
-  const riskAmount = balance * (riskPercent / 100);
-  const pipValueQuotePerLot = pipSize * contractSize; // in valuta quotata
-  const pipValuePerLotAccount = pipValueQuotePerLot * quoteToAccountRate;
-  const lots = riskAmount / (stopLossPips * pipValuePerLotAccount);
-
-  return { riskAmount, pipValuePerLotAccount, lots, units: lots * contractSize };
-}
+// Il calcolo del lottaggio vive in `src/lib/position-size.ts`: la dimensione
+// del contratto e il pip arrivano dal database, non da una regola indovinata
+// dal nome della coppia. Due implementazioni della stessa formula sono un
+// rischio — prima o poi qualcuno userebbe quella sbagliata.
 
 // --- Interesse composto -----------------------------------------------------
 

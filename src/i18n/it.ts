@@ -352,6 +352,40 @@ export const t = {
     },
   },
 
+  lottaggio: {
+    titolo: 'Lottaggio',
+    strumento: 'Strumento',
+    caricamentoStrumenti: 'Caricamento strumenti…',
+    equity: 'Saldo del conto',
+    valutaConto: 'Valuta del conto',
+    rischio: 'Rischio %',
+    stop: (unita: string) => `Stop loss (${unita})`,
+    contractOverride: 'Dimensione contratto',
+    contractOverrideSpiega:
+      'Sugli indici cambia da broker a broker: se il tuo usa un valore diverso, scrivilo qui.',
+
+    risultato: 'Lotti da aprire',
+    rischiando: (importo: string, valuta: string) => `Rischiando ${importo} ${valuta}`,
+    perditaAlloStop: 'Perdita se lo stop viene toccato',
+    valorePip: (unita: string) => `Valore ${unita} per lotto`,
+    unitaTotali: 'Unità',
+    sottoMinimo: 'Sotto il lotto minimo: riduci lo stop o aumenta il capitale.',
+
+    conversione: 'Conversione valuta',
+    conversioneSpiega: (quote: string, conto: string, unita: string) =>
+      `Il valore del ${unita} nasce in ${quote} e va convertito in ${conto}: senza, rischieresti una cifra diversa da quella decisa.`,
+    stessaValuta: 'Quotazione e conto nella stessa valuta: nessuna conversione necessaria.',
+    cambioMancante:
+      'Cambio non disponibile. Il calcolo userebbe un valore inventato: inseriscilo a mano o riprova più tardi.',
+    cambioManuale: 'Cambio manuale',
+    cambioAMano: (quote: string, tasso: string, conto: string) =>
+      `Cambio inserito a mano: 1 ${quote} = ${tasso} ${conto}`,
+
+    incompleto: 'Compila i campi per vedere il risultato.',
+    disclaimer:
+      'Stima a scopo educativo, non consulenza finanziaria. Le convenzioni su dimensione del contratto e valore del pip variano fra broker: verifica sempre col tuo.',
+  },
+
   formazione: {
     calendario: 'Calendario',
     avanzamentoRete: 'Avanzamento rete',

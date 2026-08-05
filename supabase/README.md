@@ -260,6 +260,55 @@ select cron.schedule(
 Rieseguirlo è innocuo: il vincolo di unicità su `(periodo, posizione)` rifiuta
 il doppione invece di sovrascrivere.
 
+## Strumenti e cambi (migrazione 0020)
+
+Gli strumenti del calcolatore di lottaggio stanno in tabella (`instruments`) e
+non nel codice: aggiungere una coppia o correggere la dimensione di un
+contratto — che **varia da broker a broker**, soprattutto sugli indici — non
+richiede un rilascio dell'app.
+
+```sql
+insert into public.instruments (symbol, tipo, contract_size, quote_currency, pip_size, unita, ordine)
+values ('UK100', 'indice', 1, 'GBP', 1, 'punto', 60);
+```
+
+**Perché serve la cache dei cambi.** Il valore del pip nasce nella valuta di
+**quotazione** dello strumento, non in quella del conto: su GBP/USD un pip vale
+10 USD, e con un conto in EUR quei 10 USD vanno convertiti. Saltare la
+conversione non dà errore — fa solo rischiare una cifra diversa da quella
+decisa, e ce ne si accorge dopo, sul conto.
+
+La Edge Function [`functions/fx-rates`](functions/fx-rates/index.ts) riempie
+`fx_rates`; l'app legge sempre da lì con la funzione `cambio(base, quote)`, che
+restituisce anche **da quanti minuti** il tasso è fermo.
+
+```bash
+npx supabase functions deploy fx-rates
+```
+
+```sql
+select cron.schedule(
+  'fx-rates-hourly',
+  '0 * * * *',
+  $$ select net.http_post(
+       url := 'https://<PROJECT-REF>.functions.supabase.co/fx-rates',
+       headers := '{"Authorization": "Bearer <SERVICE-ROLE-KEY>"}'::jsonb
+     ); $$
+);
+```
+
+> **Il calcolatore non si blocca mai.** Se il fornitore non risponde, la
+> function non tocca nulla e l'app continua con l'ultimo valore noto, mostrando
+> di quando è. Un tasso di un'ora fa è molto meglio di un calcolatore che non
+> calcola: chi deve aprire una posizione la aprirebbe comunque, a occhio. Se
+> invece il cambio manca del tutto, l'app lo dichiara e **chiede di inserirlo a
+> mano** — mai un valore inventato.
+
+`fx_rates` è in **sola lettura** per gli utenti autenticati: non esiste alcuna
+policy di scrittura, quindi ci scrive soltanto il `service_role` dalla function.
+Un utente che potesse alterare un cambio potrebbe alterare il lottaggio di
+chiunque.
+
 ## Agente AI — RAG (fase successiva)
 
 Architettura: **embedding domanda (Voyage AI) → retrieval su pgvector → generazione con Claude**.

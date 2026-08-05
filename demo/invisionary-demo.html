@@ -793,7 +793,15 @@
             <div class="field" style="flex:1"><span class="label">Rischio %</span><input id="lotRisk" value="1" inputmode="decimal" oninput="calcLot()"></div>
             <div class="field" style="flex:1"><span class="label">Stop (<span class="uB">pips</span>)</span><input id="lotSl" value="20" inputmode="decimal" oninput="calcLot()"></div>
           </div>
-          <div class="field"><span class="label">Tasso <span id="iQuote">USD</span> → conto</span><input id="lotRate" value="1" inputmode="decimal" oninput="calcLot()"><span class="cap" id="rateHint"></span></div>
+          <!-- La conversione: spiegata, non nascosta. È il punto in cui si sbaglia. -->
+          <div class="sect"><span class="s">✦</span><span class="t">Conversione valuta</span><span class="l"></span></div>
+          <div class="card" style="gap:8px">
+            <p class="cap" id="rateHint" style="margin:0"></p>
+            <div class="field" id="rateManualWrap" style="display:none">
+              <span class="label">Cambio manuale <span id="iQuote">USD</span> → conto</span>
+              <input id="lotRate" value="" inputmode="decimal" placeholder="1,00" oninput="calcLot()">
+            </div>
+          </div>
 
           <div class="sect"><span class="s">✦</span><span class="t">Dettaglio</span><span class="l"></span></div>
           <div class="card"><div id="lotRes"></div></div>
@@ -2191,24 +2199,55 @@
 
   /* ===== Calcolatore lottaggio: tabella strumenti + math corretto per strumento ===== */
   // pipValue (valuta quotata) per 1 lotto = pip × contratto  →  poi × tasso (quotata→conto)
+  // Rispecchia il catalogo seminato dalla migrazione 0020: nell'app arriva dalla
+  // tabella `instruments`, così si aggiunge una coppia senza rilasciare l'app.
   const INSTR = {
     'EUR/USD':{group:'Forex',contract:100000,pip:0.0001,quote:'USD',unit:'pip',cl:'100.000 unità',sl:20},
     'GBP/USD':{group:'Forex',contract:100000,pip:0.0001,quote:'USD',unit:'pip',cl:'100.000 unità',sl:20},
     'USD/JPY':{group:'Forex',contract:100000,pip:0.01,quote:'JPY',unit:'pip',cl:'100.000 unità',sl:20},
-    'AUD/USD':{group:'Forex',contract:100000,pip:0.0001,quote:'USD',unit:'pip',cl:'100.000 unità',sl:20},
     'USD/CHF':{group:'Forex',contract:100000,pip:0.0001,quote:'CHF',unit:'pip',cl:'100.000 unità',sl:20},
     'USD/CAD':{group:'Forex',contract:100000,pip:0.0001,quote:'CAD',unit:'pip',cl:'100.000 unità',sl:20},
+    'AUD/USD':{group:'Forex',contract:100000,pip:0.0001,quote:'USD',unit:'pip',cl:'100.000 unità',sl:20},
+    'NZD/USD':{group:'Forex',contract:100000,pip:0.0001,quote:'USD',unit:'pip',cl:'100.000 unità',sl:20},
+    'EUR/GBP':{group:'Forex',contract:100000,pip:0.0001,quote:'GBP',unit:'pip',cl:'100.000 unità',sl:20},
     'EUR/JPY':{group:'Forex',contract:100000,pip:0.01,quote:'JPY',unit:'pip',cl:'100.000 unità',sl:25},
-    'XAU/USD':{group:'Metalli',contract:100,pip:0.1,quote:'USD',unit:'punto',cl:'100 oz (oro)',sl:100},
-    'XAG/USD':{group:'Metalli',contract:5000,pip:0.01,quote:'USD',unit:'punto',cl:'5.000 oz (argento)',sl:80},
+    'GBP/JPY':{group:'Forex',contract:100000,pip:0.01,quote:'JPY',unit:'pip',cl:'100.000 unità',sl:30},
+    'EUR/CHF':{group:'Forex',contract:100000,pip:0.0001,quote:'CHF',unit:'pip',cl:'100.000 unità',sl:20},
+    'AUD/JPY':{group:'Forex',contract:100000,pip:0.01,quote:'JPY',unit:'pip',cl:'100.000 unità',sl:25},
     'US30':{group:'Indici',contract:1,pip:1,quote:'USD',unit:'punto',cl:'1 contratto (1$/punto)',sl:150},
     'NAS100':{group:'Indici',contract:1,pip:1,quote:'USD',unit:'punto',cl:'1 contratto (1$/punto)',sl:120},
-    'GER40':{group:'Indici',contract:1,pip:1,quote:'EUR',unit:'punto',cl:'1 contratto (1€/punto)',sl:120},
     'SPX500':{group:'Indici',contract:1,pip:1,quote:'USD',unit:'punto',cl:'1 contratto (1$/punto)',sl:40},
-    'BTC/USD':{group:'Cripto',contract:1,pip:1,quote:'USD',unit:'punto',cl:'1 BTC',sl:400},
-    'ETH/USD':{group:'Cripto',contract:1,pip:1,quote:'USD',unit:'punto',cl:'1 ETH',sl:60},
-    'WTI':{group:'Energia',contract:1000,pip:0.01,quote:'USD',unit:'punto',cl:'1.000 barili',sl:50}
+    'GER40':{group:'Indici',contract:1,pip:1,quote:'EUR',unit:'punto',cl:'1 contratto (1€/punto)',sl:120},
+    'UK100':{group:'Indici',contract:1,pip:1,quote:'GBP',unit:'punto',cl:'1 contratto (1£/punto)',sl:60},
+    'JP225':{group:'Indici',contract:1,pip:1,quote:'JPY',unit:'punto',cl:'1 contratto (1¥/punto)',sl:200},
+    'XAU/USD':{group:'Metalli',contract:100,pip:0.01,quote:'USD',unit:'punto',cl:'100 oz (oro)',sl:300},
+    'XAG/USD':{group:'Metalli',contract:5000,pip:0.001,quote:'USD',unit:'punto',cl:'5.000 oz (argento)',sl:300}
   };
+
+  /* Cache dei cambi: nell'app è la tabella `fx_rates`, riempita ogni ora da una
+     Edge Function. Qui è finta, ma si comporta allo stesso modo — compresa la
+     coppia mancante, che deve chiedere il tasso a mano invece di inventarlo. */
+  const FX = {
+    'USD>EUR':{rate:0.9174,min:14}, 'EUR>USD':{rate:1.0900,min:14},
+    'GBP>EUR':{rate:1.1730,min:14}, 'EUR>GBP':{rate:0.8525,min:14},
+    'CHF>EUR':{rate:1.0640,min:22}, 'EUR>CHF':{rate:0.9398,min:22},
+    'CAD>EUR':{rate:0.6780,min:22}, 'EUR>CAD':{rate:1.4749,min:22},
+    'JPY>EUR':{rate:0.0062,min:31}, 'EUR>JPY':{rate:161.29,min:31},
+    'USD>GBP':{rate:0.7820,min:14}, 'GBP>USD':{rate:1.2788,min:14},
+    'USD>CHF':{rate:0.8622,min:22}, 'CHF>USD':{rate:1.1598,min:22},
+    'JPY>USD':{rate:0.0068,min:31}, 'USD>JPY':{rate:147.06,min:31}
+    /* GBP>JPY e simili mancano di proposito: è il caso da mostrare. */
+  };
+  function etaCambio(m){
+    if(m<2) return 'aggiornato ora';
+    if(m<60) return 'aggiornato '+m+' minuti fa';
+    const h=Math.round(m/60); return 'aggiornato '+h+(h===1?' ora':' ore')+' fa';
+  }
+  /* Il cambio da usare adesso. `null` = non lo sappiamo, e va detto. */
+  function cambio(quote, acct){
+    if(quote===acct) return {rate:1, stessa:true};
+    return FX[quote+'>'+acct] || null;
+  }
   // popola il menu a tendina strumenti (raggruppato)
   (function(){
     const sel=document.getElementById('lotInstr'); const groups={};
@@ -2231,20 +2270,53 @@
     document.querySelectorAll('.uB').forEach(e=>e.textContent=unitP);
     document.getElementById('iGroup').textContent=I.group;
     document.getElementById('iContract').textContent=I.cl;
-    document.getElementById('iPip').textContent=fmt(I.pip*I.contract)+' '+I.quote;
+    document.getElementById('iPip').textContent=fmt(I.pip*I.contract,4)+' '+I.quote;
     document.getElementById('iQuote').textContent=I.quote;
     document.getElementById('lotSl').value=I.sl;
-    const acct=(v('lotVal')||'EUR').toUpperCase();
-    if(I.quote===acct) document.getElementById('lotRate').value='1';
-    document.getElementById('rateHint').textContent = I.quote===acct
-      ? 'Stessa valuta del conto: tasso 1.'
-      : '1 '+I.quote+' in '+acct+' (imposta il tasso reale; in demo può restare 1).';
     calcLot();
   }
+
+  /* Mostra lo stato del cambio e restituisce il tasso da usare (NaN se manca). */
+  function aggiornaCambio(I, acct){
+    const c = cambio(I.quote, acct);
+    const hint = document.getElementById('rateHint');
+    const wrap = document.getElementById('rateManualWrap');
+    document.getElementById('iQuote').textContent = I.quote;
+
+    if(c && c.stessa){
+      wrap.style.display='none';
+      hint.style.color='var(--muted)';
+      hint.textContent='Quotazione e conto sono entrambi in '+acct+': nessuna conversione necessaria.';
+      return 1;
+    }
+    const spiega='Il valore del '+I.unit+' nasce in '+I.quote+' e va convertito in '+acct+
+                 ': senza, rischieresti una cifra diversa da quella decisa. ';
+    if(c){
+      wrap.style.display='none';
+      hint.style.color='var(--muted)';
+      hint.innerHTML=spiega+'<br><b style="color:var(--text)">1 '+I.quote+' = '+
+        fmt(c.rate,4)+' '+acct+'</b> · '+etaCambio(c.min);
+      return c.rate;
+    }
+    // Nessun tasso noto: si dichiara e si chiede, non si inventa.
+    wrap.style.display='';
+    const manuale=parseNum(v('lotRate'));
+    if(Number.isFinite(manuale) && manuale>0){
+      hint.style.color='var(--muted)';
+      hint.innerHTML=spiega+'<br>Cambio inserito a mano: <b style="color:var(--text)">1 '+
+        I.quote+' = '+fmt(manuale,4)+' '+acct+'</b>';
+    } else {
+      hint.style.color='var(--accent)';
+      hint.textContent=spiega+'Cambio non disponibile: inseriscilo a mano o riprova più tardi.';
+    }
+    return manuale;
+  }
+
   function calcLot(){
     const I=INSTR[v('lotInstr')];
     const balance=parseNum(v('lotSaldo')), riskPercent=parseNum(v('lotRisk')), stop=parseNum(v('lotSl')),
-          rate=parseNum(v('lotRate')), acct=(v('lotVal')||'EUR').toUpperCase();
+          acct=(v('lotVal')||'EUR').toUpperCase();
+    const rate=aggiornaCambio(I, acct);
     const el=document.getElementById('lotRes');
     const ok=[balance,riskPercent,stop,rate].every(Number.isFinite)&&balance>0&&riskPercent>0&&stop>0&&rate>0;
     if(!ok){
@@ -2260,14 +2332,17 @@
     const pipQuote = I.pip*I.contract;      // valore pip/punto per lotto, in valuta quotata
     const pipAcct  = pipQuote*rate;         // convertito nella valuta del conto
     const riskAmount = balance*(riskPercent/100);
-    const lots = riskAmount/(stop*pipAcct);
+    // Si arrotonda SEMPRE per difetto al passo del broker: eccedere il rischio
+    // deciso è l'unico errore da non fare qui.
+    const lotsExact = riskAmount/(stop*pipAcct);
+    const lots = Math.floor(lotsExact/0.01)*0.01;
     const units = lots*I.contract;
     const unitS=I.unit, unitP=(I.unit==='pip'?'pips':'punti');
-    const lotsTxt = lots<0.01 ? '&lt; 0,01' : fmt(lots,2);
+    const lotsTxt = lots>0 ? fmt(lots,2) : '—';
     el.innerHTML =
       row('Rischio', fmt(riskAmount)+' '+acct)+
-      row('Valore '+unitS+'/lotto', fmt(pipAcct)+' '+acct)+
-      row((I.group==='Forex'?'Unità':'Quantità'), fmt(units, I.contract>=100?0:2)+(I.group==='Metalli'?' oz':(I.group==='Energia'?' barili':'')))+
+      row('Valore '+unitS+'/lotto', fmt(pipAcct,4)+' '+acct)+
+      row((I.group==='Forex'?'Unità':'Quantità'), fmt(units, I.contract>=100?0:2)+(I.group==='Metalli'?' oz':''))+
       row('Perdita stimata a '+stop+' '+unitP, fmt(lots*stop*pipAcct)+' '+acct);
 
     // Risposta in evidenza
@@ -2276,7 +2351,7 @@
     hero.innerHTML='<span class="lb">Lotti da aprire</span>'+
       '<span class="big" style="color:var(--gold)">'+lotsTxt+'</span>'+
       '<span class="sb">Su '+v('lotInstr')+', rischiando <b style="color:var(--text)">'+fmt(riskAmount)+' '+acct+
-      '</b> con stop a '+stop+' '+unitP+(lots<0.01?'<br>Sotto il lotto minimo: riduci lo stop o aumenta il capitale.':'')+'</span>';
+      '</b> con stop a '+stop+' '+unitP+(lots<=0?'<br>Sotto il lotto minimo: riduci lo stop o aumenta il capitale.':'')+'</span>';
 
     // Semaforo del rischio: 5% = fondo scala
     const pct=Math.min(riskPercent,5)/5*100;
