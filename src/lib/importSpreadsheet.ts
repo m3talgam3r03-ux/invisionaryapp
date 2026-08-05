@@ -4,6 +4,7 @@ import Papa from 'papaparse';
 import { Platform } from 'react-native';
 import * as XLSX from 'xlsx';
 
+import { separaContatto } from '@/lib/normalize';
 import type { ClientInput } from '@/types/models';
 
 export type ParsedSheet = {
@@ -105,9 +106,17 @@ export function buildClientRows(rows: string[][], mapping: ColumnMapping): Clien
   for (const row of rows) {
     const nome = pick(row, mapping.nome);
     if (!nome) continue; // il nome è obbligatorio
+
+    const contatto = pick(row, mapping.contatto);
+    // Email e telefono si ricavano subito in forma confrontabile: è ciò che
+    // permette di accorgersi dei doppioni prima di importarli, non dopo.
+    const { email, telefono } = separaContatto(contatto);
+
     result.push({
       nome,
-      contatto: pick(row, mapping.contatto),
+      contatto,
+      email,
+      telefono_e164: telefono,
       prodotto: pick(row, mapping.prodotto),
       note: pick(row, mapping.note),
     });

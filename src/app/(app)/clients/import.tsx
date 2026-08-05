@@ -2,7 +2,8 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { Button, Card, Screen, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, TextField, ThemedText } from '@/components/ui';
+import { t } from '@/i18n/it';
 import { useImportClients } from '@/lib/clients';
 import {
   buildClientRows,
@@ -13,9 +14,11 @@ import {
   type ParsedSheet,
 } from '@/lib/importSpreadsheet';
 import { radius, spacing, useTheme } from '@/theme';
+import { BASI_GIURIDICHE, type BaseGiuridica } from '@/types/models';
 
 export default function ImportClients() {
   const router = useRouter();
+  const { colors } = useTheme();
   const importer = useImportClients();
 
   const [sheet, setSheet] = useState<ParsedSheet | null>(null);
@@ -23,6 +26,10 @@ export default function ImportClients() {
   const [picking, setPicking] = useState(false);
   const [pickError, setPickError] = useState<string | null>(null);
   const [importedCount, setImportedCount] = useState<number | null>(null);
+
+  // Dichiarazione obbligatoria: senza, l'importazione non parte.
+  const [origineDati, setOrigineDati] = useState('');
+  const [baseGiuridica, setBaseGiuridica] = useState<BaseGiuridica | null>(null);
 
   async function choose() {
     setPickError(null);
@@ -45,8 +52,12 @@ export default function ImportClients() {
     setSheet(null);
     setMapping(null);
     setImportedCount(null);
+    setOrigineDati('');
+    setBaseGiuridica(null);
     importer.reset();
   }
+
+  const dichiarazioneCompleta = origineDati.trim().length > 0 && baseGiuridica !== null;
 
   // --- Risultato import ---------------------------------------------------
   if (importedCount !== null) {
@@ -160,6 +171,53 @@ export default function ImportClients() {
         </View>
       )}
 
+      {/* Dichiarazione: non è burocrazia, è la sola risposta possibile a
+          «perché avete questi dati». Senza, l'importazione non parte. */}
+      <View style={{ gap: spacing.sm }}>
+        <ThemedText variant="label" tone="muted">
+          {t.crm.importaSchermata.dichiarazione}
+        </ThemedText>
+        <ThemedText tone="muted" variant="caption">
+          {t.crm.importaSchermata.dichiarazioneSpiega}
+        </ThemedText>
+
+        <TextField
+          label={t.crm.importaSchermata.origineDati}
+          value={origineDati}
+          onChangeText={setOrigineDati}
+          placeholder={t.crm.importaSchermata.origineDatiEsempio}
+        />
+
+        <ThemedText variant="label" tone="muted">
+          {t.crm.importaSchermata.baseGiuridica}
+        </ThemedText>
+        <View style={styles.chips}>
+          {BASI_GIURIDICHE.map((b) => (
+            <Pressable
+              key={b}
+              onPress={() => setBaseGiuridica(b)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: baseGiuridica === b }}
+              style={{
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.sm,
+                borderRadius: radius.pill,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: baseGiuridica === b ? colors.accent : colors.border,
+                backgroundColor: baseGiuridica === b ? colors.accent : colors.surface,
+              }}
+            >
+              <ThemedText
+                variant="caption"
+                style={{ color: baseGiuridica === b ? '#FFFFFF' : colors.text }}
+              >
+                {t.crm.importaSchermata.basi[b]}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
       {importer.isError && (
         <ThemedText tone="error" variant="caption">
           {importer.error instanceof Error ? importer.error.message : 'Import non riuscito.'}
@@ -167,14 +225,27 @@ export default function ImportClients() {
       )}
 
       <View style={{ gap: spacing.sm }}>
+        {!dichiarazioneCompleta && built.length > 0 && (
+          <ThemedText tone="muted" variant="caption">
+            {t.crm.importaSchermata.mancaDichiarazione}
+          </ThemedText>
+        )}
         <Button
-          title={`Importa ${built.length} clienti`}
-          disabled={!canImport}
+          title={t.crm.importaSchermata.importaN(built.length)}
+          disabled={!canImport || !dichiarazioneCompleta}
           loading={importer.isPending}
           onPress={() =>
-            importer.mutate(built, {
-              onSuccess: (count) => setImportedCount(count),
-            })
+            importer.mutate(
+              {
+                rows: built,
+                nomeFile: sheet?.fileName ?? null,
+                origineDati,
+                baseGiuridica: baseGiuridica as BaseGiuridica,
+                righeTotali: sheet?.rows.length ?? built.length,
+                righeDuplicate: 0,
+              },
+              { onSuccess: (count) => setImportedCount(count) },
+            )
           }
         />
         <Button title="Scegli un altro file" variant="secondary" onPress={reset} />

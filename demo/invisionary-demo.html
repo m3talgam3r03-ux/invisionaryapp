@@ -634,12 +634,31 @@
           <div class="field"><span class="cap">Nome *</span><div class="row" style="flex-wrap:wrap"><span class="chip">—</span><span class="chip on">Nominativo</span><span class="chip">Email</span><span class="chip">Prodotto</span></div></div>
           <div class="field"><span class="cap">Contatto</span><div class="row" style="flex-wrap:wrap"><span class="chip">—</span><span class="chip">Nominativo</span><span class="chip on">Email</span><span class="chip">Prodotto</span></div></div>
           <div class="field"><span class="cap">Prodotto</span><div class="row" style="flex-wrap:wrap"><span class="chip">—</span><span class="chip">Nominativo</span><span class="chip">Email</span><span class="chip on">Prodotto</span></div></div>
-          <span class="label">Anteprima (126 clienti validi)</span>
+          <span class="label">Anteprima (126 righe valide)</span>
           <div class="card"><h3 class="heading">Anna Neri</h3><p class="cap">Membership annuale</p><p class="cap">anna.neri@email.it</p></div>
           <div class="card"><h3 class="heading">Paolo Gialli</h3><p class="cap">Pacchetto Starter</p><p class="cap">paolo.g@email.it</p></div>
           <p class="cap">…e altri 124.</p>
-          <button class="btn" onclick="crmSub('list')">Importa 126 clienti</button>
-          <p class="cap" style="text-align:center">Import CSV/Excel con mappatura colonne e anteprima prima del salvataggio.</p>
+
+          <!-- Deduplica: «+39 340 123 4567» e «3401234567» sono la stessa persona -->
+          <div class="card" style="border-color:#5A4A24">
+            <div class="row" style="gap:8px"><span class="gold">⚠</span>
+              <span class="cap"><b class="gold">4 righe sono già in lista</b> e non verranno reimportate.
+              Il confronto avviene su email e telefono normalizzati: «+39 340 123 4567» e «3401234567»
+              sono la stessa persona.</span></div>
+          </div>
+
+          <!-- Dichiarazione obbligatoria: senza, il pulsante resta spento -->
+          <div class="sect"><span class="s">✦</span><span class="t">Dichiarazione obbligatoria</span><span class="l"></span></div>
+          <p class="cap">Prima di importare va dichiarato da dove arrivano questi dati e con quale base li tratti. È la sola cosa che si può esibire se qualcuno chiede perché quei contatti sono nel sistema.</p>
+
+          <div class="field"><span class="label">Da dove arrivano *</span>
+            <input id="impOrigine" placeholder="es. evento del 12 marzo, rubrica personale" oninput="checkImport()"></div>
+
+          <div class="field"><span class="label">Base giuridica *</span>
+            <div class="segs" id="impBasi"></div></div>
+
+          <button class="btn" id="impBtn" disabled onclick="confermaImport()">Importa 122 contatti</button>
+          <p class="cap" id="impNota" style="text-align:center">Compila origine e base giuridica per poter importare.</p>
         </div>
       </section>
 
@@ -1428,6 +1447,7 @@
     document.getElementById('crmMain').style.display=(v==='list')?'':'none';
     document.getElementById('crmImport').style.display=(v==='import')?'':'none';
     if(v==='list') renderCrm();
+    if(v==='import'){ renderBasi(); checkImport(); }
   }
   function fmSub(v){ ['menu','course','lesson','cal','rete'].forEach(k=>{ const el=document.getElementById('fm'+k.charAt(0).toUpperCase()+k.slice(1)); if(el) el.style.display=(k===v)?'':'none'; }); }
   function cSub(v){ document.getElementById('cMenu').style.display=(v==='menu')?'':'none'; document.getElementById('cLot').style.display=(v==='lot')?'':'none'; document.getElementById('cComp').style.display=(v==='comp')?'':'none'; if(v==='lot')calcLot(); if(v==='comp')calcComp(); }
@@ -2019,6 +2039,44 @@
     renderCrm(); openDetail(c.id); toast('Fase aggiornata: '+STAGE[k].label);
   }
   function quick(msg){ toast(msg+' (demo)'); }
+
+  /* — Importazione: dichiarazione obbligatoria —
+     Il pulsante resta spento finché origine e base giuridica non ci sono.
+     Nell'app il vincolo è lo stesso, e la dichiarazione viene salvata PRIMA
+     dei contatti: ogni contatto resta legato alla sua importazione. */
+  const BASI_GIURIDICHE = [
+    ['consenso','Consenso'],
+    ['contratto','Contratto'],
+    ['obbligo_legale','Obbligo legale'],
+    ['legittimo_interesse','Legittimo interesse'],
+  ];
+  let baseScelta = null;
+
+  function renderBasi(){
+    const el=document.getElementById('impBasi'); if(!el) return;
+    el.innerHTML=BASI_GIURIDICHE.map(([k,label])=>
+      '<button class="seg'+(baseScelta===k?' on':'')+'" onclick="scegliBase(\''+k+'\')">'+label+'</button>'
+    ).join('');
+  }
+  function scegliBase(k){ baseScelta=k; renderBasi(); checkImport(); }
+
+  function checkImport(){
+    const origine=(document.getElementById('impOrigine')?.value||'').trim();
+    const pronto = origine.length>0 && baseScelta!==null;
+    const btn=document.getElementById('impBtn');
+    const nota=document.getElementById('impNota');
+    if(btn) btn.disabled=!pronto;
+    if(nota) nota.textContent = pronto
+      ? 'Origine e base giuridica verranno salvate insieme ai contatti.'
+      : 'Compila origine e base giuridica per poter importare.';
+  }
+
+  function confermaImport(){
+    const origine=(document.getElementById('impOrigine')?.value||'').trim();
+    const label=(BASI_GIURIDICHE.find(b=>b[0]===baseScelta)||[])[1];
+    crmSub('list');
+    toast('122 contatti importati · ' + label + ' · ' + origine);
+  }
 
   /* — Nuovo prospect — */
   function openCrm(){ document.getElementById('npErr').innerHTML=''; document.getElementById('crmModal').classList.add('on'); setTimeout(()=>document.getElementById('npName').focus(),50); }

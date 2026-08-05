@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type {
+  BaseGiuridica,
   Client,
   ClientInput,
   ContactStato,
@@ -153,16 +154,69 @@ export function useDeleteClient() {
 }
 
 /**
- * Inserimento massivo (import CSV/Excel).
- * L'origine viene marcata qui e non lasciata al chiamante: sapere quali
- * contatti arrivano da un file, e non dal lavoro sul campo, è metà del valore
- * del campo `origine`.
+ * Cerca fra i contatti già in lista quelli che corrispondono ai valori
+ * proposti, per non importare due volte la stessa persona.
+ * Il confronto avviene sui valori normalizzati, lato database.
+ */
+export function useTrovaDuplicati() {
+  return useMutation({
+    mutationFn: async (input: {
+      emails: (string | null)[];
+      telefoni: (string | null)[];
+    }): Promise<Set<string>> => {
+      const { data, error } = await supabase.rpc('trova_duplicati', {
+        emails: input.emails.filter(Boolean),
+        telefoni: input.telefoni.filter(Boolean),
+      });
+      if (error) throw error;
+      // Chiavi nella stessa forma usata da chiaveDeduplica().
+      const chiavi = new Set<string>();
+      for (const r of (data ?? []) as { email: string | null; telefono_e164: string | null }[]) {
+        if (r.email) chiavi.add(`email:${r.email}`);
+        if (r.telefono_e164) chiavi.add(`tel:${r.telefono_e164}`);
+      }
+      return chiavi;
+    },
+  });
+}
+
+/**
+ * Importazione massiva.
+ *
+ * La dichiarazione di origine e base giuridica non è opzionale: viene salvata
+ * PRIMA dei contatti, e ogni contatto ci resta legato. Senza, non si potrebbe
+ * rispondere a «perché avete questi dati».
  */
 export function useImportClients() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (rows: ClientInput[]): Promise<number> => {
-      const conOrigine = rows.map((r) => ({ ...r, origine: r.origine ?? 'import' }));
+    mutationFn: async (input: {
+      rows: ClientInput[];
+      nomeFile: string | null;
+      origineDati: string;
+      baseGiuridica: BaseGiuridica;
+      righeTotali: number;
+      righeDuplicate: number;
+    }): Promise<number> => {
+      const { data: batch, error: errBatch } = await supabase
+        .from('import_batches')
+        .insert({
+          nome_file: input.nomeFile,
+          origine_dati: input.origineDati.trim(),
+          base_giuridica: input.baseGiuridica,
+          righe_totali: input.righeTotali,
+          righe_importate: input.rows.length,
+          righe_duplicate: input.righeDuplicate,
+        })
+        .select('id')
+        .single();
+      if (errBatch) throw errBatch;
+
+      const conOrigine = input.rows.map((r) => ({
+        ...r,
+        origine: r.origine ?? 'import',
+        import_batch_id: batch.id,
+      }));
       const { data, error } = await supabase.from('clients').insert(conOrigine).select('id');
       if (error) throw error;
       return data?.length ?? 0;
@@ -172,4 +226,34 @@ export function useImportClients() {
       qc.invalidateQueries({ queryKey: ['leaderboard'] }); // i clienti pesano sul rank
     },
   });
+}
+
+/**
+ * Export dei contatti visibili, con i consensi.
+ * Esportarli senza i consensi darebbe una lista inutilizzabile: chi la riceve
+ * non saprebbe chi è contattabile e su quale canale.
+ */
+export function useExportContatti() {
+  return useMutation({
+    mutationFn: async (): Promise<string> => {
+      const { data, error } = await supabase.rpc('export_contatti');
+      if (error) throw error;
+      return toCSV((data ?? []) as Record<string, unknown>[]);
+    },
+  });
+}
+
+/** Righe → CSV. Virgolette raddoppiate secondo lo standard, niente librerie. */
+function toCSV(righe: Record<string, unknown>[]): string {
+  if (righe.length === 0) return '';
+  const colonne = Object.keys(righe[0]);
+  const cella = (v: unknown) => {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [
+    colonne.join(','),
+    ...righe.map((r) => colonne.map((c) => cella(r[c])).join(',')),
+  ].join('\n');
 }

@@ -15,12 +15,39 @@ export type Profile = {
 export const CONTACT_STATI = ['nuovo', 'contattato', 'appuntamento', 'cliente', 'perso'] as const;
 export type ContactStato = (typeof CONTACT_STATI)[number];
 
+/** Basi giuridiche ammesse per trattare i dati di un contatto importato. */
+export const BASI_GIURIDICHE = [
+  'consenso',
+  'contratto',
+  'obbligo_legale',
+  'legittimo_interesse',
+] as const;
+export type BaseGiuridica = (typeof BASI_GIURIDICHE)[number];
+
+/** Un'importazione con la sua dichiarazione: è la risposta a «perché avete questi dati». */
+export type ImportBatch = {
+  id: string;
+  owner_id: string;
+  nome_file: string | null;
+  origine_dati: string;
+  base_giuridica: BaseGiuridica;
+  righe_totali: number;
+  righe_importate: number;
+  righe_duplicate: number;
+  created_at: string;
+};
+
 /** Riga della tabella `clients` (CRM). */
 export type Client = {
   id: string;
   owner_id: string;
   nome: string;
   contatto: string | null;
+  /** Email in minuscolo, per il confronto; il testo originale resta in `contatto`. */
+  email: string | null;
+  /** Telefono in E.164, per il confronto; il testo originale resta in `contatto`. */
+  telefono_e164: string | null;
+  import_batch_id: string | null;
   prodotto: string | null;
   note: string | null;
   stato: ContactStato;
@@ -36,11 +63,14 @@ export type Client = {
 export type ClientInput = {
   nome: string;
   contatto?: string | null;
+  email?: string | null;
+  telefono_e164?: string | null;
   prodotto?: string | null;
   note?: string | null;
   stato?: ContactStato;
   origine?: string;
   tags?: string[];
+  import_batch_id?: string | null;
 };
 
 /** I canali su cui si può essere contattati. Ognuno è una decisione separata. */

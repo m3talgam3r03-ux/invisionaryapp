@@ -9,7 +9,13 @@
  * dei ruoli, TypeScript segnala qui le voci mancanti.
  */
 import type { Role } from '@/theme';
-import type { Canale, ContactStato, RenewalAction, RenewalStatus } from '@/types/models';
+import type {
+  BaseGiuridica,
+  Canale,
+  ContactStato,
+  RenewalAction,
+  RenewalStatus,
+} from '@/types/models';
 
 /** Come si chiamano i ruoli quando li legge una persona. */
 export const ROLE_LABEL: Record<Role, string> = {
@@ -129,6 +135,33 @@ export const t = {
       cliente: 'Cliente',
       perso: 'Perso',
     } satisfies Record<ContactStato, string>,
+
+    importa2: 'Importa',
+    importaSchermata: {
+      dichiarazione: 'Dichiarazione obbligatoria',
+      dichiarazioneSpiega:
+        'Prima di importare va dichiarato da dove arrivano questi dati e con quale base li tratti. È la sola cosa che si può esibire se qualcuno chiede perché quei contatti sono nel sistema.',
+      origineDati: 'Da dove arrivano *',
+      origineDatiEsempio: 'es. evento del 12 marzo, rubrica personale, modulo sul sito',
+      baseGiuridica: 'Base giuridica *',
+      basi: {
+        consenso: 'Consenso',
+        contratto: 'Contratto',
+        obbligo_legale: 'Obbligo legale',
+        legittimo_interesse: 'Legittimo interesse',
+      } satisfies Record<BaseGiuridica, string>,
+      mancaDichiarazione: 'Compila origine e base giuridica per poter importare.',
+      importaN: (n: number) => `Importa ${n} ${n === 1 ? 'contatto' : 'contatti'}`,
+      duplicatiTrovati: (n: number) =>
+        `${n} ${n === 1 ? 'riga è già' : 'righe sono già'} in lista e non ${n === 1 ? 'verrà reimportata' : 'verranno reimportate'}.`,
+    },
+
+    esporta: {
+      titolo: 'Esporta contatti',
+      spiega: 'CSV con i consensi inclusi: senza, la lista non è utilizzabile da chi la riceve.',
+      azione: 'Esporta in CSV',
+      fatto: (n: number) => `${n} contatti esportati`,
+    },
 
     campoStato: 'Fase',
     campoTag: 'Tag',
