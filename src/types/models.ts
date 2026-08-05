@@ -43,6 +43,34 @@ export type ClientInput = {
   tags?: string[];
 };
 
+/** I canali su cui si può essere contattati. Ognuno è una decisione separata. */
+export const CANALI = ['email', 'sms', 'whatsapp', 'telefono'] as const;
+export type Canale = (typeof CANALI)[number];
+
+/** Consenso corrente per un canale. */
+export type ContactConsent = {
+  id: string;
+  client_id: string;
+  canale: Canale;
+  valore: boolean;
+  origine: 'manuale' | 'import' | 'funnel';
+  testo_informativa: string | null;
+  registrato_da: string | null;
+  created_at: string;
+};
+
+/** Riga di `consent_history`: la prova di quando un consenso è stato dato o tolto. */
+export type ConsentHistoryEntry = {
+  id: string;
+  client_id: string;
+  canale: Canale;
+  valore: boolean;
+  origine: string | null;
+  testo_informativa: string | null;
+  actor_id: string | null;
+  created_at: string;
+};
+
 /** Riga di `contact_status_history`: chi ha spostato il contatto, da dove a dove. */
 export type ContactStatusHistoryEntry = {
   id: string;

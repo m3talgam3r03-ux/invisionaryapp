@@ -9,7 +9,7 @@
  * dei ruoli, TypeScript segnala qui le voci mancanti.
  */
 import type { Role } from '@/theme';
-import type { ContactStato, RenewalAction, RenewalStatus } from '@/types/models';
+import type { Canale, ContactStato, RenewalAction, RenewalStatus } from '@/types/models';
 
 /** Come si chiamano i ruoli quando li legge una persona. */
 export const ROLE_LABEL: Record<Role, string> = {
@@ -141,6 +141,42 @@ export const t = {
       vuoto: 'Nessun passaggio registrato.',
       creato: (stato: string) => `Creato come «${stato}»`,
       passaggio: (da: string, a: string) => `${da} → ${a}`,
+    },
+
+    consensi: {
+      titolo: 'Consensi',
+      sottotitolo:
+        'Ogni canale è una decisione separata. Senza consenso attivo il contatto non entra negli invii: lo impedisce il database, non solo questa schermata.',
+      canale: {
+        email: 'Email',
+        sms: 'SMS',
+        whatsapp: 'WhatsApp',
+        telefono: 'Telefono',
+      } satisfies Record<Canale, string>,
+      concesso: 'Sì',
+      negato: 'No',
+      nonRegistrato: 'Non registrato',
+      spiegaNonRegistrato: 'Mai chiesto: vale come un no.',
+      informativa:
+        'Autorizzo Invisionary a contattarmi su questo canale per comunicazioni relative ai prodotti e ai servizi della rete. Posso revocare il consenso in qualsiasi momento.',
+      storicoTitolo: 'Storico dei consensi',
+      storicoVuoto: 'Nessun consenso ancora registrato.',
+      dato: (canale: string) => `${canale}: consenso dato`,
+      revocato: (canale: string) => `${canale}: consenso revocato`,
+      soloProprietario: 'Solo chi possiede il contatto può registrarne i consensi.',
+    },
+
+    privacy: {
+      titolo: 'Dati personali',
+      esporta: 'Esporta i dati',
+      esportaFatto: 'Dati esportati',
+      esportaSpiega: 'Tutto ciò che è registrato su questa persona, in un file.',
+      cancella: 'Cancella tutti i dati',
+      cancellaSpiega:
+        'Elimina il contatto e tutto ciò che vi è collegato: consensi, storico, rinnovi. Resta solo la traccia dell’avvenuta cancellazione, senza i dati.',
+      cancellaConferma:
+        'Cancellare definitivamente questa persona e tutti i suoi dati? L’operazione non si annulla.',
+      cancellaFatto: 'Dati cancellati',
     },
   },
 

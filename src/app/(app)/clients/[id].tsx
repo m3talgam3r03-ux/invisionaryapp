@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { ClientForm } from '@/components/ClientForm';
+import { ConsentPanel } from '@/components/ConsentPanel';
 import { StatoBadge } from '@/components/StatoBadge';
 import { Avatar, Button, Card, EmptyState, Screen, ThemedText } from '@/components/ui';
 import { t } from '@/i18n/it';
@@ -131,6 +132,9 @@ export default function ClientDetail() {
           <ThemedText>{client.note}</ThemedText>
         </Card>
       ) : null}
+
+      {/* Consensi per canale: senza, il contatto non entra negli invii */}
+      <ConsentPanel client={client} />
 
       {/* Dove si è mosso il contatto: serve a capire dove si perde la rete */}
       <Storico righe={storico ?? []} />

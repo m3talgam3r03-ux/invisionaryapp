@@ -789,6 +789,351 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
     });
   });
 
+  // --- storico degli stati del CRM ------------------------------------------
+
+  describe('storico dei contatti', () => {
+    it('creare un contatto registra la fase iniziale', async () => {
+      const { data: c, error } = await admin
+        .from('clients')
+        .insert({ owner_id: id.collaboratore, nome: 'RLS Test — storico' })
+        .select('id')
+        .single();
+      if (error) throw error;
+
+      const { data: storico } = await admin
+        .from('contact_status_history')
+        .select('da_stato, a_stato')
+        .eq('client_id', c.id);
+
+      expect(storico).toHaveLength(1);
+      expect(storico![0]).toMatchObject({ da_stato: null, a_stato: 'nuovo' });
+
+      await admin.from('clients').delete().eq('id', c.id);
+    });
+
+    it('ogni passaggio di fase lascia una riga, con la fase di partenza', async () => {
+      const { data: c } = await admin
+        .from('clients')
+        .insert({ owner_id: id.collaboratore, nome: 'RLS Test — passaggi' })
+        .select('id')
+        .single();
+
+      await client.collaboratore.from('clients').update({ stato: 'contattato' }).eq('id', c!.id);
+      await client.collaboratore.from('clients').update({ stato: 'appuntamento' }).eq('id', c!.id);
+
+      const { data: storico } = await admin
+        .from('contact_status_history')
+        .select('da_stato, a_stato, actor_id')
+        .eq('client_id', c!.id)
+        .order('created_at');
+
+      expect(storico!.map((r) => `${r.da_stato ?? '∅'}→${r.a_stato}`)).toEqual([
+        '∅→nuovo',
+        'nuovo→contattato',
+        'contattato→appuntamento',
+      ]);
+      // L'autore del passaggio è chi ha scritto, non il proprietario del dato.
+      expect(storico![1].actor_id).toBe(id.collaboratore);
+
+      await admin.from('clients').delete().eq('id', c!.id);
+    });
+
+    it('modificare altri campi non sporca lo storico', async () => {
+      const { data: c } = await admin
+        .from('clients')
+        .insert({ owner_id: id.collaboratore, nome: 'RLS Test — solo note' })
+        .select('id')
+        .single();
+
+      await client.collaboratore.from('clients').update({ note: 'aggiornata' }).eq('id', c!.id);
+
+      const { data: storico } = await admin
+        .from('contact_status_history')
+        .select('id')
+        .eq('client_id', c!.id);
+      expect(storico, 'solo i cambi di fase vanno registrati').toHaveLength(1);
+
+      await admin.from('clients').delete().eq('id', c!.id);
+    });
+
+    it('cambiare fase aggiorna da sé la data di ultimo contatto', async () => {
+      const vecchia = new Date();
+      vecchia.setDate(vecchia.getDate() - 40);
+      const { data: c } = await admin
+        .from('clients')
+        .insert({
+          owner_id: id.collaboratore,
+          nome: 'RLS Test — ultimo contatto',
+          ultimo_contatto_at: vecchia.toISOString(),
+        })
+        .select('id')
+        .single();
+
+      await client.collaboratore.from('clients').update({ stato: 'contattato' }).eq('id', c!.id);
+
+      const { data: dopo } = await admin
+        .from('clients')
+        .select('ultimo_contatto_at')
+        .eq('id', c!.id)
+        .single();
+
+      const giorniFa =
+        (Date.now() - new Date(dopo!.ultimo_contatto_at).getTime()) / 86_400_000;
+      expect(giorniFa, 'cambiare fase È un contatto').toBeLessThan(1);
+
+      await admin.from('clients').delete().eq('id', c!.id);
+    });
+
+    it('lo storico non si scrive né si modifica a mano', async () => {
+      const { data: c } = await admin
+        .from('clients')
+        .insert({ owner_id: id.collaboratore, nome: 'RLS Test — sola lettura' })
+        .select('id')
+        .single();
+
+      const { error } = await client.collaboratore
+        .from('contact_status_history')
+        .insert({ client_id: c!.id, a_stato: 'cliente' });
+      expect(error, 'lo storico lo scrivono solo i trigger').not.toBeNull();
+
+      await admin.from('clients').delete().eq('id', c!.id);
+    });
+
+    it('lo storico segue il perimetro del contatto', async () => {
+      const { data: c } = await admin
+        .from('clients')
+        .insert({ owner_id: id.admin, nome: 'RLS Test — perimetro' })
+        .select('id')
+        .single();
+
+      const { data: visto } = await client.collaboratore
+        .from('contact_status_history')
+        .select('id')
+        .eq('client_id', c!.id);
+      expect(visto, 'il contatto è dell’admin: il collaboratore non lo vede').toEqual([]);
+
+      await admin.from('clients').delete().eq('id', c!.id);
+    });
+  });
+
+  // --- consensi GDPR --------------------------------------------------------
+
+  describe('consensi', () => {
+    async function contattoDi(owner: string, nome: string) {
+      const { data, error } = await admin
+        .from('clients')
+        .insert({ owner_id: owner, nome })
+        .select('id')
+        .single();
+      if (error) throw error;
+      return data.id as string;
+    }
+
+    it('senza consenso registrato il contatto NON è raggiungibile', async () => {
+      // È il vincolo che conta: l'assenza non è un sì.
+      const cid = await contattoDi(id.collaboratore, 'RLS Test — senza consenso');
+
+      const { data } = await client.collaboratore
+        .from('contactable_by_email')
+        .select('client_id')
+        .eq('client_id', cid);
+      expect(data, 'il silenzio non è consenso').toEqual([]);
+
+      await admin.from('clients').delete().eq('id', cid);
+    });
+
+    it('un consenso negato non rende raggiungibili', async () => {
+      const cid = await contattoDi(id.collaboratore, 'RLS Test — consenso negato');
+      await admin.from('contact_consents').insert({
+        client_id: cid,
+        canale: 'email',
+        valore: false,
+        origine: 'manuale',
+      });
+
+      const { data } = await client.collaboratore
+        .from('contactable_by_email')
+        .select('client_id')
+        .eq('client_id', cid);
+      expect(data).toEqual([]);
+
+      await admin.from('clients').delete().eq('id', cid);
+    });
+
+    it('il consenso vale solo per il canale su cui è stato dato', async () => {
+      const cid = await contattoDi(id.collaboratore, 'RLS Test — un canale solo');
+      await admin.from('contact_consents').insert({
+        client_id: cid,
+        canale: 'email',
+        valore: true,
+        origine: 'manuale',
+      });
+
+      const email = await client.collaboratore
+        .from('contactable_by_email')
+        .select('client_id')
+        .eq('client_id', cid);
+      const sms = await client.collaboratore
+        .from('contactable_by_sms')
+        .select('client_id')
+        .eq('client_id', cid);
+
+      expect(email.data, 'ha detto sì all’email').toHaveLength(1);
+      expect(sms.data, 'non ha mai detto sì agli SMS').toEqual([]);
+
+      await admin.from('clients').delete().eq('id', cid);
+    });
+
+    it('revocare il consenso toglie subito dalla lista dei raggiungibili', async () => {
+      const cid = await contattoDi(id.collaboratore, 'RLS Test — revoca');
+      await admin.from('contact_consents').insert({
+        client_id: cid,
+        canale: 'email',
+        valore: true,
+        origine: 'manuale',
+      });
+
+      await client.collaboratore
+        .from('contact_consents')
+        .update({ valore: false })
+        .eq('client_id', cid)
+        .eq('canale', 'email');
+
+      const { data } = await client.collaboratore
+        .from('contactable_by_email')
+        .select('client_id')
+        .eq('client_id', cid);
+      expect(data).toEqual([]);
+
+      await admin.from('clients').delete().eq('id', cid);
+    });
+
+    it('ogni consenso lascia una prova nello storico', async () => {
+      const cid = await contattoDi(id.collaboratore, 'RLS Test — prova');
+      await client.collaboratore.from('contact_consents').insert({
+        client_id: cid,
+        canale: 'whatsapp',
+        valore: true,
+        origine: 'manuale',
+        testo_informativa: 'Testo mostrato alla persona',
+      });
+      await client.collaboratore
+        .from('contact_consents')
+        .update({ valore: false })
+        .eq('client_id', cid)
+        .eq('canale', 'whatsapp');
+
+      const { data: storia } = await admin
+        .from('consent_history')
+        .select('valore, testo_informativa, actor_id')
+        .eq('client_id', cid)
+        .order('created_at');
+
+      expect(storia!.map((r) => r.valore), 'dato e poi revocato').toEqual([true, false]);
+      expect(storia![0].testo_informativa, 'va salvato COSA ha accettato').toBe(
+        'Testo mostrato alla persona',
+      );
+      expect(storia![0].actor_id).toBe(id.collaboratore);
+
+      await admin.from('clients').delete().eq('id', cid);
+    });
+
+    it('un leader legge i consensi della rete ma non li dichiara al posto altrui', async () => {
+      const cid = await contattoDi(id.collaboratore, 'RLS Test — firma altrui');
+      await admin.from('contact_consents').insert({
+        client_id: cid,
+        canale: 'email',
+        valore: false,
+        origine: 'manuale',
+      });
+
+      const lettura = await client.leader
+        .from('contact_consents')
+        .select('valore')
+        .eq('client_id', cid);
+      expect(lettura.data, 'il leader vede la rete').toHaveLength(1);
+
+      const { data: modificate } = await client.leader
+        .from('contact_consents')
+        .update({ valore: true })
+        .eq('client_id', cid)
+        .select('id');
+      expect(modificate, 'un consenso è una firma: non la mette un altro').toEqual([]);
+
+      await admin.from('clients').delete().eq('id', cid);
+    });
+
+    it('l’export raccoglie contatto, consensi e storici', async () => {
+      const cid = await contattoDi(id.collaboratore, 'RLS Test — export');
+      await admin.from('contact_consents').insert({
+        client_id: cid,
+        canale: 'email',
+        valore: true,
+        origine: 'manuale',
+      });
+
+      const { data, error } = await client.collaboratore.rpc('export_contact_data', {
+        contact_id: cid,
+      });
+      expect(error).toBeNull();
+      const dump = data as Record<string, unknown>;
+      expect(Object.keys(dump)).toEqual(
+        expect.arrayContaining(['contatto', 'consensi', 'storico_consensi', 'storico_fasi', 'rinnovi']),
+      );
+      expect((dump.consensi as unknown[]).length).toBe(1);
+
+      await admin.from('clients').delete().eq('id', cid);
+    });
+
+    it('l’export non esce dal perimetro', async () => {
+      const cid = await contattoDi(id.admin, 'RLS Test — export altrui');
+      const { data } = await client.collaboratore.rpc('export_contact_data', { contact_id: cid });
+      expect(data, 'non è un suo contatto').toBeNull();
+      await admin.from('clients').delete().eq('id', cid);
+    });
+
+    it('la cancellazione porta via tutto e lascia solo la traccia', async () => {
+      const cid = await contattoDi(id.collaboratore, 'RLS Test — cancellazione');
+      await admin.from('contact_consents').insert({
+        client_id: cid,
+        canale: 'email',
+        valore: true,
+        origine: 'manuale',
+      });
+
+      const { data: esito, error } = await client.collaboratore.rpc('delete_contact_data', {
+        contact_id: cid,
+        motivo: 'richiesta dell’interessato',
+      });
+      expect(error).toBeNull();
+      expect(esito).toBe(true);
+
+      const contatto = await admin.from('clients').select('id').eq('id', cid);
+      const consensi = await admin.from('contact_consents').select('id').eq('client_id', cid);
+      expect(contatto.data, 'il contatto sparisce').toEqual([]);
+      expect(consensi.data, 'i consensi cadono in cascata').toEqual([]);
+
+      const { data: registro } = await admin
+        .from('deletion_log')
+        .select('entita, motivo')
+        .eq('entita_id', cid)
+        .single();
+      expect(registro!.entita).toBe('client');
+      expect(registro!.motivo).toBe('richiesta dell’interessato');
+    });
+
+    it('non si cancellano i contatti di altri', async () => {
+      const cid = await contattoDi(id.admin, 'RLS Test — cancellazione altrui');
+      const { error } = await client.collaboratore.rpc('delete_contact_data', { contact_id: cid });
+      expect(error, 'deve rifiutare, non ignorare').not.toBeNull();
+
+      const { data } = await admin.from('clients').select('id').eq('id', cid);
+      expect(data, 'il contatto è ancora lì').toHaveLength(1);
+
+      await admin.from('clients').delete().eq('id', cid);
+    });
+  });
+
   // --- escalation di privilegi ---------------------------------------------
 
   describe('anti escalation', () => {

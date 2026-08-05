@@ -152,12 +152,18 @@ export function useDeleteClient() {
   });
 }
 
-/** Inserimento massivo (import CSV/Excel). */
+/**
+ * Inserimento massivo (import CSV/Excel).
+ * L'origine viene marcata qui e non lasciata al chiamante: sapere quali
+ * contatti arrivano da un file, e non dal lavoro sul campo, è metà del valore
+ * del campo `origine`.
+ */
 export function useImportClients() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (rows: ClientInput[]): Promise<number> => {
-      const { data, error } = await supabase.from('clients').insert(rows).select('id');
+      const conOrigine = rows.map((r) => ({ ...r, origine: r.origine ?? 'import' }));
+      const { data, error } = await supabase.from('clients').insert(conOrigine).select('id');
       if (error) throw error;
       return data?.length ?? 0;
     },
