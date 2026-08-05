@@ -73,15 +73,26 @@ export default function ClientsList() {
                 ? '1 contatto'
                 : `${total} contatti`}
           </ThemedText>
-          <Pressable
-            onPress={() => router.push('/clients/import')}
-            accessibilityRole="button"
-            hitSlop={8}
-          >
-            <ThemedText tone="muted" variant="caption">
-              Importa da file ›
-            </ThemedText>
-          </Pressable>
+          <View style={{ flexDirection: 'row', gap: spacing.md }}>
+            <Pressable
+              onPress={() => router.push('/clients/rubrica')}
+              accessibilityRole="button"
+              hitSlop={8}
+            >
+              <ThemedText tone="accent" variant="caption">
+                ☎ {t.crm.rubrica.apri}
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push('/clients/import')}
+              accessibilityRole="button"
+              hitSlop={8}
+            >
+              <ThemedText tone="muted" variant="caption">
+                File ›
+              </ThemedText>
+            </Pressable>
+          </View>
         </View>
       </View>
 

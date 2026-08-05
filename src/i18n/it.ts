@@ -156,6 +156,34 @@ export const t = {
         `${n} ${n === 1 ? 'riga è già' : 'righe sono già'} in lista e non ${n === 1 ? 'verrà reimportata' : 'verranno reimportate'}.`,
     },
 
+    rubrica: {
+      titolo: 'Dalla rubrica',
+      apri: 'Aggiungi dalla rubrica',
+      spiega:
+        'L’app legge la rubrica del telefono e ti mostra chi c’è. Scegli tu chi aggiungere: nessun contatto viene copiato senza la tua selezione.',
+      avvisoPrivacy:
+        'Nella rubrica ci sono anche persone che non c’entrano col lavoro. Aggiungi solo chi ha davvero senso avere nel CRM: entreranno senza consensi, quindi non contattabili finché non li registri tu.',
+      leggi: 'Leggi la rubrica',
+      lettura: 'Lettura della rubrica…',
+      nonDisponibile: 'Rubrica non disponibile',
+      nonDisponibileSpiega:
+        'Serve l’app installata sul telefono: nel browser e in Expo Go la rubrica non è accessibile.',
+      permessoNegato: 'Permesso negato',
+      permessoNegatoSpiega:
+        'Senza accesso alla rubrica non c’è nulla da mostrare. Puoi concederlo dalle impostazioni del telefono.',
+      vuota: 'Nessun contatto utilizzabile',
+      vuotaSpiega: 'Servono almeno un’email o un numero di telefono per poter aggiungere qualcuno.',
+      trovati: (n: number) => `${n} contatti nella rubrica`,
+      selezionati: (n: number) => `${n} selezionati`,
+      selezionaTutti: 'Seleziona tutti',
+      deselezionaTutti: 'Deseleziona',
+      giaInLista: 'Già nel CRM',
+      cerca: 'Cerca nella rubrica',
+      aggiungi: (n: number) => `Aggiungi ${n} ${n === 1 ? 'contatto' : 'contatti'}`,
+      fatto: (n: number) => `${n} ${n === 1 ? 'contatto aggiunto' : 'contatti aggiunti'}`,
+      origineDati: 'Rubrica del telefono',
+    },
+
     esporta: {
       titolo: 'Esporta contatti',
       spiega: 'CSV con i consensi inclusi: senza, la lista non è utilizzabile da chi la riceve.',

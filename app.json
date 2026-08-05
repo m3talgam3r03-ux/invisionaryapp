@@ -45,6 +45,12 @@
           "microphonePermission": "Consenti l'accesso al microfono per dettare le domande all'agente.",
           "speechRecognitionPermission": "Consenti il riconoscimento vocale per trasformare in testo ciò che detti all'agente."
         }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Consenti l'accesso alla rubrica per scegliere quali contatti aggiungere al CRM. Nessun contatto viene copiato senza la tua selezione."
+        }
       ]
     ],
     "experiments": {

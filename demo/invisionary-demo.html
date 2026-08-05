@@ -597,6 +597,7 @@
         <div id="crmMain">
           <div class="between"><h2 class="title">Rete</h2><span class="pill">CRM</span></div>
           <div class="row" style="margin-top:14px"><button class="btn sm" style="flex:1" onclick="openCrm()">+ Nuovo</button><button class="btn sec sm" style="flex:1" onclick="crmSub('import')">Importa</button></div>
+          <button class="btn sec sm" style="margin-top:8px" onclick="crmSub('rubrica')">☎ Aggiungi dalla rubrica</button>
 
           <!-- Contatti per stato: toccabili, filtrano la lista -->
           <div class="stats" id="crmStats" style="margin-top:14px"></div>
@@ -622,6 +623,29 @@
           </div>
 
           <div id="crmList"></div>
+        </div>
+
+        <!-- RUBRICA: legge in automatico, ma la scelta resta all'utente -->
+        <div id="crmRubrica" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="crmSub('list')">‹ Contatti</button>
+          <div class="phead"><h2>Dalla rubrica</h2><p>L'app legge la rubrica del telefono e ti mostra chi c'è. Scegli tu chi aggiungere.</p></div>
+
+          <div class="card" style="border-color:#5A4A24">
+            <div class="row" style="gap:8px"><span class="gold">⚠</span>
+              <span class="cap">Nella rubrica ci sono anche persone che non c'entrano col lavoro: il medico, i familiari.
+              Aggiungi solo chi ha davvero senso avere nel CRM. Entreranno <b>senza consensi</b>, quindi non
+              contattabili finché non li registri tu.</span></div>
+          </div>
+
+          <div class="crmbar">
+            <span class="cnt" id="rubCount">—</span>
+            <button class="rbtn" style="color:var(--accent)" onclick="rubTutti()" id="rubTutti">Seleziona tutti</button>
+          </div>
+
+          <div id="rubList"></div>
+
+          <button class="btn" id="rubBtn" disabled onclick="rubImporta()">Aggiungi 0 contatti</button>
+          <p class="cap" style="text-align:center">Nell'app la lettura richiede il permesso del sistema. Qui la rubrica è simulata.</p>
         </div>
 
         <div id="crmImport" style="display:none" class="list">
@@ -1446,8 +1470,10 @@
   function crmSub(v){
     document.getElementById('crmMain').style.display=(v==='list')?'':'none';
     document.getElementById('crmImport').style.display=(v==='import')?'':'none';
+    document.getElementById('crmRubrica').style.display=(v==='rubrica')?'':'none';
     if(v==='list') renderCrm();
     if(v==='import'){ renderBasi(); checkImport(); }
+    if(v==='rubrica') renderRubrica();
   }
   function fmSub(v){ ['menu','course','lesson','cal','rete'].forEach(k=>{ const el=document.getElementById('fm'+k.charAt(0).toUpperCase()+k.slice(1)); if(el) el.style.display=(k===v)?'':'none'; }); }
   function cSub(v){ document.getElementById('cMenu').style.display=(v==='menu')?'':'none'; document.getElementById('cLot').style.display=(v==='lot')?'':'none'; document.getElementById('cComp').style.display=(v==='comp')?'':'none'; if(v==='lot')calcLot(); if(v==='comp')calcComp(); }
@@ -2039,6 +2065,70 @@
     renderCrm(); openDetail(c.id); toast('Fase aggiornata: '+STAGE[k].label);
   }
   function quick(msg){ toast(msg+' (demo)'); }
+
+  /* — Rubrica del telefono —
+     L'app legge in automatico, ma la scelta resta all'utente: nella rubrica ci
+     sono il medico e i familiari, e non devono finire in un CRM per
+     distrazione. Chi è già nel CRM non è selezionabile. */
+  const RUBRICA = [
+    {id:'r1', nome:'Alessio Fabbri',  tel:'+39 340 555 0101'},
+    {id:'r2', nome:'Mario Rossi',     tel:'+39 320 100 0000'},   // già nel CRM
+    {id:'r3', nome:'Dott. Ferrando',  tel:'+39 02 5551234'},
+    {id:'r4', nome:'Sofia Meloni',    tel:'+39 345 555 0102'},
+    {id:'r5', nome:'Giulia Bianchi',  tel:'+39 321 100 0001'},   // già nel CRM
+    {id:'r6', nome:'Idraulico Enzo',  tel:'+39 348 555 0103'},
+    {id:'r7', nome:'Nicola Bergamin', tel:'+39 349 555 0104'},
+    {id:'r8', nome:'Mamma',           tel:'+39 347 555 0105'},
+  ];
+  // Chi c'è già: nella demo si riconosce dal nome, nell'app dal confronto su
+  // email e telefono normalizzati.
+  const rubGiaInCrm = new Set(['Mario Rossi','Giulia Bianchi']);
+  let rubScelti = new Set();
+
+  function rubSelezionabili(){ return RUBRICA.filter(v=>!rubGiaInCrm.has(v.nome)); }
+
+  function renderRubrica(){
+    const el=document.getElementById('rubList'); if(!el) return;
+    el.innerHTML=RUBRICA.map(v=>{
+      const gia=rubGiaInCrm.has(v.nome);
+      const on=rubScelti.has(v.id);
+      return '<div class="crow" style="opacity:'+(gia?'.45':'1')+'"'+
+        (gia?'':' onclick="rubAlterna(\''+v.id+'\')"')+'>'+
+        '<span class="av" style="color:var(--muted)">'+esc(initials(v.nome))+'</span>'+
+        '<span class="mid"><span class="nm">'+esc(v.nome)+'</span>'+
+        '<span class="sub">'+(gia?'Già nel CRM':esc(v.tel))+'</span></span>'+
+        (gia?'':'<span style="width:26px;height:26px;border-radius:999px;border:2px solid '+
+          (on?'var(--accent);background:var(--accent)':'var(--border)')+
+          ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px">'+
+          (on?'✓':'')+'</span>')+
+        '</div>';
+    }).join('');
+
+    const n=rubScelti.size;
+    document.getElementById('rubCount').textContent =
+      RUBRICA.length+' contatti nella rubrica · '+n+' selezionati';
+    const btn=document.getElementById('rubBtn');
+    btn.disabled = n===0;
+    btn.textContent = 'Aggiungi '+n+(n===1?' contatto':' contatti');
+    const tutti = rubSelezionabili().every(v=>rubScelti.has(v.id));
+    document.getElementById('rubTutti').textContent = tutti ? 'Deseleziona' : 'Seleziona tutti';
+  }
+
+  function rubAlterna(id){
+    if(rubScelti.has(id)) rubScelti.delete(id); else rubScelti.add(id);
+    renderRubrica();
+  }
+  function rubTutti(){
+    const sel=rubSelezionabili();
+    rubScelti = sel.every(v=>rubScelti.has(v.id)) ? new Set() : new Set(sel.map(v=>v.id));
+    renderRubrica();
+  }
+  function rubImporta(){
+    const n=rubScelti.size;
+    rubScelti=new Set();
+    crmSub('list');
+    toast(n+(n===1?' contatto aggiunto':' contatti aggiunti')+' · senza consensi');
+  }
 
   /* — Importazione: dichiarazione obbligatoria —
      Il pulsante resta spento finché origine e base giuridica non ci sono.
