@@ -417,7 +417,7 @@ Il doppio invio è impossibile per costruzione: la chiave primaria di
 all'arrivo si manda **un solo** avviso e si registrano tutti gli scaglioni
 coperti, così non riemergono al giro dopo.
 
-### File .ics — cosa funziona e cosa no
+### File .ics
 
 `src/lib/ics.ts` genera il file secondo la RFC 5545: CRLF, righe piegate a 75
 **ottetti** (non caratteri: in italiano «è» pesa due byte) e protezione di
@@ -427,14 +427,13 @@ Calendar rifiutano il file senza dire perché — per questo ognuna ha un test.
 | Piattaforma | Stato |
 | --- | --- |
 | Web | ✅ scaricamento del file |
-| iOS | ✅ file in cache + foglio di condivisione |
-| Android | ⛔ **non supportato** |
+| iOS / Android | ✅ file in cache + foglio di condivisione (`expo-sharing`) |
 
-Su Android `Share.share({ url })` di React Native non esiste e `message` manda
-testo semplice, che nessuna app di calendario interpreta. Servirebbe
-`expo-sharing` (~30 kB), che **non è fra le dipendenze**. Finché non c'è,
-`condivisioneICSDisponibile()` è falsa su Android e il pulsante non compare:
-meglio nasconderlo che offrire qualcosa che non funziona.
+`Share.share({ url })` di React Native non basta: è supportato solo su iOS, e su
+Android `message` manda testo semplice che nessuna app di calendario
+interpreta. Con `expo-sharing` il foglio riceve un vero file e «Aggiungi a
+Calendario» compare su entrambe. Il pulsante resta comunque condizionato a
+`isAvailableAsync()`: dove il sistema non sa aprirlo, non compare.
 
 ## Punti e premi (migrazione 0023)
 

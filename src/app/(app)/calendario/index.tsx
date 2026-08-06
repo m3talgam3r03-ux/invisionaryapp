@@ -39,6 +39,18 @@ export default function Calendario() {
   const giornate = useMemo(() => raggruppaSlot(slot ?? []), [slot]);
   const avvisaFuso = fusoDaSegnalare(scelto?.fuso);
 
+  // Il pulsante «Al calendario» compare solo dove il sistema sa aprire un .ics.
+  const [icsDisponibile, setIcsDisponibile] = useState(false);
+  useEffect(() => {
+    let vivo = true;
+    void condivisioneICSDisponibile().then((ok) => {
+      if (vivo) setIcsDisponibile(ok);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
   // «Adesso» non si legge durante il render: sarebbe un valore diverso a ogni
   // ridisegno. Sta in stato e avanza di minuto in minuto, così un appuntamento
   // che finisce sparisce dall'elenco da solo, senza ricaricare la schermata.
@@ -126,7 +138,7 @@ export default function Calendario() {
                   </ThemedText>
                 ) : null}
                 <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                  {condivisioneICSDisponibile() && (
+                  {icsDisponibile && (
                     <Button
                       title={t.calendario.aggiungiAlCalendario}
                       variant="secondary"

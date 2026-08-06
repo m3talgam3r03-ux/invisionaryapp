@@ -1,4 +1,4 @@
-import { Platform, Share } from 'react-native';
+import { Platform } from 'react-native';
 
 import { nomeFileICS } from './ics';
 
@@ -8,15 +8,11 @@ import { nomeFileICS } from './ics';
  * Il contenuto lo genera `ics.ts`, che è puro e testato. Qui c'è solo la parte
  * che tocca il sistema, e che quindi i test non possono verificare.
  *
- * ⚠️ SU ANDROID NON FUNZIONA, E LO DICE.
- * Il foglio di condivisione di Android non accetta un file da `Share` di React
- * Native: `Share.share({ url })` è supportato solo su iOS, e su Android
- * `message` manda testo semplice, che nessuna app di calendario interpreta.
- * Servirebbe `expo-sharing` (~30 kB), che non è fra le dipendenze e non l'ho
- * aggiunta: le dipendenze si concordano prima.
- *
- * Finché non c'è, la funzione restituisce `non_supportato` e l'interfaccia
- * nasconde il pulsante invece di offrire qualcosa che non funziona.
+ * Su telefono si passa da `expo-sharing`, non da `Share` di React Native:
+ * `Share.share({ url })` è supportato solo su iOS, e su Android `message`
+ * manda testo semplice, che nessuna app di calendario interpreta. Con
+ * `expo-sharing` il foglio di condivisione riceve un vero file e «Aggiungi a
+ * Calendario» compare su entrambe le piattaforme.
  */
 export type EsitoCondivisione =
   | { esito: 'condiviso' }
@@ -24,9 +20,21 @@ export type EsitoCondivisione =
   | { esito: 'non_supportato' }
   | { esito: 'errore'; motivo: string };
 
-/** Vero se su questa piattaforma il pulsante ha senso. */
-export function condivisioneICSDisponibile(): boolean {
-  return Platform.OS === 'web' || Platform.OS === 'ios';
+/**
+ * Vero se su questa piattaforma il pulsante ha senso.
+ *
+ * Su web è sempre vero (si scarica il file). Su telefono dipende dal sistema:
+ * `expo-sharing` può non essere disponibile, e in quel caso è meglio nascondere
+ * il pulsante che offrire qualcosa che non funziona.
+ */
+export async function condivisioneICSDisponibile(): Promise<boolean> {
+  if (Platform.OS === 'web') return true;
+  try {
+    const Sharing = await import('expo-sharing');
+    return await Sharing.isAvailableAsync();
+  } catch {
+    return false;
+  }
 }
 
 export async function condividiICS(
@@ -35,10 +43,9 @@ export async function condividiICS(
   quando: Date,
 ): Promise<EsitoCondivisione> {
   const nome = nomeFileICS(titolo, quando);
-
-  if (Platform.OS === 'web') return scaricaSuWeb(contenuto, nome);
-  if (Platform.OS === 'ios') return condividiSuIOS(contenuto, nome);
-  return { esito: 'non_supportato' };
+  return Platform.OS === 'web'
+    ? scaricaSuWeb(contenuto, nome)
+    : condividiSuTelefono(contenuto, nome);
 }
 
 /** Sul browser il file si scarica: nessun foglio di condivisione di mezzo. */
@@ -60,22 +67,34 @@ async function scaricaSuWeb(contenuto: string, nome: string): Promise<EsitoCondi
   }
 }
 
-/**
- * Su iOS il file si scrive nella cache e si passa al foglio di condivisione,
- * da cui «Aggiungi a Calendario» lo apre.
- */
-async function condividiSuIOS(contenuto: string, nome: string): Promise<EsitoCondivisione> {
+/** Il file si scrive nella cache e si passa al foglio di condivisione. */
+async function condividiSuTelefono(
+  contenuto: string,
+  nome: string,
+): Promise<EsitoCondivisione> {
   try {
-    // Import pigro: su web il modulo nativo non esiste e importarlo in cima
+    // Import pigro: su web i moduli nativi non esistono e importarli in cima
     // romperebbe il bundle.
-    const { File, Paths } = await import('expo-file-system');
+    const [{ File, Paths }, Sharing] = await Promise.all([
+      import('expo-file-system'),
+      import('expo-sharing'),
+    ]);
+
+    if (!(await Sharing.isAvailableAsync())) return { esito: 'non_supportato' };
+
     const file = new File(Paths.cache, nome);
     if (file.exists) file.delete();
     file.create();
     file.write(contenuto);
 
-    const esito = await Share.share({ url: file.uri, title: nome });
-    return esito.action === Share.dismissedAction ? { esito: 'annullato' } : { esito: 'condiviso' };
+    await Sharing.shareAsync(file.uri, {
+      mimeType: 'text/calendar',
+      dialogTitle: nome,
+      // Su iOS dice al foglio che tipo di contenuto è: senza, «Aggiungi a
+      // Calendario» può non comparire fra le azioni proposte.
+      UTI: 'com.apple.ical.ics',
+    });
+    return { esito: 'condiviso' };
   } catch (err) {
     return { esito: 'errore', motivo: messaggio(err) };
   }

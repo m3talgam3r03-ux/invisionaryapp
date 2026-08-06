@@ -1,10 +1,14 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 
+import { CardCondivisibile } from '@/components/CardCondivisibile';
 import { ProgressBar } from '@/components/ProgressBar';
 import { RankBadge } from '@/components/RankBadge';
-import { Card, Screen, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, TextField, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { ROLE_LABEL, t } from '@/i18n/it';
+import { costruisciCard, verificaTesto } from '@/lib/condivisione';
+import { condividiCard, condivisioneCardDisponibile } from '@/lib/condivisione-share';
 import { useLeaderboard, useMyStats, type LeaderboardEntry } from '@/lib/leaderboard';
 import { useRankRules } from '@/lib/rank-rules';
 import { progressoVersoProssimo, rankLabel } from '@/lib/rank';
@@ -70,6 +74,10 @@ export default function RankScreen() {
           </>
         ) : null}
       </Card>
+
+      {/* Condivisione: la card esce dall'app, quindi cosa ci va sopra è deciso
+          da `condivisione.ts` e non da questa schermata. */}
+      {me && <CondividiTraguardo rank={rankLabel(me.tier_name)} punti={punti} />}
 
       {/* Classifica */}
       <ThemedText variant="label" tone="muted">
@@ -159,6 +167,86 @@ function RigaClassifica({
       <ThemedText tone="gold" variant="label">
         {Math.round(riga.punti)} pt
       </ThemedText>
+    </Card>
+  );
+}
+
+/**
+ * Anteprima della card e condivisione.
+ *
+ * La didascalia si controlla PRIMA di generare l'immagine: se contiene una
+ * promessa di guadagno il pulsante resta spento, e il motivo si legge. Bloccare
+ * dopo, con l'immagine già pronta, insegnerebbe solo a riprovare finché passa.
+ */
+function CondividiTraguardo({ rank, punti }: { rank: string; punti: number }) {
+  const riferimento = useRef<View>(null);
+  const [didascalia, setDidascalia] = useState('');
+  const [disponibile, setDisponibile] = useState(false);
+  const [inCorso, setInCorso] = useState(false);
+  const [errore, setErrore] = useState<string | null>(null);
+
+  const card = useMemo(() => costruisciCard({ tipo: 'rank', rank, punti }), [rank, punti]);
+  const esito = useMemo(() => verificaTesto(didascalia), [didascalia]);
+
+  useEffect(() => {
+    let vivo = true;
+    void condivisioneCardDisponibile().then((ok) => {
+      if (vivo) setDisponibile(ok);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  if (!disponibile) return null;
+
+  async function condividi() {
+    setErrore(null);
+    setInCorso(true);
+    const r = await condividiCard(riferimento, 'rank');
+    setInCorso(false);
+    if (r.esito === 'errore') setErrore(r.motivo);
+  }
+
+  return (
+    <Card style={{ gap: spacing.md, alignItems: 'center' }}>
+      <ThemedText variant="label" tone="muted">
+        {t.condivisione.titolo}
+      </ThemedText>
+
+      {/* Disegnata a 1080×1920 e ridotta: catturarla piccola darebbe una PNG sgranata */}
+      <CardCondivisibile ref={riferimento} card={card} scala={0.16} />
+
+      <View style={{ alignSelf: 'stretch', gap: spacing.sm }}>
+        <TextField
+          label={t.condivisione.didascalia}
+          value={didascalia}
+          onChangeText={setDidascalia}
+          placeholder={t.condivisione.didascaliaEsempio}
+          multiline
+        />
+        {!esito.ok && (
+          <ThemedText tone="error" variant="caption">
+            {t.condivisione.bloccato[esito.motivo]} {t.condivisione.frase(esito.frase)}
+          </ThemedText>
+        )}
+        <ThemedText tone="muted" variant="caption">
+          {t.condivisione.perche}
+        </ThemedText>
+      </View>
+
+      <Button
+        title={t.condivisione.condividi}
+        disabled={!esito.ok}
+        loading={inCorso}
+        onPress={() => void condividi()}
+        style={{ alignSelf: 'stretch' }}
+      />
+      {errore && (
+        <ThemedText tone="error" variant="caption">
+          {errore}
+        </ThemedText>
+      )}
     </Card>
   );
 }

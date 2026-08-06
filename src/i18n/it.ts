@@ -489,6 +489,28 @@ export const t = {
       'Pubblica quando sei disponibile: la tua rete vede solo gli orari liberi, mai con chi sono gli altri appuntamenti.',
   },
 
+  condivisione: {
+    titolo: 'Condividi il traguardo',
+    condividi: 'Condividi',
+    didascalia: 'Didascalia (facoltativa)',
+    didascaliaEsempio: 'Nuovo livello raggiunto, avanti così',
+
+    // Si blocca prima di generare l'immagine, e si dice quale parola è il
+    // problema: chi non lo sa riscrive a caso finché non passa.
+    bloccato: {
+      importo: 'Non si possono pubblicare importi.',
+      guadagno: 'Non si possono pubblicare guadagni o rendimenti.',
+      garanzia: 'Non si possono pubblicare garanzie o promesse di risultato.',
+      dato_personale: 'Non si pubblicano email o numeri di telefono.',
+    } as Record<string, string>,
+    frase: (f: string) => `Qui: «${f}»`,
+
+    perche:
+      'La card esce dall’app col marchio sopra: quello che ci scrivi diventa comunicazione dell’azienda, non tua. Per questo importi e promesse di guadagno non passano.',
+    nienteTrading:
+      'Le metriche di trading non si condividono: dentro la rete un win rate è un dato, su un social diventa una promessa.',
+  },
+
   premi: {
     titolo: 'Punti e premi',
     saldo: 'I tuoi punti',

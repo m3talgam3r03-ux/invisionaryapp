@@ -872,6 +872,19 @@
           <div id="rankBreak" style="align-self:stretch"></div>
         </div>
         <!-- La classifica generale è di chi guida la rete: nascosta al collaboratore -->
+        <!-- Condivisione: la card esce dall'app col marchio sopra -->
+        <div class="sect"><span class="s">✦</span><span class="t">Condividi il traguardo</span><span class="l"></span></div>
+        <div class="card" style="gap:12px;align-items:center">
+          <div id="shCard"></div>
+          <div class="field" style="align-self:stretch">
+            <span class="label">Didascalia (facoltativa)</span>
+            <input id="shTesto" placeholder="Nuovo livello raggiunto, avanti così" oninput="shControlla()">
+          </div>
+          <p class="cap" id="shEsito" style="align-self:stretch;margin:0"></p>
+          <button class="btn sm" id="shBtn" style="align-self:stretch" onclick="shScarica()">Condividi</button>
+          <p class="cap" style="align-self:stretch">La card esce dall'app col marchio sopra: quello che ci scrivi diventa comunicazione dell'azienda, non tua. Per questo importi e promesse di guadagno non passano — provaci e guarda cosa succede. Le metriche di trading non si condividono affatto: dentro la rete un win rate è un dato, su un social diventa una promessa.</p>
+        </div>
+
         <div id="rankBoard"></div>
         <p class="cap" style="text-align:center">Avanzamento a scopo motivazionale. Le metriche di trading (in percentuale) arrivano dall'integrazione MT5.</p>
       </section>
@@ -1521,6 +1534,8 @@
       row('Lezioni completate ×10','<b>'+(LESSONS_DONE*10)+'</b>')+
       row('Clienti ×5','<b>'+(s.clienti*5)+'</b>')+
       row('Rinnovi attivi ×3','<b>'+(s.rinnovi*3)+'</b>');
+    renderCard();
+    shControlla();
 
     // Classifica generale: solo leader e admin. Il collaboratore vede il proprio percorso.
     const board=document.getElementById('rankBoard');
@@ -2910,6 +2925,86 @@
     r.stato='Rifiutato';
     toast('Riscatto rifiutato: i punti sono tornati sul saldo.');
     renderPremi();
+  }
+
+  /* ===== Condivisione social =====
+     Una card che finisce su Instagram col marchio dell'azienda sopra non è più
+     interfaccia: è pubblicità dell'azienda, anche se l'ha scritta un
+     collaboratore. Due difese, e servono entrambe.
+
+     1. QUELLO CHE VA SULLA CARD È UNA LISTA CHIUSA, non un filtro: rank, punti,
+        conteggi. Importi e percentuali di guadagno non hanno un campo dove
+        entrare. Un filtro si aggira, una struttura che non prevede il campo no.
+     2. IL TESTO LIBERO SI CONTROLLA E SI BLOCCA — è la falla vera.
+
+     Le regole sono le stesse di src/lib/condivisione.ts, dove 13 test le
+     presidiano. Volutamente larghe: un falso positivo costa una riscrittura,
+     un falso negativo costa un post che promette guadagni. */
+  const SH_REGOLE = [
+    {motivo:'Non si possono pubblicare importi.', re:/(?:€|\$|£)\s?\d|(?:\d[\d.,]*)\s?(?:€|\$|£|eur\b|euro\b|dollar)/i},
+    {motivo:'Non si possono pubblicare importi.', re:/\b\d[\d.]*\s?(?:k\b|mila\b|milion)/i},
+    {motivo:'Non si possono pubblicare guadagni o rendimenti.', re:/\bguadagn|\brendiment|\bprofitt|\bincass|\bstipendi|\bfatturat/i},
+    {motivo:'Non si possono pubblicare guadagni o rendimenti.', re:/\bentrate\b|\brendita\b|\bpassiv[oi]\b/i},
+    {motivo:'Non si possono pubblicare guadagni o rendimenti.', re:/\bal\s+mese\b|\/mese\b|\bmensilment/i},
+    {motivo:'Non si possono pubblicare guadagni o rendimenti.', re:/\bx\s?\d+\b|\braddoppia|\btriplic|\broi\b/i},
+    {motivo:'Non si possono pubblicare garanzie o promesse di risultato.', re:/\bgarant|\bsicur[oa]\s+al\s+\d|\bsenza\s+risch|\bzero\s+risch/i},
+    {motivo:'Non si possono pubblicare garanzie o promesse di risultato.', re:/\bsoldi\s+facil|\bricc[oh]|\blibert[àa]\s+finanziar/i},
+    {motivo:'Non si pubblicano email o numeri di telefono.', re:/[\w.+-]+@[\w-]+\.[\w.]{2,}/},
+    {motivo:'Non si pubblicano email o numeri di telefono.', re:/(?:\+\d{1,3}[\s.-]?)?(?:\d[\s.-]?){9,}/}
+  ];
+
+  function shVerifica(testo){
+    const t=String(testo).trim();
+    if(t==='') return {ok:true};
+    for(const r of SH_REGOLE){
+      const m=r.re.exec(t);
+      if(m){
+        // Si dice DOVE è il problema: chi non lo sa riscrive a caso finché passa.
+        const da=Math.max(0,m.index-20), a=Math.min(t.length,m.index+20);
+        return {ok:false, motivo:r.motivo,
+                frase:(da>0?'…':'')+t.slice(da,a).trim()+(a<t.length?'…':'')};
+      }
+    }
+    return {ok:true};
+  }
+
+  /** Il nome per esteso: sulla card «A» da solo non direbbe niente. */
+  const SH_NOMI={'J':'Jack','Q':'Regina','K':'Re','A':'Asso'};
+
+  /** L'anteprima della card, in proporzione 1080×1920. */
+  function renderCard(){
+    const s=netStats(myContacts());
+    const simbolo=RANKS[Math.min(s.idx, RANKS.length-1)];
+    const rank=SH_NOMI[simbolo] || simbolo;
+    const rankPunti=s.punti;
+    document.getElementById('shCard').innerHTML =
+      '<div style="width:190px;height:338px;border-radius:14px;background:#0E0E10;border:1px solid #2E2E33;'+
+      'display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;padding:26px 14px;text-align:center">'+
+      '<span style="font-size:26px;color:#C9A227">◈</span>'+
+      '<span style="font-size:22px;font-weight:800;color:#C9A227;line-height:1.15">'+rank+'</span>'+
+      '<span style="font-size:11px;font-weight:700;color:#F5F3EF">Nuovo livello raggiunto</span>'+
+      '<span style="font-size:9px;color:#8A8A90">'+Math.round(rankPunti)+' punti di percorso</span>'+
+      '<span style="display:block;width:22px;height:2px;background:#C8102E"></span>'+
+      '<span style="font-size:8px;letter-spacing:2px;color:#F5F3EF">INVISIONARY</span>'+
+      '<span style="font-size:6.5px;color:#8A8A90;line-height:1.35">Percorso personale a scopo informativo. Nessuna promessa di guadagno né consulenza finanziaria.</span>'+
+      '</div>';
+  }
+
+  function shControlla(){
+    const e=shVerifica(v('shTesto'));
+    const p=document.getElementById('shEsito'), b=document.getElementById('shBtn');
+    if(e.ok){
+      p.textContent=''; b.disabled=false; b.style.opacity='1';
+    } else {
+      p.style.color='var(--accent)';
+      p.textContent=e.motivo+' Qui: «'+e.frase+'»';
+      b.disabled=true; b.style.opacity='0.5';
+    }
+  }
+
+  function shScarica(){
+    if(!shVerifica(v('shTesto')).ok) return;
+    toast('Nell\'app genera una PNG 1080×1920 e apre il foglio di condivisione.');
   }
 
   /* ===== init ===== */
