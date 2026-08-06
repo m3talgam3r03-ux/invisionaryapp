@@ -2618,7 +2618,10 @@
           '<div class="card" style="gap:6px">'+
           '<span class="gold" style="font-size:12px;font-weight:800">'+p.etichetta+'</span>'+
           '<span>Con '+p.con+'</span>'+
-          '<button class="btn sec sm" onclick="agAnnulla('+i+')">Annulla</button></div>').join('');
+          '<div class="row" style="gap:8px">'+
+          '<button class="btn sec sm" style="flex:1" onclick="agIcs('+i+')">Al calendario</button>'+
+          '<button class="btn sec sm" style="flex:1" onclick="agAnnulla('+i+')">Annulla</button>'+
+          '</div></div>').join('');
 
     const giorni=slotLiberi();
     document.getElementById('agSlot').innerHTML = giorni.length===0
@@ -2722,6 +2725,56 @@
     agFasce.splice(i,1);
     toast('Fascia rimossa. Gli appuntamenti già presi restano.');
     renderDisponibilita();
+  }
+
+  /* File .ics (RFC 5545) — stessa logica di src/lib/ics.ts, che nell'app è
+     coperta da 17 test. Tre regole che sembrano dettagli e non lo sono: le
+     righe finiscono con CRLF, nessuna supera i 75 OTTETTI (in italiano «è»
+     pesa due byte), e `\ ; ,` e gli a capo vanno protetti. Se una salta,
+     Google Calendar e Apple Calendar rifiutano il file senza dire perché. */
+  function icsData(d){
+    const p=n=>String(n).padStart(2,'0');
+    return d.getUTCFullYear()+p(d.getUTCMonth()+1)+p(d.getUTCDate())+'T'+
+           p(d.getUTCHours())+p(d.getUTCMinutes())+p(d.getUTCSeconds())+'Z';
+  }
+  function icsProteggi(v){
+    return String(v).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r\n|\r|\n/g,'\\n');
+  }
+  function icsOttetti(c){ return c<0x80?1:c<0x800?2:c<0x10000?3:4; }
+  function icsPiega(riga){
+    const righe=[]; let cur='', peso=0;
+    for(const ch of [...riga]){
+      const w=icsOttetti(ch.codePointAt(0));
+      const max = righe.length===0 ? 75 : 74;   // lo spazio iniziale occupa un ottetto
+      if(peso+w>max){ righe.push(cur); cur=ch; peso=w; }
+      else { cur+=ch; peso+=w; }
+    }
+    righe.push(cur);
+    return righe.map((r,i)=>i===0?r:' '+r).join('\r\n');
+  }
+  function agIcs(i){
+    const p=agMiei[i]; if(!p) return;
+    const inizio=new Date(p.quando.replace(' ','T')+':00');
+    const fine=new Date(inizio.getTime()+30*60000);
+    const titolo='Call con '+p.con;
+    const righe=[
+      'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Invisionary//Appuntamenti//IT',
+      'CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
+      icsPiega('UID:'+icsProteggi(p.quando+'@invisionary')),
+      'DTSTAMP:'+icsData(new Date()),
+      'DTSTART:'+icsData(inizio),
+      'DTEND:'+icsData(fine),
+      icsPiega('SUMMARY:'+icsProteggi(titolo)),
+      'STATUS:CONFIRMED','END:VEVENT','END:VCALENDAR'
+    ];
+    const contenuto=righe.join('\r\n')+'\r\n';
+    const blob=new Blob([contenuto],{type:'text/calendar;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='call-con-'+p.con.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.ics';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    toast('File .ics scaricato: aprilo per aggiungerlo al calendario.');
   }
 
   /* ===== init ===== */

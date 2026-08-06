@@ -391,6 +391,51 @@ agisce solo in insert.
 update public.profiles set fuso = 'Europe/London' where id = '<uuid>';
 ```
 
+### Promemoria (migrazione 0022)
+
+A 24 ore e a 1 ora dall'appuntamento, a **entrambe** le persone: un
+appuntamento è un impegno reciproco, e avvisare solo chi ha prenotato
+lascerebbe l'altro a scoprirlo da solo.
+
+```bash
+npx supabase functions deploy booking-reminders
+```
+
+```sql
+select cron.schedule(
+  'booking-reminders',
+  '*/15 * * * *',                 -- ogni quarto d'ora
+  $$ select net.http_post(
+       url := 'https://<PROJECT-REF>.functions.supabase.co/booking-reminders',
+       headers := '{"Authorization": "Bearer <SERVICE-ROLE-KEY>"}'::jsonb
+     ); $$
+);
+```
+
+Il doppio invio è impossibile per costruzione: la chiave primaria di
+`booking_reminders` è `(booking_id, offset_minuti)`. Se il cron salta dei giri,
+all'arrivo si manda **un solo** avviso e si registrano tutti gli scaglioni
+coperti, così non riemergono al giro dopo.
+
+### File .ics — cosa funziona e cosa no
+
+`src/lib/ics.ts` genera il file secondo la RFC 5545: CRLF, righe piegate a 75
+**ottetti** (non caratteri: in italiano «è» pesa due byte) e protezione di
+`\ ; ,` e degli a capo. Se una di queste salta, Google Calendar e Apple
+Calendar rifiutano il file senza dire perché — per questo ognuna ha un test.
+
+| Piattaforma | Stato |
+| --- | --- |
+| Web | ✅ scaricamento del file |
+| iOS | ✅ file in cache + foglio di condivisione |
+| Android | ⛔ **non supportato** |
+
+Su Android `Share.share({ url })` di React Native non esiste e `message` manda
+testo semplice, che nessuna app di calendario interpreta. Servirebbe
+`expo-sharing` (~30 kB), che **non è fra le dipendenze**. Finché non c'è,
+`condivisioneICSDisponibile()` è falsa su Android e il pulsante non compare:
+meglio nasconderlo che offrire qualcosa che non funziona.
+
 ## Agente AI — RAG (fase successiva)
 
 Architettura: **embedding domanda (Voyage AI) → retrieval su pgvector → generazione con Claude**.

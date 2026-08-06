@@ -12,7 +12,10 @@ import {
   usePrenota,
   usePrenotazioni,
   useSlotLiberi,
+  type Prenotazione,
 } from '@/lib/calendario';
+import { creaICS } from '@/lib/ics';
+import { condividiICS, condivisioneICSDisponibile } from '@/lib/ics-share';
 import { can } from '@/lib/permissions';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -43,6 +46,29 @@ export default function Calendario() {
   const attive = (prenotazioni ?? []).filter(
     (p) => p.stato === 'confermata' && new Date(p.fine).getTime() > adesso,
   );
+
+  /** Porta l'appuntamento nel calendario del telefono, via file .ics. */
+  async function esporta(p: Prenotazione, con: string) {
+    const titolo = t.calendario.conNome(con);
+    const inizio = new Date(p.inizio);
+    const risultato = await condividiICS(
+      creaICS({
+        // L'id della prenotazione come UID: riaggiungerlo aggiorna l'evento
+        // invece di crearne un secondo.
+        uid: `${p.id}@invisionary`,
+        inizio,
+        fine: new Date(p.fine),
+        titolo,
+        descrizione: p.note ?? undefined,
+        creatoIl: new Date(),
+      }),
+      titolo,
+      inizio,
+    );
+    if (risultato.esito === 'errore') {
+      setMessaggio({ testo: t.calendario.erroreCalendario, errore: true });
+    }
+  }
 
   async function prenotaSlot(s: Slot) {
     if (!scelto) return;
@@ -99,12 +125,23 @@ export default function Calendario() {
                     {p.note}
                   </ThemedText>
                 ) : null}
-                <Button
-                  title={t.calendario.annulla}
-                  variant="secondary"
-                  loading={annulla.isPending}
-                  onPress={() => annulla.mutate(p.id)}
-                />
+                <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                  {condivisioneICSDisponibile() && (
+                    <Button
+                      title={t.calendario.aggiungiAlCalendario}
+                      variant="secondary"
+                      style={{ flex: 1 }}
+                      onPress={() => void esporta(p, altro)}
+                    />
+                  )}
+                  <Button
+                    title={t.calendario.annulla}
+                    variant="secondary"
+                    style={{ flex: 1 }}
+                    loading={annulla.isPending}
+                    onPress={() => annulla.mutate(p.id)}
+                  />
+                </View>
               </Card>
             );
           })

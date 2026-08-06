@@ -447,6 +447,8 @@ export const t = {
     annulla: 'Annulla',
     annullata: 'Annullata',
     passato: 'Già passato',
+    aggiungiAlCalendario: 'Al calendario',
+    erroreCalendario: 'Non è stato possibile creare il file per il calendario.',
 
     // Il messaggio che conta: non è un errore dell'utente, è una corsa persa.
     slotOccupato: 'Qualcuno ha preso questo orario un attimo prima. Ne ho ricaricati altri.',
