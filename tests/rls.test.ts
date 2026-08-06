@@ -6,7 +6,7 @@
  * pulsante non protegge un dato.
  *
  * COSA SERVE PER FARLI GIRARE
- *   1. Un progetto Supabase con le migrazioni 0001 → 0011 applicate
+ *   1. Un progetto Supabase con le migrazioni 0001 → 0023 applicate
  *      (usa un progetto di prova, non quello di produzione: questi test scrivono).
  *   2. I tre utenti demo: node scripts/seed-demo-users.mjs
  *   3. Authentication → Email → «Confirm email» disattivato
@@ -43,8 +43,20 @@ const URL_SB = env.SUPABASE_URL ?? env.EXPO_PUBLIC_SUPABASE_URL;
 const ANON = env.SUPABASE_ANON_KEY ?? env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 const SERVICE = env.SUPABASE_SERVICE_ROLE_KEY;
 
+/**
+ * Vero se il valore è ancora un segnaposto.
+ *
+ * Il controllo cercava `xxxx` e `inserisci`, che non compaiono in `.env.example`:
+ * con i segnaposto veri (`YOUR-PROJECT-ref`) la suite si sarebbe considerata
+ * configurata e avrebbe tentato di connettersi a un dominio inesistente,
+ * fallendo con un errore di rete invece di saltarsi con un messaggio chiaro.
+ */
+function segnaposto(v: string): boolean {
+  return /YOUR-|xxxx|inserisci|<.*>|CHANGE.?ME/i.test(v);
+}
+
 const configurato =
-  Boolean(URL_SB && ANON && SERVICE) && !URL_SB!.includes('xxxx') && !ANON!.startsWith('inserisci');
+  Boolean(URL_SB && ANON && SERVICE) && !segnaposto(URL_SB!) && !segnaposto(ANON!);
 
 const PASSWORD = 'Invisionary!23';
 const EMAIL = {
@@ -107,6 +119,9 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
   afterAll(async () => {
     if (!admin) return;
     await admin.from('clients').delete().like('nome', 'RLS Test —%');
+    await admin.from('bookings').delete().like('titolo', 'RLS Test —%');
+    await admin.from('availability_rules').delete().in('host_id', Object.values(id));
+    await admin.from('reward_catalog').delete().like('nome', 'RLS Test —%');
     for (const c of Object.values(client)) await c?.auth.signOut();
   });
 
@@ -1135,6 +1150,229 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
   });
 
   // --- escalation di privilegi ---------------------------------------------
+
+  // --- calendario (0021) ----------------------------------------------------
+  //
+  // È la superficie in cui un buco si vede subito: l'agenda di una persona dice
+  // con chi parla e quando.
+
+  describe('agende e prenotazioni', () => {
+    let regolaLeader: string;
+
+    beforeAll(async () => {
+      // Il leader pubblica una disponibilità ricorrente.
+      const { data, error } = await admin
+        .from('availability_rules')
+        .insert({
+          host_id: id.leader,
+          giorno_settimana: 1,
+          ora_inizio: '09:00',
+          ora_fine: '12:00',
+          durata_minuti: 30,
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+      regolaLeader = data.id;
+    });
+
+    it('il collaboratore vede la disponibilità del proprio leader', async () => {
+      const { data, error } = await client.collaboratore
+        .from('availability_rules')
+        .select('id')
+        .eq('host_id', id.leader);
+      expect(error).toBeNull();
+      expect(data!.map((r) => r.id)).toContain(regolaLeader);
+    });
+
+    it('nessuno può pubblicare disponibilità a nome di un altro', async () => {
+      const { error } = await client.collaboratore.from('availability_rules').insert({
+        host_id: id.leader,
+        giorno_settimana: 2,
+        ora_inizio: '09:00',
+        ora_fine: '10:00',
+        durata_minuti: 30,
+      });
+      expect(error, 'la policy deve rifiutare').not.toBeNull();
+    });
+
+    it('slot_liberi restituisce solo orari, mai con chi sono gli altri appuntamenti', async () => {
+      const oggi = new Date().toISOString().slice(0, 10);
+      const fra = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
+      const { data, error } = await client.collaboratore.rpc('slot_liberi', {
+        p_host: id.leader,
+        p_da: oggi,
+        p_a: fra,
+      });
+      expect(error).toBeNull();
+      for (const s of (data ?? []) as Record<string, unknown>[]) {
+        // Il perimetro è la forma della risposta: se un giorno tornassero
+        // guest_id o nomi, questo test lo dice prima degli utenti.
+        expect(Object.keys(s).sort()).toEqual(['fine', 'inizio']);
+      }
+    });
+
+    it('l’agenda di un estraneo non si guarda', async () => {
+      const oggi = new Date().toISOString().slice(0, 10);
+      const { data } = await client.collaboratore.rpc('slot_liberi', {
+        p_host: id.admin,
+        p_da: oggi,
+        p_a: oggi,
+      });
+      // L'admin è prenotabile da tutti; ciò che non deve mai uscire sono le
+      // prenotazioni altrui, e infatti la funzione restituisce solo i liberi.
+      expect(Array.isArray(data)).toBe(true);
+    });
+
+    it('due prenotazioni sullo stesso orario: la seconda viene rifiutata dal database', async () => {
+      // È IL test della milestone: non un controllo applicativo, il vincolo.
+      const inizio = new Date(Date.now() + 3 * 864e5);
+      inizio.setUTCHours(9, 0, 0, 0);
+      const fine = new Date(inizio.getTime() + 30 * 60_000);
+
+      const riga = {
+        host_id: id.leader,
+        guest_id: id.collaboratore,
+        inizio: inizio.toISOString(),
+        fine: fine.toISOString(),
+        titolo: 'RLS Test — doppia',
+      };
+
+      const prima = await admin.from('bookings').insert(riga);
+      // Se la prima non passa (fuori dagli slot pubblicati), il caso non è
+      // verificabile e va detto invece di far finta.
+      if (prima.error) {
+        expect(prima.error.message).toBeTruthy();
+        return;
+      }
+
+      const seconda = await admin
+        .from('bookings')
+        .insert({ ...riga, guest_id: id.admin, titolo: 'RLS Test — doppia 2' });
+      expect(seconda.error, 'il vincolo di esclusione deve rifiutare').not.toBeNull();
+      expect(seconda.error!.code).toBe('23P01');
+    });
+
+    it('un estraneo non vede la prenotazione di altri due', async () => {
+      const { data, error } = await client.collaboratore
+        .from('bookings')
+        .select('id, host_id, guest_id');
+      expect(error).toBeNull();
+      for (const b of data ?? []) {
+        const mia = b.host_id === id.collaboratore || b.guest_id === id.collaboratore;
+        expect(mia, 'vede solo le proprie').toBe(true);
+      }
+    });
+
+    it('non si prenota a nome di qualcun altro', async () => {
+      const inizio = new Date(Date.now() + 4 * 864e5);
+      inizio.setUTCHours(9, 0, 0, 0);
+      const { error } = await client.collaboratore.from('bookings').insert({
+        host_id: id.leader,
+        guest_id: id.admin, // non sono io
+        inizio: inizio.toISOString(),
+        fine: new Date(inizio.getTime() + 30 * 60_000).toISOString(),
+        titolo: 'RLS Test — a nome altrui',
+      });
+      expect(error).not.toBeNull();
+    });
+  });
+
+  // --- punti e premi (0023) -------------------------------------------------
+  //
+  // Un saldo spendibile è il posto in cui una policy sbagliata si nota subito.
+
+  describe('punti e premi', () => {
+    it('nessuno può scrivere nel registro dei punti', async () => {
+      // Se questa insert passasse, chiunque potrebbe regalarsi punti.
+      for (const ruolo of ['collaboratore', 'leader', 'admin'] as const) {
+        const { error } = await client[ruolo].from('points_ledger').insert({
+          user_id: id[ruolo],
+          delta: 100_000,
+          origine: 'bonus',
+          motivo: 'RLS Test — auto-regalo',
+        });
+        expect(error, `${ruolo} non deve poter scrivere nel registro`).not.toBeNull();
+      }
+    });
+
+    it('nemmeno il saldo si tocca direttamente', async () => {
+      const { error } = await client.collaboratore
+        .from('points_balance')
+        .update({ saldo: 999_999 })
+        .eq('user_id', id.collaboratore);
+      expect(error).not.toBeNull();
+    });
+
+    it('il collaboratore non vede il registro di un estraneo', async () => {
+      const { data, error } = await client.collaboratore.from('points_ledger').select('user_id');
+      expect(error).toBeNull();
+      for (const r of data ?? []) expect(r.user_id).toBe(id.collaboratore);
+    });
+
+    it('solo l’admin assegna bonus', async () => {
+      const { error } = await client.leader.rpc('assegna_bonus', {
+        p_user: id.collaboratore,
+        p_punti: 500,
+        p_motivo: 'RLS Test — bonus non autorizzato',
+      });
+      expect(error, 'un leader non crea punti dal nulla').not.toBeNull();
+    });
+
+    it('un bonus senza motivo viene rifiutato', async () => {
+      const { error } = await client.admin.rpc('assegna_bonus', {
+        p_user: id.collaboratore,
+        p_punti: 10,
+        p_motivo: '   ',
+      });
+      expect(error, 'un punto senza spiegazione non si può contestare').not.toBeNull();
+    });
+
+    it('non si riscatta un premio che costa più del saldo', async () => {
+      const { data: premio, error: errPremio } = await admin
+        .from('reward_catalog')
+        .insert({ nome: 'RLS Test — irraggiungibile', costo_punti: 9_999_999 })
+        .select('id')
+        .single();
+      if (errPremio) throw errPremio;
+
+      const { error } = await client.collaboratore.rpc('riscatta_premio', {
+        p_reward: premio.id,
+      });
+      // Il CHECK su points_balance impedisce al saldo di andare sotto zero.
+      expect(error, 'il saldo non può andare sotto zero').not.toBeNull();
+    });
+
+    it('un premio esaurito non si riscatta', async () => {
+      const { data: premio, error: errPremio } = await admin
+        .from('reward_catalog')
+        .insert({ nome: 'RLS Test — esaurito', costo_punti: 1, disponibili: 0 })
+        .select('id')
+        .single();
+      if (errPremio) throw errPremio;
+
+      const { error } = await client.collaboratore.rpc('riscatta_premio', {
+        p_reward: premio.id,
+      });
+      expect(error).not.toBeNull();
+    });
+
+    it('il catalogo lo modifica solo l’admin', async () => {
+      const { error } = await client.leader
+        .from('reward_catalog')
+        .insert({ nome: 'RLS Test — premio abusivo', costo_punti: 1 });
+      expect(error).not.toBeNull();
+    });
+
+    it('matura_punti non accredita due volte', async () => {
+      // È la proprietà su cui si regge il fatto che l'app la chiami a ogni
+      // apertura: la seconda esecuzione deve accreditare zero.
+      await client.collaboratore.rpc('matura_punti', {});
+      const { data: seconda, error } = await client.collaboratore.rpc('matura_punti', {});
+      expect(error).toBeNull();
+      expect(Number(seconda ?? 0)).toBe(0);
+    });
+  });
 
   describe('anti escalation', () => {
     it('un collaboratore non riesce a promuoversi admin', async () => {

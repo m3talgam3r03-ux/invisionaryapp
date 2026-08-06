@@ -63,7 +63,8 @@
     "corpus": "node scripts/build-corpus.mjs",
     "knowledge": "node scripts/ingest-knowledge.mjs",
     "eval": "node scripts/eval-brain.mjs",
-    "eval:live": "node scripts/eval-brain.mjs --live"
+    "eval:live": "node scripts/eval-brain.mjs --live",
+    "test:rls": "node scripts/verifica-rls.mjs"
   },
   "private": true
 }
