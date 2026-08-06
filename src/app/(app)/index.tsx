@@ -101,6 +101,19 @@ export default function Dashboard() {
         />
       </Card>
 
+      {/* Azione rapida: appuntamenti */}
+      <Card style={{ gap: spacing.sm }}>
+        <ThemedText variant="heading">{t.dashboard.calendario.titolo}</ThemedText>
+        <ThemedText tone="muted" variant="caption">
+          {t.dashboard.calendario.testo}
+        </ThemedText>
+        <Button
+          title={t.dashboard.calendario.azione}
+          variant="secondary"
+          onPress={() => router.push('/calendario')}
+        />
+      </Card>
+
       {/* Rank a carte: punti e distanza dal livello successivo, a colpo d'occhio */}
       <Card style={{ gap: spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>

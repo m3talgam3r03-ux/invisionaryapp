@@ -309,6 +309,88 @@ policy di scrittura, quindi ci scrive soltanto il `service_role` dalla function.
 Un utente che potesse alterare un cambio potrebbe alterare il lottaggio di
 chiunque.
 
+## Disponibilità e prenotazioni (migrazione 0021)
+
+Un collaboratore prenota una call col proprio leader scegliendo fra gli orari
+liberi. Due cose, qui, si rompono sempre allo stesso modo.
+
+### 1. La doppia prenotazione
+
+Controllare «lo slot è libero?» e poi inserire **è una corsa**: fra la lettura e
+la scrittura passa del tempo, e due persone che aprono l'app insieme prenotano
+lo stesso orario senza che nessuna se ne accorga. Nessun controllo applicativo
+lo evita.
+
+Lo evita un vincolo di esclusione, che è atomico:
+
+```sql
+exclude using gist (host_id with =, durante with &&) where (stato = 'confermata')
+```
+
+Serve `btree_gist` (la migrazione la installa) per mettere un uuid e un range
+nello stesso indice. Ce n'è un **secondo** sull'ospite: nemmeno chi prenota può
+essere in due posti insieme.
+
+Il `where (stato = 'confermata')` non è un dettaglio: senza, una prenotazione
+annullata continuerebbe a occupare lo slot e riprenotare lo stesso orario
+sarebbe impossibile.
+
+> **L'app deve riconoscere l'errore `23P01`**, non mostrarlo. Non è un guasto:
+> è il vincolo che fa il suo lavoro. `classificaErrore()` in
+> [`src/lib/booking.ts`](../src/lib/booking.ts) lo traduce in «qualcuno ha preso
+> questo orario un attimo prima».
+
+### 2. I fusi orari
+
+«Sono libero il martedì dalle 9 alle 12» è un'ora **locale**, e in UTC cambia
+due volte l'anno con l'ora legale. Per questo:
+
+| Cosa | Tipo | Perché |
+| --- | --- | --- |
+| `availability_rules.ora_inizio` | `time` + `profiles.fuso` | le 9 restano le 9 |
+| `bookings.inizio` | `timestamptz` | un appuntamento è un istante assoluto |
+
+La conversione la fa Postgres con `at time zone`, che ha il database dei fusi
+aggiornato. Farla in JavaScript sarebbe sbagliato due domeniche l'anno.
+
+Nell'ora che il cambio fa sparire Postgres sposta in avanti; in quella che si
+ripete sceglie la prima occorrenza. In entrambi i casi il risultato è un istante
+ben definito, quindi il vincolo di esclusione continua a proteggere.
+
+### Cosa vede chi prenota
+
+`slot_liberi()` è **SECURITY DEFINER** perché per sapere cosa è libero deve
+leggere le prenotazioni dell'host — che l'ospite non deve poter vedere.
+Restituisce **solo gli slot liberi**, mai quelli occupati e mai con chi:
+«9:00 occupato (Marco Rossi)» direbbe a un collaboratore con chi parla il suo
+leader.
+
+```sql
+select * from public.slot_liberi('<uuid-host>', current_date, current_date + 21);
+```
+
+Chi può vedere l'agenda di chi lo decide `puo_prenotare_con()`: il proprio
+leader, l'amministrazione, i propri collaboratori. Non chiunque.
+
+### Un orario qualsiasi non si prenota
+
+Il vincolo di esclusione impedisce le sovrapposizioni ma non impedisce di
+scrivere all'API un orario inventato. A questo pensa il trigger
+`bookings_verifica_slot()`, che verifica che l'orario sia fra quelli pubblicati.
+Resta una verifica preventiva — e va bene: la corsa la chiude il vincolo di
+esclusione, questo controlla la legittimità.
+
+Gli orari sono **immutabili** dopo l'inserimento (`bookings_orari_immutabili`):
+si annulla e si riprenota, così resta traccia. Un update potrebbe altrimenti
+spostare una prenotazione fuori dagli slot pubblicati, aggirando il trigger che
+agisce solo in insert.
+
+### Fuso di ciascuno
+
+```sql
+update public.profiles set fuso = 'Europe/London' where id = '<uuid>';
+```
+
 ## Agente AI — RAG (fase successiva)
 
 Architettura: **embedding domanda (Voyage AI) → retrieval su pgvector → generazione con Claude**.

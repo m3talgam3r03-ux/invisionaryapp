@@ -85,6 +85,11 @@ export const t = {
       testo: 'Lottaggio e interesse composto — strumenti a scopo educativo.',
       azione: 'Apri calcolatori',
     },
+    calendario: {
+      titolo: 'Appuntamenti',
+      testo: 'Prenota una call col tuo leader scegliendo fra i suoi orari liberi.',
+      azione: 'Apri il calendario',
+    },
     rank: {
       titolo: 'Rank & classifica',
       testo: 'Il tuo avanzamento nella rete: diventa un Asso.',
@@ -422,6 +427,59 @@ export const t = {
     incompleto: 'Compila i campi con valori validi (anni fra 1 e 100).',
     disclaimer:
       'Proiezione a scopo educativo, non consulenza finanziaria. Il rendimento è un’ipotesi tua, non una previsione né una garanzia: i mercati non salgono a percentuale costante e il capitale può diminuire. La proiezione non tiene conto di inflazione, imposte e costi.',
+  },
+
+  calendario: {
+    titolo: 'Appuntamenti',
+    disponibilita: 'La tua disponibilità',
+
+    conChi: 'Con chi',
+    quando: 'Quando',
+    nessunHost: 'Non c’è ancora nessuno con cui prenotare.',
+    nessunoSlot: 'Nessun orario libero nelle prossime tre settimane.',
+    caricamentoSlot: 'Cerco gli orari liberi…',
+    prenota: 'Prenota',
+    prenotato: 'Appuntamento preso.',
+
+    mieiAppuntamenti: 'I tuoi appuntamenti',
+    nessunAppuntamento: 'Nessun appuntamento in programma.',
+    conNome: (nome: string) => `Con ${nome}`,
+    annulla: 'Annulla',
+    annullata: 'Annullata',
+    passato: 'Già passato',
+
+    // Il messaggio che conta: non è un errore dell'utente, è una corsa persa.
+    slotOccupato: 'Qualcuno ha preso questo orario un attimo prima. Ne ho ricaricati altri.',
+    slotNonDisponibile: 'Questo orario non è più fra quelli disponibili.',
+    erroreGenerico: 'Non è stato possibile prenotare. Riprova.',
+
+    fusoDiverso: (fuso: string) =>
+      `Gli orari sono nel fuso del tuo telefono. Chi ospita è su ${fuso}: controlla prima di confermare.`,
+
+    // Disponibilità
+    giorni: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'],
+    giorniBrevi: ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'],
+    dalle: 'Dalle',
+    alle: 'Alle',
+    durata: 'Durata (minuti)',
+    aggiungiFascia: 'Aggiungi fascia',
+    nessunaFascia: 'Non hai ancora pubblicato nessuna disponibilità.',
+    fasciaDescrizione: (inizio: string, fine: string, durata: number) =>
+      `${inizio}–${fine} · appuntamenti da ${durata} min`,
+    anteprimaSlot: (quanti: number) =>
+      `${quanti} ${quanti === 1 ? 'appuntamento' : 'appuntamenti'} da questa fascia`,
+    anteprimaAvanzo: (minuti: number) => `, e ${minuti} min che restano fuori`,
+    rimuovi: 'Rimuovi',
+    rimuoviAvviso:
+      'Togliere una fascia non annulla gli appuntamenti già presi: quelli restano, e si annullano uno per uno.',
+
+    erroreOrario: 'Orario non valido (usa il formato 09:00).',
+    erroreFine: 'L’ora di fine deve venire dopo quella di inizio.',
+    erroreDurata: 'La durata deve stare fra 5 e 480 minuti.',
+    erroreFinestra: 'La fascia è troppo corta per contenere un appuntamento.',
+
+    spiegazione:
+      'Pubblica quando sei disponibile: la tua rete vede solo gli orari liberi, mai con chi sono gli altri appuntamenti.',
   },
 
   formazione: {

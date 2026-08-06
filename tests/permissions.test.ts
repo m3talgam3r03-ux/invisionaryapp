@@ -114,6 +114,14 @@ describe('can() — approvazione dei rinnovi', () => {
   });
 });
 
+describe('can() — pubblicare la propria disponibilità', () => {
+  it('la pubblicano admin e leader; il collaboratore prenota e basta', () => {
+    expect(can(admin, 'calendar.host')).toBe(true);
+    expect(can(leader, 'calendar.host')).toBe(true);
+    expect(can(collaboratore, 'calendar.host')).toBe(false);
+  });
+});
+
 describe('can() — utente non caricato', () => {
   it('nel dubbio nega tutto', () => {
     for (const azione of ['admin.panel', 'knowledge.manage', 'network.progress'] as const) {

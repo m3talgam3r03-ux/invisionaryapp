@@ -519,6 +519,11 @@
           <div class="pillar press" onclick="setScreen('community')"><span class="ace low" style="color:var(--text)"><b>A</b><i>♣</i></span><span class="label" style="color:var(--text)">Community</span><span class="cap accent">Apri →</span></div>
         </div>
         </div>
+        <div class="ctool" style="color:#C9A227" onclick="setScreen('agenda')">
+          <span class="ci">◷</span>
+          <span class="cm"><b>Appuntamenti</b><span>Prenota una call scegliendo fra gli orari liberi</span></span>
+          <span class="chev" style="color:#4a4a52;font-size:19px">›</span>
+        </div>
         <button class="btn sec" onclick="setScreen('login')">Esci</button>
         <p class="cap" style="text-align:center">Contenuti a scopo educativo e informativo. Nessuna promessa di rendimento né consulenza finanziaria personalizzata.</p>
       </section>
@@ -866,6 +871,45 @@
         <p class="cap" style="text-align:center">Avanzamento a scopo motivazionale. Le metriche di trading (in percentuale) arrivano dall'integrazione MT5.</p>
       </section>
 
+      <!-- APPUNTAMENTI -->
+      <section class="view" data-view="agenda">
+        <div id="agHost" class="list">
+          <div class="phead"><h2>Appuntamenti</h2><p>Prenota una call scegliendo fra gli orari liberi. Niente scambi di messaggi.</p></div>
+
+          <!-- Chi ospita pubblica la propria disponibilità -->
+          <div id="agDispBtn"></div>
+
+          <div class="sect"><span class="s">✦</span><span class="t">I tuoi appuntamenti</span><span class="l"></span></div>
+          <div id="agMiei" class="list"></div>
+
+          <div class="sect"><span class="s">✦</span><span class="t">Con chi</span><span class="l"></span></div>
+          <div class="presets" id="agChi"></div>
+
+          <div class="sect"><span class="s">✦</span><span class="t">Quando</span><span class="l"></span></div>
+          <div id="agSlot" class="list"></div>
+          <p class="cap">Vedi solo gli orari <b>liberi</b>: chi prenota non sa con chi sono gli altri appuntamenti del suo leader. Nell'app è il database a garantirlo, non l'interfaccia.</p>
+        </div>
+
+        <!-- Disponibilità (solo leader e admin) -->
+        <div id="agDisp" style="display:none" class="list">
+          <button class="btn sec sm" style="align-self:flex-start" onclick="agSub('home')">‹ Appuntamenti</button>
+          <div class="phead"><h2>La tua disponibilità</h2><p>La tua rete vede solo gli orari liberi, mai con chi sono gli altri appuntamenti.</p></div>
+
+          <div id="agFasce" class="list"></div>
+
+          <div class="sect"><span class="s">✦</span><span class="t">Aggiungi fascia</span><span class="l"></span></div>
+          <div class="presets" id="agGiorni"></div>
+          <div class="row" style="gap:10px;align-items:flex-start">
+            <div class="field" style="flex:1"><span class="label">Dalle</span><input id="agDa" value="09:00" oninput="agAnteprima()"></div>
+            <div class="field" style="flex:1"><span class="label">Alle</span><input id="agA" value="12:00" oninput="agAnteprima()"></div>
+            <div class="field" style="flex:1"><span class="label">Durata</span><input id="agDur" value="30" inputmode="numeric" oninput="agAnteprima()"></div>
+          </div>
+          <p class="cap" id="agPrev"></p>
+          <button class="btn sm" id="agAdd" onclick="agAggiungi()">Aggiungi fascia</button>
+          <p class="cap">Togliere una fascia non annulla gli appuntamenti già presi: quelli restano, e si annullano uno per uno.</p>
+        </div>
+      </section>
+
       <!-- COMMUNITY -->
       <section class="view" data-view="community">
         <button class="btn sm" onclick="toast('Modulo «Nuovo feedback» con foto (demo)')">+ Nuovo feedback</button>
@@ -1090,14 +1134,14 @@
   /* ===== Navigazione: schermate, barra, menu a tendina, Indietro ===== */
   const SCREENS = [
     ['dashboard','Dashboard'],['agente','Agente AI'],['trading','Trading'],['crm','Network'],['renewals','Scadenzario'],
-    ['formazione','Formazione'],['calc','Calcolatori'],['rank','Rank'],['community','Community'],['admin','Admin']
+    ['formazione','Formazione'],['calc','Calcolatori'],['agenda','Appuntamenti'],['rank','Rank'],['community','Community'],['admin','Admin']
   ];
   const TITLES = {login:'Invisionary',dashboard:'Invisionary',agente:'Agente AI',trading:'Trading',crm:'Network / CRM',
-    renewals:'Scadenzario',formazione:'Formazione',calc:'Calcolatori',rank:'Rank',community:'Community',admin:'Admin'};
+    renewals:'Scadenzario',formazione:'Formazione',calc:'Calcolatori',agenda:'Appuntamenti',rank:'Rank',community:'Community',admin:'Admin'};
   const MENU = [
     ['dashboard','⌂','Dashboard'],['agente','◉','Agente AI'],['trading','♠','Trading'],['crm','♥','Network / CRM'],
-    ['renewals','◷','Scadenzario'],['formazione','♦','Formazione'],['calc','∑','Calcolatori'],['rank','★','Rank'],
-    ['community','♣','Community'],['admin','⚙','Admin']
+    ['renewals','◷','Scadenzario'],['formazione','♦','Formazione'],['calc','∑','Calcolatori'],
+    ['agenda','◷','Appuntamenti'],['rank','★','Rank'],['community','♣','Community'],['admin','⚙','Admin']
   ];
   let role = 'admin';
   let history = [];
@@ -1190,6 +1234,7 @@
     if(id==='admin') renderAdmin();
     if(id==='formazione'){ fmSub('menu'); renderFormazione(); }
     if(id==='calc') cSub('menu');
+    if(id==='agenda'){ agSub('home'); renderAgenda(); }
     if(id==='crm') crmSub('list');
     if(id==='trading'){ tSub('home'); renderTrading(); }
   }
@@ -2473,6 +2518,210 @@
     document.getElementById('cVers').value=m;
     document.getElementById('cYears').value=y;
     calcComp();
+  }
+
+  /* ===== Appuntamenti =====
+     Nell'app la disponibilità sta in tabella (ora LOCALE + fuso di chi ospita)
+     e gli slot liberi li calcola Postgres, che ha il database dei fusi e vede
+     le prenotazioni altrui — che l'ospite non deve poter leggere. Qui è tutto
+     finto, ma si comporta allo stesso modo: si vedono solo gli orari liberi. */
+  const AG_HOST = [
+    {id:'marco', nome:'Marco Bianchi', ruolo:'Il tuo leader'},
+    {id:'admin', nome:'Amministrazione', ruolo:'Segreteria'}
+  ];
+  let agChiSel='marco';
+  let agGiornoSel=1;
+  // Fasce pubblicate per host: [giornoSettimana(0=dom), dalle, alle, durataMinuti].
+  // Ognuno ha la propria agenda: cambiando persona cambiano davvero gli orari.
+  const AG_FASCE={
+    marco: [[1,'09:00','12:00',30],[3,'14:00','17:00',45]],
+    admin: [[2,'10:00','13:00',20],[4,'15:00','17:00',20]]
+  };
+  // Le proprie fasce, quelle che si modificano dalla schermata «disponibilità».
+  let agFasce=AG_FASCE.marco;
+  /* Nell'app ci sono DUE vincoli di esclusione, e qui si vedono entrambi:
+     - l'agenda di chi ospita non può avere due appuntamenti sovrapposti
+       → `agOccupati`, con chiave 'host|giorno ora';
+     - e nemmeno l'ospite può essere in due posti insieme
+       → si controlla l'orario fra i propri appuntamenti, con qualunque host. */
+  const agOccupati=new Set();
+  let agMiei=[];
+
+  function agSub(v){
+    document.getElementById('agHost').style.display=(v==='home')?'':'none';
+    document.getElementById('agDisp').style.display=(v==='disp')?'':'none';
+    if(v==='disp') renderDisponibilita();
+  }
+
+  function minutiDaOrario(s){
+    const m=/^(\d{1,2}):(\d{2})$/.exec(String(s).trim());
+    if(!m) return null;
+    const h=+m[1], mi=+m[2];
+    if(h>23||mi>59) return null;
+    return h*60+mi;
+  }
+  function orarioDaMinuti(n){
+    return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+  }
+  /** Quanti appuntamenti nascono da una fascia, e quanti minuti restano fuori. */
+  function verificaFascia(da,a,dur){
+    const i=minutiDaOrario(da), f=minutiDaOrario(a);
+    if(i===null||f===null) return {valida:false,motivo:'Orario non valido (usa il formato 09:00).'};
+    if(f<=i) return {valida:false,motivo:'L\'ora di fine deve venire dopo quella di inizio.'};
+    if(!Number.isInteger(dur)||dur<5||dur>480) return {valida:false,motivo:'La durata deve stare fra 5 e 480 minuti.'};
+    const n=Math.floor((f-i)/dur);
+    if(n<1) return {valida:false,motivo:'La fascia è troppo corta per contenere un appuntamento.'};
+    return {valida:true,slot:n,avanzo:(f-i)-n*dur};
+  }
+
+  const AG_GIORNI=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+  const AG_BREVI=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+
+  function chiaveGiorno(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  /** Slot liberi delle prossime tre settimane: solo i liberi, mai gli occupati. */
+  function slotLiberi(){
+    const fasce=AG_FASCE[agChiSel]||[];
+    const fuori=[], oggi=new Date();
+    for(let g=0; g<21; g++){
+      const d=new Date(oggi.getFullYear(),oggi.getMonth(),oggi.getDate()+g);
+      const dow=d.getDay();
+      const slot=[];
+      fasce.filter(f=>f[0]===dow).forEach(([,da,a,dur])=>{
+        const i=minutiDaOrario(da), f=minutiDaOrario(a);
+        for(let m=i; m+dur<=f; m+=dur){
+          const ora=orarioDaMinuti(m);
+          const quando=new Date(d.getFullYear(),d.getMonth(),d.getDate(),Math.floor(m/60),m%60);
+          if(quando<=new Date()) continue;                                      // niente nel passato
+          if(agOccupati.has(agChiSel+'|'+chiaveGiorno(d)+' '+ora)) continue;     // già preso
+          slot.push({ora, quando});
+        }
+      });
+      if(slot.length) fuori.push({data:d, slot});
+    }
+    return fuori;
+  }
+
+  function renderAgenda(){
+    // Chi ospita pubblica la propria agenda; il collaboratore prenota e basta.
+    document.getElementById('agDispBtn').innerHTML = (role==='collaborator') ? '' :
+      '<button class="btn sec sm" onclick="agSub(\'disp\')">La tua disponibilità ›</button>';
+
+    document.getElementById('agChi').innerHTML = AG_HOST.map(h=>
+      '<button class="preset'+(agChiSel===h.id?' on':'')+'" onclick="agSetChi(\''+h.id+'\')">'+h.nome+'</button>').join('');
+
+    document.getElementById('agMiei').innerHTML = agMiei.length===0
+      ? '<p class="cap">Nessun appuntamento in programma.</p>'
+      : agMiei.map((p,i)=>
+          '<div class="card" style="gap:6px">'+
+          '<span class="gold" style="font-size:12px;font-weight:800">'+p.etichetta+'</span>'+
+          '<span>Con '+p.con+'</span>'+
+          '<button class="btn sec sm" onclick="agAnnulla('+i+')">Annulla</button></div>').join('');
+
+    const giorni=slotLiberi();
+    document.getElementById('agSlot').innerHTML = giorni.length===0
+      ? '<p class="cap">Nessun orario libero nelle prossime tre settimane.</p>'
+      : giorni.map(g=>
+          '<div style="display:flex;flex-direction:column;gap:8px">'+
+          '<span class="cap">'+g.data.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})+'</span>'+
+          '<div style="display:flex;flex-wrap:wrap;gap:8px">'+
+          g.slot.map(s=>'<button class="preset" onclick="agPrenota(\''+chiaveGiorno(g.data)+'\',\''+s.ora+'\')">'+s.ora+'</button>').join('')+
+          '</div></div>').join('');
+  }
+
+  function agSetChi(id){ agChiSel=id; renderAgenda(); }
+
+  /* Prenotare. Nell'app non c'è nessun controllo «è ancora libero?» prima
+     dell'inserimento: fra il controllo e la scrittura passerebbe abbastanza
+     tempo perché qualcun altro lo prenda. A rifiutare la seconda scrittura è un
+     vincolo di esclusione nel database, che è atomico. Qui la corsa si simula
+     una volta su cinque, per far vedere cosa succede quando si perde. */
+  function agPrenota(giorno,ora){
+    const quando=giorno+' '+ora;
+    const chiave=agChiSel+'|'+quando;
+
+    // Secondo vincolo: non si può essere in due posti insieme.
+    if(agMiei.some(p=>p.quando===quando)){
+      toast('Hai già un appuntamento a quell\'ora.');
+      return;
+    }
+
+    if(agOccupati.has(chiave) || Math.random()<0.2){
+      agOccupati.add(chiave);
+      toast('Qualcuno ha preso questo orario un attimo prima. Ne ho ricaricati altri.');
+      renderAgenda();
+      return;
+    }
+
+    agOccupati.add(chiave);
+    const d=new Date(giorno+'T'+ora+':00');
+    const host=AG_HOST.find(h=>h.id===agChiSel);
+    agMiei.push({
+      chiave, quando,
+      con: host ? host.nome : '—',
+      etichetta: d.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'})+' · '+ora
+    });
+    agMiei.sort((a,b)=>a.quando.localeCompare(b.quando));
+    toast('Appuntamento preso.');
+    renderAgenda();
+  }
+
+  function agAnnulla(i){
+    const p=agMiei[i]; if(!p) return;
+    agOccupati.delete(p.chiave);   // l'orario torna libero
+    agMiei.splice(i,1);
+    toast('Appuntamento annullato.');
+    renderAgenda();
+  }
+
+  function renderDisponibilita(){
+    document.getElementById('agFasce').innerHTML = agFasce.length===0
+      ? '<p class="cap">Non hai ancora pubblicato nessuna disponibilità.</p>'
+      : agFasce.map(([g,da,a,dur],i)=>
+          '<div class="card" style="gap:6px">'+
+          '<span class="gold" style="font-size:12px;font-weight:800">'+AG_GIORNI[g]+'</span>'+
+          '<span style="font-size:13px">'+da+'–'+a+' · appuntamenti da '+dur+' min</span>'+
+          '<button class="btn sec sm" onclick="agRimuovi('+i+')">Rimuovi</button></div>').join('');
+
+    document.getElementById('agGiorni').innerHTML = AG_BREVI.map((b,i)=>
+      '<button class="preset'+(agGiornoSel===i?' on':'')+'" onclick="agSetGiorno('+i+')">'+b+'</button>').join('');
+
+    agAnteprima();
+  }
+
+  function agSetGiorno(i){ agGiornoSel=i; renderDisponibilita(); }
+
+  /** Quanti appuntamenti nascono dalla fascia, prima di salvarla. */
+  function agAnteprima(){
+    const r=verificaFascia(v('agDa'), v('agA'), parseInt(v('agDur'),10));
+    const p=document.getElementById('agPrev'), b=document.getElementById('agAdd');
+    if(r.valida){
+      p.style.color='var(--muted)';
+      p.textContent=r.slot+(r.slot===1?' appuntamento':' appuntamenti')+' da questa fascia'+
+        (r.avanzo>0?', e '+r.avanzo+' min che restano fuori':'');
+      b.disabled=false; b.style.opacity='1';
+    } else {
+      p.style.color='var(--accent)';
+      p.textContent=r.motivo;
+      b.disabled=true; b.style.opacity='0.5';
+    }
+  }
+
+  function agAggiungi(){
+    const r=verificaFascia(v('agDa'), v('agA'), parseInt(v('agDur'),10));
+    if(!r.valida) return;
+    agFasce.push([agGiornoSel, v('agDa'), v('agA'), parseInt(v('agDur'),10)]);
+    agFasce.sort((x,y)=>x[0]-y[0] || x[1].localeCompare(y[1]));
+    toast('Fascia pubblicata.');
+    renderDisponibilita();
+  }
+
+  function agRimuovi(i){
+    agFasce.splice(i,1);
+    toast('Fascia rimossa. Gli appuntamenti già presi restano.');
+    renderDisponibilita();
   }
 
   /* ===== init ===== */

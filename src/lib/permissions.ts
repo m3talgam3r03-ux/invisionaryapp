@@ -28,7 +28,9 @@ export type Action =
   /** Approvare il rinnovo di qualcuno (richiede `resource`). */
   | 'renewals.approve'
   /** Leggere i dati di un membro della rete (richiede `resource`). */
-  | 'member.read';
+  | 'member.read'
+  /** Pubblicare la propria disponibilità: si ospita, non si prenota soltanto. */
+  | 'calendar.host';
 
 /**
  * Il "chi possiede cosa" di una riga, per le azioni che dipendono dal dato e non
@@ -56,6 +58,11 @@ export function can(user: Profile | null | undefined, action: Action, resource?:
     case 'network.progress':
     case 'renewals.network':
     case 'clients.network':
+    // Chi guida la rete pubblica la propria agenda; il collaboratore prenota.
+    // Non è una regola di sicurezza (il database lascia pubblicare a chiunque
+    // la PROPRIA disponibilità): è che a un collaboratore la schermata non
+    // servirebbe a niente.
+    case 'calendar.host':
       return user.role === 'admin' || user.role === 'leader';
 
     // Rispecchia can_approve_renewal() del database.
