@@ -524,6 +524,11 @@
           <span class="cm"><b>Appuntamenti</b><span>Prenota una call scegliendo fra gli orari liberi</span></span>
           <span class="chev" style="color:#4a4a52;font-size:19px">›</span>
         </div>
+        <div class="ctool" style="color:#C9A227" onclick="setScreen('premi')">
+          <span class="ci">🎁</span>
+          <span class="cm"><b>Punti e premi</b><span>I punti che accumuli lavorando si riscattano a catalogo</span></span>
+          <span class="chev" style="color:#4a4a52;font-size:19px">›</span>
+        </div>
         <button class="btn sec" onclick="setScreen('login')">Esci</button>
         <p class="cap" style="text-align:center">Contenuti a scopo educativo e informativo. Nessuna promessa di rendimento né consulenza finanziaria personalizzata.</p>
       </section>
@@ -910,6 +915,25 @@
         </div>
       </section>
 
+      <!-- PUNTI E PREMI -->
+      <section class="view" data-view="premi">
+        <div class="hero" id="pxHero"></div>
+        <p class="cap" id="pxIncoerente" style="color:var(--accent);display:none"></p>
+
+        <div class="sect"><span class="s">✦</span><span class="t">Il prossimo traguardo</span><span class="l"></span></div>
+        <div class="card" id="pxObiettivo" style="gap:8px"></div>
+
+        <div class="sect"><span class="s">✦</span><span class="t">Catalogo</span><span class="l"></span></div>
+        <div id="pxCatalogo" class="list"></div>
+
+        <div class="sect"><span class="s">✦</span><span class="t">I tuoi riscatti</span><span class="l"></span></div>
+        <div class="card" style="padding:6px 14px"><div id="pxRiscatti"></div></div>
+
+        <div class="sect"><span class="s">✦</span><span class="t">Come li hai guadagnati</span><span class="l"></span></div>
+        <div class="card" style="padding:6px 14px"><div id="pxRegistro"></div></div>
+        <p class="cap">Il registro è la verità: il saldo è solo la sua somma. Un riscatto rifiutato non cancella la riga, ne aggiunge una opposta — un registro che si può riscrivere non spiega più niente. I premi sono riconoscimenti interni alla rete, non compensi né promesse di guadagno.</p>
+      </section>
+
       <!-- COMMUNITY -->
       <section class="view" data-view="community">
         <button class="btn sm" onclick="toast('Modulo «Nuovo feedback» con foto (demo)')">+ Nuovo feedback</button>
@@ -1134,14 +1158,14 @@
   /* ===== Navigazione: schermate, barra, menu a tendina, Indietro ===== */
   const SCREENS = [
     ['dashboard','Dashboard'],['agente','Agente AI'],['trading','Trading'],['crm','Network'],['renewals','Scadenzario'],
-    ['formazione','Formazione'],['calc','Calcolatori'],['agenda','Appuntamenti'],['rank','Rank'],['community','Community'],['admin','Admin']
+    ['formazione','Formazione'],['calc','Calcolatori'],['agenda','Appuntamenti'],['premi','Premi'],['rank','Rank'],['community','Community'],['admin','Admin']
   ];
   const TITLES = {login:'Invisionary',dashboard:'Invisionary',agente:'Agente AI',trading:'Trading',crm:'Network / CRM',
-    renewals:'Scadenzario',formazione:'Formazione',calc:'Calcolatori',agenda:'Appuntamenti',rank:'Rank',community:'Community',admin:'Admin'};
+    renewals:'Scadenzario',formazione:'Formazione',calc:'Calcolatori',agenda:'Appuntamenti',premi:'Punti e premi',rank:'Rank',community:'Community',admin:'Admin'};
   const MENU = [
     ['dashboard','⌂','Dashboard'],['agente','◉','Agente AI'],['trading','♠','Trading'],['crm','♥','Network / CRM'],
     ['renewals','◷','Scadenzario'],['formazione','♦','Formazione'],['calc','∑','Calcolatori'],
-    ['agenda','◷','Appuntamenti'],['rank','★','Rank'],['community','♣','Community'],['admin','⚙','Admin']
+    ['agenda','◷','Appuntamenti'],['premi','🎁','Punti e premi'],['rank','★','Rank'],['community','♣','Community'],['admin','⚙','Admin']
   ];
   let role = 'admin';
   let history = [];
@@ -1235,6 +1259,7 @@
     if(id==='formazione'){ fmSub('menu'); renderFormazione(); }
     if(id==='calc') cSub('menu');
     if(id==='agenda'){ agSub('home'); renderAgenda(); }
+    if(id==='premi') renderPremi();
     if(id==='crm') crmSub('list');
     if(id==='trading'){ tSub('home'); renderTrading(); }
   }
@@ -2775,6 +2800,116 @@
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),10000);
     toast('File .ics scaricato: aprilo per aggiungerlo al calendario.');
+  }
+
+  /* ===== Punti e premi =====
+     ⚠️ I punti premio NON sono i punti del rank.
+       Rank   → un livello. Si ricalcola dalle metriche, non si spende.
+       Premio → una valuta. Si accumula, si spende, il saldo scende.
+     Confonderle farebbe scendere il rank a chi ritira un regalo. Nell'app sono
+     due tabelle diverse; qui sono due variabili diverse, per la stessa ragione. */
+  let pxRegistro = [
+    {delta:+120, origine:'maturazione', motivo:'Lezioni completate'},
+    {delta:+250, origine:'maturazione', motivo:'Clienti acquisiti'},
+    {delta:+100, origine:'bonus',       motivo:'Presentazione di squadra'}
+  ];
+  const PX_PREMI = [
+    {id:'felpa',  nome:'Felpa Invisionary',        desc:'Cotone pesante, logo ricamato', costo:300, disponibili:null},
+    {id:'cena',   nome:'Cena con la leadership',   desc:'Serata di formazione informale', costo:500, disponibili:4},
+    {id:'corso',  nome:'Corso avanzato di trading', desc:'Otto ore in aula',              costo:900, disponibili:1},
+    {id:'ritiro', nome:'Ritiro annuale',            desc:'Due giorni, viaggio incluso',   costo:2500, disponibili:0}
+  ];
+  let pxRiscatti = [];
+
+  /** Il saldo è la somma del registro, mai un numero tenuto a parte. */
+  function pxSaldo(){ return pxRegistro.reduce((s,v)=>s+v.delta, 0); }
+
+  /* Perché un premio non è riscattabile. L'ordine conta: un premio esaurito
+     resta esaurito anche per chi ha punti da vendere, e dirgli «ti mancano
+     punti» sarebbe falso. */
+  function pxImpedimento(p, saldo){
+    if(p.disponibili!==null && p.disponibili<=0) return 'esaurito';
+    if(saldo < p.costo) return 'punti';
+    return null;
+  }
+
+  function renderPremi(){
+    const saldo=pxSaldo();
+
+    document.getElementById('pxHero').innerHTML=
+      '<span class="lb">I tuoi punti</span>'+
+      '<span class="big" style="color:var(--gold)">'+fmt(saldo,0)+'</span>'+
+      '<span class="sb">I punti premio sono una valuta a parte: riscattare non tocca il tuo rank.</span>';
+
+    // Il prossimo traguardo è quello subito dopo, non il più costoso.
+    const obiettivo = PX_PREMI
+      .filter(p=>(p.disponibili===null||p.disponibili>0) && p.costo>saldo)
+      .sort((a,b)=>a.costo-b.costo)[0];
+    document.getElementById('pxObiettivo').innerHTML = obiettivo
+      ? '<span style="font-weight:700">'+obiettivo.nome+'</span>'+
+        '<div class="bar"><i style="width:'+Math.min(100,saldo/obiettivo.costo*100).toFixed(1)+'%"></i></div>'+
+        '<span class="cap">Ti mancano '+fmt(obiettivo.costo-saldo,0)+' punti</span>'
+      : '<span class="cap">Puoi riscattare tutto quello che c\'è a catalogo.</span>';
+
+    document.getElementById('pxCatalogo').innerHTML = PX_PREMI.map(p=>{
+      const blocco=pxImpedimento(p,saldo);
+      const pezzi = p.disponibili===null ? 'sempre disponibile'
+                  : p.disponibili===0 ? 'esaurito'
+                  : p.disponibili===1 ? 'ultimo pezzo'
+                  : p.disponibili+' pezzi rimasti';
+      const azione = blocco===null
+        ? '<button class="btn sm" onclick="pxRiscatta(\''+p.id+'\')">Riscatta</button>'
+        : '<span class="cap" style="color:var(--muted)">'+
+          (blocco==='esaurito' ? 'Esaurito' : 'Punti insufficienti · ne mancano '+fmt(p.costo-saldo,0))+'</span>';
+      return '<div class="card" style="gap:6px">'+
+        '<div class="resline"><span style="font-weight:700">'+p.nome+'</span>'+
+        '<span class="gold" style="font-weight:800;font-size:13px">'+fmt(p.costo,0)+' punti</span></div>'+
+        '<span class="cap">'+p.desc+'</span>'+
+        '<span class="cap">'+pezzi+'</span>'+azione+'</div>';
+    }).join('');
+
+    document.getElementById('pxRiscatti').innerHTML = pxRiscatti.length===0
+      ? '<p class="cap">Non hai ancora riscattato nulla.</p>'
+      : pxRiscatti.map((r,i)=>
+          '<div class="resline" style="padding:8px 0;border-bottom:1px solid var(--border)">'+
+          '<span style="font-size:13px">'+r.nome+'</span>'+
+          '<span style="display:flex;gap:8px;align-items:center">'+
+          '<span class="cap" style="color:'+(r.stato==='Rifiutato'?'var(--accent)':'var(--muted)')+'">'+r.stato+'</span>'+
+          (r.stato==='In attesa'
+            ? '<button class="btn sec sm" style="padding:4px 10px" onclick="pxRifiuta('+i+')">Rifiuta</button>' : '')+
+          '</span></div>').join('');
+
+    document.getElementById('pxRegistro').innerHTML = pxRegistro.slice().reverse().map(v=>
+      '<div class="resline" style="padding:8px 0;border-bottom:1px solid var(--border)">'+
+      '<span class="cap">'+v.origine.charAt(0).toUpperCase()+v.origine.slice(1)+' · '+v.motivo+'</span>'+
+      '<span style="font-size:13px;font-variant-numeric:tabular-nums;color:'+
+        (v.delta<0?'var(--text)':'var(--gold)')+'">'+(v.delta<0?'−'+fmt(-v.delta,0):'+'+fmt(v.delta,0))+'</span></div>').join('');
+  }
+
+  function pxRiscatta(id){
+    const p=PX_PREMI.find(x=>x.id===id); if(!p) return;
+    const saldo=pxSaldo();
+    const blocco=pxImpedimento(p,saldo);
+    if(blocco){ toast(blocco==='esaurito'?'Qualcuno l\'ha riscattato un attimo prima.':'I punti non bastano.'); return; }
+
+    if(p.disponibili!==null) p.disponibili--;
+    // La spesa è una riga NEGATIVA nel registro, non una modifica del saldo.
+    pxRegistro.push({delta:-p.costo, origine:'riscatto', motivo:p.nome});
+    pxRiscatti.unshift({nome:p.nome, costo:p.costo, stato:'In attesa', premio:p.id});
+    toast('Riscatto inviato: riceverai conferma.');
+    renderPremi();
+  }
+
+  /* Il rifiuto RESTITUISCE i punti con una riga opposta, e rimette il pezzo a
+     catalogo. La riga del riscatto resta dov'è. */
+  function pxRifiuta(i){
+    const r=pxRiscatti[i]; if(!r || r.stato!=='In attesa') return;
+    pxRegistro.push({delta:+r.costo, origine:'rimborso', motivo:'Riscatto rifiutato'});
+    const p=PX_PREMI.find(x=>x.id===r.premio);
+    if(p && p.disponibili!==null) p.disponibili++;
+    r.stato='Rifiutato';
+    toast('Riscatto rifiutato: i punti sono tornati sul saldo.');
+    renderPremi();
   }
 
   /* ===== init ===== */

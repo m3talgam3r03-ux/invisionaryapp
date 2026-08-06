@@ -436,6 +436,72 @@ testo semplice, che nessuna app di calendario interpreta. Servirebbe
 `condivisioneICSDisponibile()` è falsa su Android e il pulsante non compare:
 meglio nasconderlo che offrire qualcosa che non funziona.
 
+## Punti e premi (migrazione 0023)
+
+> ⚠️ **I punti premio non sono i punti del rank.** Sono due cose diverse e
+> devono restare separate.
+>
+> | | Cosa sono | Si spendono? |
+> | --- | --- | --- |
+> | Punti **rank** (0015) | un **livello**, ricalcolato dalle metriche | no |
+> | Punti **premio** (0023) | una **valuta**: si accumulano e si spendono | sì |
+>
+> Confonderle sarebbe un errore serio in due modi. Chi riscatta un premio
+> vedrebbe **scendere il proprio rank** — perderebbe un traguardo per aver
+> ritirato un regalo. E i punti rank sono *derivati* da una vista
+> materializzata: non esistono come riga da decrementare, e il primo ricalcolo
+> cancellerebbe qualunque spesa.
+
+### Come si tiene un saldo che non va sotto zero
+
+`points_ledger` è **in sola aggiunta** ed è la verità. `points_balance` è la
+sua somma, mantenuta da un trigger, con un `check (saldo >= 0)`.
+
+Quel CHECK non è ridondante: è ciò che rende impossibile spendere punti che non
+si hanno **anche quando due riscatti arrivano insieme**. L'`update` prende un
+lock sulla riga, il secondo trova il saldo già ridotto e viene rifiutato. Un
+controllo applicativo «ha abbastanza punti?» seguito da un insert sarebbe una
+corsa, esattamente come per le prenotazioni.
+
+Stessa forma per le scorte: `check (disponibili >= 0)` più un `select … for
+update` sulla riga del premio.
+
+**Un errore si compensa, non si cancella.** Un riscatto rifiutato aggiunge una
+riga opposta e rimette il pezzo a catalogo; la riga negativa originale resta.
+Un registro che si può riscrivere non spiega più niente.
+
+### La maturazione è ripetibile
+
+`matura_punti()` accredita la differenza fra quanto si è fatto e quanto è già
+stato pagato — `points_accrual` tiene il conto. Chiamarla due volte non
+accredita nulla la seconda, quindi l'app può lanciarla a ogni apertura.
+
+```sql
+select public.matura_punti('<uuid>');   -- restituisce i punti accreditati adesso
+```
+
+`greatest(0, …)` non è una precauzione oziosa: se un cliente viene cancellato la
+metrica scende, e senza quel vincolo la funzione toglierebbe punti già
+guadagnati. **I punti maturati non si riprendono.**
+
+I valori stanno in `points_rules`, tabella separata da `rank_rules`: legarle
+significherebbe che ritoccare un peso del rank cambia il prezzo dei premi.
+
+```sql
+update public.points_rules set punti_per_unita = 15 where metric = 'lezioni_completate';
+insert into public.reward_catalog (nome, costo_punti, disponibili) values ('Felpa', 300, null);
+```
+
+### Chi può creare punti dal nulla
+
+Solo l'**admin**, con `assegna_bonus()`, e il motivo è obbligatorio: un punto
+senza spiegazione non si può contestare. I leader **no**, di proposito — chi
+può creare punti per la propria squadra può gonfiarne i risultati. È una scelta
+di prodotto, non un limite tecnico: va rivista consapevolmente se servirà.
+
+Nessuna tabella dei punti ha policy di scrittura: si passa dalle funzioni. Una
+`insert` diretta su `points_ledger` significherebbe potersi regalare punti.
+
 ## Agente AI — RAG (fase successiva)
 
 Architettura: **embedding domanda (Voyage AI) → retrieval su pgvector → generazione con Claude**.

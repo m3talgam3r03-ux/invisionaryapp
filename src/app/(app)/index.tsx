@@ -114,6 +114,19 @@ export default function Dashboard() {
         />
       </Card>
 
+      {/* Azione rapida: punti e premi */}
+      <Card style={{ gap: spacing.sm }}>
+        <ThemedText variant="heading">{t.dashboard.premi.titolo}</ThemedText>
+        <ThemedText tone="muted" variant="caption">
+          {t.dashboard.premi.testo}
+        </ThemedText>
+        <Button
+          title={t.dashboard.premi.azione}
+          variant="secondary"
+          onPress={() => router.push('/premi')}
+        />
+      </Card>
+
       {/* Rank a carte: punti e distanza dal livello successivo, a colpo d'occhio */}
       <Card style={{ gap: spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>

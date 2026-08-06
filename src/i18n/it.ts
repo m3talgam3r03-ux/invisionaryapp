@@ -90,6 +90,11 @@ export const t = {
       testo: 'Prenota una call col tuo leader scegliendo fra i suoi orari liberi.',
       azione: 'Apri il calendario',
     },
+    premi: {
+      titolo: 'Punti e premi',
+      testo: 'I punti che accumuli lavorando si riscattano a catalogo. Non toccano il rank.',
+      azione: 'Apri il catalogo',
+    },
     rank: {
       titolo: 'Rank & classifica',
       testo: 'Il tuo avanzamento nella rete: diventa un Asso.',
@@ -482,6 +487,65 @@ export const t = {
 
     spiegazione:
       'Pubblica quando sei disponibile: la tua rete vede solo gli orari liberi, mai con chi sono gli altri appuntamenti.',
+  },
+
+  premi: {
+    titolo: 'Punti e premi',
+    saldo: 'I tuoi punti',
+    punti: (n: string) => `${n} punti`,
+
+    // La distinzione più importante di tutta la schermata.
+    diversiDalRank:
+      'I punti premio sono una valuta a parte: riscattare un premio non tocca il tuo rank.',
+
+    obiettivo: 'Il prossimo traguardo',
+    mancano: (n: string, premio: string) => `Ti mancano ${n} punti per «${premio}»`,
+    tuttoAllaPortata: 'Puoi riscattare tutto quello che c’è a catalogo.',
+
+    catalogo: 'Catalogo',
+    catalogoVuoto: 'Non c’è ancora nessun premio a catalogo.',
+    riscatta: 'Riscatta',
+    costo: (n: string) => `${n} punti`,
+    rimasti: (n: number) => (n === 1 ? 'ultimo pezzo' : `${n} pezzi rimasti`),
+    senzaLimite: 'sempre disponibile',
+    esaurito: 'Esaurito',
+    puntiInsufficienti: 'Punti insufficienti',
+
+    riscattato: 'Riscatto inviato: riceverai conferma.',
+    erroreEsaurito: 'Qualcuno l’ha riscattato un attimo prima.',
+    errorePunti: 'I punti non bastano più: controlla il saldo.',
+    erroreGenerico: 'Non è stato possibile completare il riscatto.',
+
+    mieiRiscatti: 'I tuoi riscatti',
+    nessunRiscatto: 'Non hai ancora riscattato nulla.',
+    stato: {
+      richiesta: 'In attesa',
+      approvata: 'Approvato',
+      consegnata: 'Consegnato',
+      rifiutata: 'Rifiutato',
+    } as Record<string, string>,
+
+    movimenti: 'Come li hai guadagnati',
+    nessunMovimento: 'Nessun movimento: i punti arrivano completando lezioni e acquisendo clienti.',
+    origine: {
+      maturazione: 'Maturati',
+      bonus: 'Bonus',
+      riscatto: 'Riscatto',
+      rimborso: 'Rimborso',
+    } as Record<string, string>,
+    metrica: {
+      lezioni_completate: 'Lezioni completate',
+      clienti_acquisiti: 'Clienti acquisiti',
+      clienti_attivi: 'Clienti attivi',
+      rinnovi_attivi: 'Rinnovi attivi',
+    } as Record<string, string>,
+
+    // Se saldo e registro non coincidono, il registro ha ragione.
+    saldoIncoerente:
+      'Il saldo non corrisponde ai movimenti. Segnalalo: il registro è la versione giusta.',
+
+    disclaimer:
+      'I premi sono riconoscimenti interni alla rete, non compensi né promesse di guadagno.',
   },
 
   formazione: {
