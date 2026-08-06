@@ -815,34 +815,40 @@
 
           <!-- Grafico: quanto hai versato vs quanto hanno reso gli interessi -->
           <div class="card" style="gap:10px">
-            <span class="label">Crescita anno per anno</span>
+            <span class="label">Come ci si arriva</span>
             <div id="compChart"></div>
+            <!-- Neutro per i soldi che hai messo, oro per quelli che ha fatto
+                 il tempo: la distinzione è tutto il senso del grafico. -->
             <div class="legend">
-              <span><i style="background:#4C8DD8"></i>Versato</span>
+              <span><i style="background:#8A8A90"></i>Versato</span>
               <span><i style="background:#C9A227"></i>Interessi</span>
             </div>
+            <p class="cap" id="compSorpasso" style="margin:0"></p>
           </div>
 
           <div class="kpis" id="compKpis"></div>
 
           <div class="sect"><span class="s">✦</span><span class="t">I tuoi numeri</span><span class="l"></span></div>
+          <!-- I presetti toccano versamento e durata, MAI il tasso: un
+               rendimento suggerito dall'app sarebbe una promessa. -->
           <div class="presets">
-            <button class="preset" onclick="compPreset(100,5,10)">100 €/mese · 10 anni</button>
-            <button class="preset" onclick="compPreset(200,6,20)">200 €/mese · 20 anni</button>
-            <button class="preset" onclick="compPreset(500,6,30)">500 €/mese · 30 anni</button>
+            <button class="preset" onclick="compPreset(100,10)">100 €/mese · 10 anni</button>
+            <button class="preset" onclick="compPreset(200,20)">200 €/mese · 20 anni</button>
+            <button class="preset" onclick="compPreset(500,30)">500 €/mese · 30 anni</button>
           </div>
           <div class="row" style="gap:10px;align-items:flex-start">
             <div class="field" style="flex:1"><span class="label">Capitale iniziale €</span><input id="cCap" value="5000" inputmode="decimal" oninput="calcComp()"></div>
             <div class="field" style="flex:1"><span class="label">Ogni mese €</span><input id="cVers" value="200" inputmode="decimal" oninput="calcComp()"></div>
           </div>
           <div class="row" style="gap:10px;align-items:flex-start">
-            <div class="field" style="flex:1"><span class="label">Tasso annuo %</span><input id="cRate" value="6" inputmode="decimal" oninput="calcComp()"></div>
+            <div class="field" style="flex:1"><span class="label">Tasso annuo %</span><input id="cRate" value="" placeholder="—" inputmode="decimal" oninput="calcComp()"></div>
             <div class="field" style="flex:1"><span class="label">Anni</span><input id="cYears" value="10" inputmode="decimal" oninput="calcComp()"></div>
           </div>
+          <p class="cap">Nessun rendimento è preimpostato: l'ipotesi la scegli tu. Il tasso è nominale annuo con capitalizzazione mensile — scrivendo 6 il rendimento effettivo è 6,17%.</p>
 
-          <div class="sect"><span class="s">✦</span><span class="t">Montante per anno</span><span class="l"></span></div>
+          <div class="sect"><span class="s">✦</span><span class="t">Anno per anno</span><span class="l"></span></div>
           <div class="card" style="padding:6px 14px"><div id="compYears"></div></div>
-          <p class="cap">Il tasso è un'ipotesi che scegli tu: i mercati non danno rendimenti costanti. Proiezione a scopo educativo, non consulenza finanziaria. Nessuna garanzia di rendimento.</p>
+          <p class="cap">Il tasso è un'ipotesi che scegli tu, non una previsione né una garanzia: i mercati non salgono a percentuale costante e il capitale può diminuire. La proiezione non tiene conto di inflazione, imposte e costi. A scopo educativo, non consulenza finanziaria.</p>
         </div>
       </section>
 
@@ -2369,25 +2375,38 @@
   function lotPreset(p){ document.getElementById('lotRisk').value=String(p).replace('.',','); calcLot(); }
 
   /** Barre impilate: quota versata (blu) e interessi maturati (oro), anno per anno. */
-  function stackChart(per, w, h){
-    const pad=18, bw=(w-pad*2)/per.length, max=Math.max(...per.map(x=>x[1]))||1;
-    let bars='', labels='';
-    per.forEach(([yy,bal,contr],i)=>{
-      const x=pad+i*bw+bw*0.16, cw=bw*0.68;
-      const hb=(bal/max)*(h-pad*2), hc=(contr/max)*(h-pad*2);
-      const yTop=h-pad-hb, yC=h-pad-hc;
-      bars+='<rect x="'+x.toFixed(1)+'" y="'+yTop.toFixed(1)+'" width="'+cw.toFixed(1)+'" height="'+Math.max(0,hb-hc).toFixed(1)+
-            '" fill="#C9A227" rx="2"/>'+
-            '<rect x="'+x.toFixed(1)+'" y="'+yC.toFixed(1)+'" width="'+cw.toFixed(1)+'" height="'+hc.toFixed(1)+
-            '" fill="#4C8DD8" rx="2"/>';
-      // etichetta ogni tanto, per non affollare l'asse
-      const step=Math.ceil(per.length/6);
-      if(i===0||i===per.length-1||i%step===0)
-        labels+='<text x="'+(x+cw/2).toFixed(1)+'" y="'+(h-5)+'" font-size="9" fill="#8A8A90" text-anchor="middle">'+yy+'</text>';
-    });
+  /* Aree impilate, come nell'app.
+     Una curva sola del montante farebbe sembrare che tutta la crescita venga
+     dagli interessi: quasi mai è così, nei primi anni la linea sale perché si
+     sta versando. Separare le due aree mostra quando gli interessi cominciano
+     davvero a contare.
+     Parte dall'anno 0 col capitale iniziale: partire da zero farebbe sembrare
+     guadagnato anche quello che è stato messo. */
+  function stackChart(per, capitale, w, h){
+    const pad=18;
+    const pts=[[0,capitale,capitale]].concat(per);      // [anno, totale, versato]
+    const max=Math.max(...pts.map(x=>x[1]))||1;
+    const ultimo=pts[pts.length-1][0]||1;
+    const X=a=>pad+(a/ultimo)*(w-pad*2);
+    const Y=val=>h-pad-(val/max)*(h-pad*2);
+
+    const linVer=pts.map(([a,,c])=>X(a).toFixed(1)+','+Y(c).toFixed(1)).join(' ');
+    const linTot=pts.map(([a,b])=>X(a).toFixed(1)+','+Y(b).toFixed(1)).join(' ');
+    const rovescio=pts.slice().reverse().map(([a,,c])=>X(a).toFixed(1)+','+Y(c).toFixed(1)).join(' ');
+
+    // etichette ogni tanto, per non affollare l'asse
+    const step=Math.ceil(pts.length/6);
+    const labels=pts.map(([a],i)=>
+      (i===0||i===pts.length-1||i%step===0)
+        ? '<text x="'+X(a).toFixed(1)+'" y="'+(h-4)+'" font-size="9" fill="#8A8A90" text-anchor="middle">'+a+'</text>'
+        : '').join('');
+
     return '<svg class="chart" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+
-      '<line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" stroke="#2E2E33" stroke-width="1"/>'+
-      bars+labels+'</svg>';
+      '<polygon points="'+linTot+' '+rovescio+'" fill="#C9A227" fill-opacity="0.55"/>'+
+      '<polygon points="'+X(0).toFixed(1)+','+(h-pad)+' '+linVer+' '+X(ultimo).toFixed(1)+','+(h-pad)+'" fill="#8A8A90" fill-opacity="0.55"/>'+
+      '<polyline points="'+linTot+'" fill="none" stroke="#C9A227" stroke-width="2" vector-effect="non-scaling-stroke"/>'+
+      '<line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" stroke="#2E2E33" stroke-width="1" vector-effect="non-scaling-stroke"/>'+
+      labels+'</svg>';
   }
 
   function calcComp(){
@@ -2396,9 +2415,14 @@
     const hero=document.getElementById('compHero'), yrs=document.getElementById('compYears');
     const chart=document.getElementById('compChart'), kp=document.getElementById('compKpis');
     if(!ok){
+      // Il tasso vuoto non vale zero: se valesse, il campo lasciato in bianco
+      // diventerebbe «0%» senza dirlo.
+      const senzaTasso = v('cRate').trim()==='';
       hero.style.color='#2E2E33';
       hero.innerHTML='<span class="lb">Montante finale</span><span class="big muted">—</span>'+
-        '<span class="sb">Compila i campi (anni tra 1 e 100).</span>';
+        '<span class="sb">'+(senzaTasso
+          ? 'Inserisci l\'ipotesi di rendimento per vedere la proiezione.'
+          : 'Compila i campi (anni tra 1 e 100).')+'</span>';
       yrs.innerHTML=''; chart.innerHTML=''; kp.innerHTML='';
       return;
     }
@@ -2412,24 +2436,41 @@
       '<span class="big" style="color:var(--gold)">'+fmt(bal,0)+' €</span>'+
       '<span class="sb">Dopo '+fmt(y,0)+' anni al '+fmt(ar,2)+'% annuo ipotizzato</span>';
 
-    chart.innerHTML=stackChart(per,320,150);
+    chart.innerHTML=stackChart(per,p,320,150);
 
     kp.innerHTML=
-      kpi(fmt(contr,0)+' €','Versato','#4C8DD8')+
+      kpi(fmt(contr,0)+' €','Versato','var(--muted)')+
       kpi(fmt(interessi,0)+' €','Interessi','var(--gold)')+
       kpi(fmt(quota,0)+'%','Quota interessi','var(--success)');
 
-    yrs.innerHTML=per.map(([yy,bb,cc])=>
+    // Il primo anno in cui gli interessi maturati superano il versato dell'anno.
+    let sorpasso=null;
+    per.forEach(([yy,bb,cc],i)=>{
+      if(sorpasso!==null) return;
+      const prima = i===0 ? [0,p,p] : per[i-1];
+      const intAnno = (bb-cc)-(prima[1]-prima[2]), versAnno = cc-prima[2];
+      if(versAnno>0 && intAnno>versAnno) sorpasso=yy;
+    });
+    document.getElementById('compSorpasso').textContent = sorpasso!==null
+      ? 'Dall\'anno '+sorpasso+' gli interessi superano quanto hai versato in quell\'anno.'
+      : 'In questo periodo il versato resta la parte più grande: il composto ha bisogno di tempo.';
+
+    yrs.innerHTML=
       '<div class="resline" style="padding:8px 0;border-bottom:1px solid var(--border)">'+
-      '<span class="cap">Anno '+yy+'</span>'+
-      '<span style="font-size:12.5px"><span class="muted">'+fmt(cc,0)+' + </span>'+
-      '<span class="gold">'+fmt(bb-cc,0)+'</span>'+
-      '<b style="margin-left:8px;font-variant-numeric:tabular-nums">'+fmt(bb,0)+' €</b></span></div>').join('');
+      '<span class="cap" style="width:44px">Anno</span>'+
+      '<span class="cap" style="flex:1;text-align:right">Versato</span>'+
+      '<span class="cap" style="flex:1;text-align:right">Interessi</span>'+
+      '<span class="cap" style="flex:1;text-align:right">Totale</span></div>'+
+      per.map(([yy,bb,cc])=>
+        '<div class="resline" style="padding:8px 0;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums">'+
+        '<span class="cap" style="width:44px">'+yy+'</span>'+
+        '<span style="flex:1;text-align:right;font-size:12.5px">'+fmt(cc,0)+'</span>'+
+        '<span class="gold" style="flex:1;text-align:right;font-size:12.5px">'+fmt(bb-cc,0)+'</span>'+
+        '<b style="flex:1;text-align:right;font-size:12.5px">'+fmt(bb,0)+'</b></div>').join('');
   }
-  /** Presetti: versamento mensile, tasso, anni. */
-  function compPreset(m,r,y){
+  /** Presetti: versamento mensile e durata. Il tasso resta scelta dell'utente. */
+  function compPreset(m,y){
     document.getElementById('cVers').value=m;
-    document.getElementById('cRate').value=r;
     document.getElementById('cYears').value=y;
     calcComp();
   }

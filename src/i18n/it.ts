@@ -386,6 +386,44 @@ export const t = {
       'Stima a scopo educativo, non consulenza finanziaria. Le convenzioni su dimensione del contratto e valore del pip variano fra broker: verifica sempre col tuo.',
   },
 
+  composto: {
+    titolo: 'Interesse composto',
+    capitale: 'Capitale iniziale (€)',
+    versamento: 'Versamento mensile (€)',
+    tasso: 'Tasso annuo %',
+    anni: 'Per quanti anni',
+
+    // Il campo del tasso nasce vuoto: un valore preimpostato sarebbe l'app che
+    // suggerisce un rendimento, e non lo facciamo da nessuna parte.
+    tassoAiuto:
+      'Nessun rendimento è preimpostato: l’ipotesi la scegli tu. Il tasso è nominale annuo con capitalizzazione mensile — scrivendo 6 il rendimento effettivo è 6,17%.',
+    tassoMancante: 'Inserisci l’ipotesi di rendimento per vedere la proiezione.',
+
+    montante: 'Montante finale',
+    versato: 'Versato da te',
+    interessi: 'Generato dagli interessi',
+    quotaInteressi: (percento: string) =>
+      `Gli interessi sono il ${percento}% del totale: il resto sono soldi che hai messo tu.`,
+
+    andamento: 'Come ci si arriva',
+    legendaVersato: 'Versato',
+    legendaInteressi: 'Interessi',
+    sorpasso: (anno: number) =>
+      `Dall’anno ${anno} gli interessi superano quanto hai versato in quell’anno.`,
+    nessunSorpasso:
+      'In questo periodo il versato resta la parte più grande: il composto ha bisogno di tempo.',
+
+    annoPerAnno: 'Anno per anno',
+    colonnaAnno: 'Anno',
+    colonnaVersato: 'Versato',
+    colonnaInteressi: 'Interessi',
+    colonnaTotale: 'Totale',
+
+    incompleto: 'Compila i campi con valori validi (anni fra 1 e 100).',
+    disclaimer:
+      'Proiezione a scopo educativo, non consulenza finanziaria. Il rendimento è un’ipotesi tua, non una previsione né una garanzia: i mercati non salgono a percentuale costante e il capitale può diminuire. La proiezione non tiene conto di inflazione, imposte e costi.',
+  },
+
   formazione: {
     calendario: 'Calendario',
     avanzamentoRete: 'Avanzamento rete',
