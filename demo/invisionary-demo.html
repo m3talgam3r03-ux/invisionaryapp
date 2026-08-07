@@ -930,6 +930,12 @@
 
       <!-- PUNTI E PREMI -->
       <section class="view" data-view="premi">
+        <!-- Il podio in cima: lo vede tutta la rete -->
+        <div class="sect"><span class="s">✦</span><span class="t" id="pxMese">Podio</span><span class="l"></span></div>
+        <div class="card" style="gap:14px;padding-bottom:0"><div id="pxPodio"></div></div>
+        <p class="cap" id="pxComeSi"></p>
+        <p class="cap">La classifica è sulla quota di operazioni in utile, mai su importi o rendimenti. Per entrarci servono le operazioni minime del mese e un <b>profit factor almeno pari a 1</b>: vincere spesso perdendo tanto non premia.</p>
+
         <div class="hero" id="pxHero"></div>
         <p class="cap" id="pxIncoerente" style="color:var(--accent);display:none"></p>
 
@@ -2824,10 +2830,22 @@
      Confonderle farebbe scendere il rank a chi ritira un regalo. Nell'app sono
      due tabelle diverse; qui sono due variabili diverse, per la stessa ragione. */
   let pxRegistro = [
-    {delta:+120, origine:'maturazione', motivo:'Lezioni completate'},
-    {delta:+250, origine:'maturazione', motivo:'Clienti acquisiti'},
-    {delta:+100, origine:'bonus',       motivo:'Presentazione di squadra'}
+    {delta:+200, origine:'classifica', motivo:'06/2026 — 3° posto'},
+    {delta:+300, origine:'classifica', motivo:'07/2026 — 2° posto'},
+    {delta:+100, origine:'bonus',      motivo:'Presentazione di squadra'}
   ];
+
+  /* Il podio del mese CHIUSO, non di quello in corso: una classifica che cambia
+     sotto gli occhi non dice a nessuno chi ha vinto davvero.
+     Solo posizione, nome e quota di operazioni in utile — mai importi. */
+  const PX_PODIO = [
+    {posizione:1, nome:'Giulia Ferrari', winRate:71, operazioni:48},
+    {posizione:2, nome:'Marco Bianchi',  winRate:68, operazioni:52},
+    {posizione:3, nome:'Luca Esposito',  winRate:64, operazioni:31}
+  ];
+  const PX_PUNTI_POS = {1:500, 2:300, 3:200, 4:120, 5:100, 6:60, 7:60, 8:60, 9:60, 10:60};
+  const PX_MESI = ['gennaio','febbraio','marzo','aprile','maggio','giugno',
+                   'luglio','agosto','settembre','ottobre','novembre','dicembre'];
   const PX_PREMI = [
     {id:'felpa',  nome:'Felpa Invisionary',        desc:'Cotone pesante, logo ricamato', costo:300, disponibili:null},
     {id:'cena',   nome:'Cena con la leadership',   desc:'Serata di formazione informale', costo:500, disponibili:4},
@@ -2848,13 +2866,58 @@
     return null;
   }
 
+  /* Il podio si disegna 2 · 1 · 3: il primo al centro e più in alto. È come si
+     legge un podio da sempre — disporli 1-2-3 da sinistra farebbe sembrare il
+     vincitore un terzo classificato. */
+  function renderPodio(){
+    const oggi=new Date();
+    const chiuso=new Date(oggi.getFullYear(), oggi.getMonth()-1, 1);
+    document.getElementById('pxMese').textContent =
+      'Podio di '+PX_MESI[chiuso.getMonth()]+' '+chiuso.getFullYear();
+
+    const per={}; PX_PODIO.forEach(v=>per[v.posizione]=v);
+    const medaglie={1:'🥇',2:'🥈',3:'🥉'};
+    const altezze={1:84,2:62,3:44};
+    const colori={1:'var(--gold)',2:'var(--text)',3:'var(--muted)'};
+
+    document.getElementById('pxPodio').innerHTML=
+      '<div style="display:flex;align-items:flex-end;justify-content:center;gap:8px">'+
+      [2,1,3].filter(p=>per[p]).map(p=>{
+        const v=per[p], oro=(p===1);
+        return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;'+
+          'padding-bottom:'+(oro?0:16)+'px">'+
+          '<span style="font-size:26px;line-height:30px">'+medaglie[p]+'</span>'+
+          '<span style="width:'+(oro?52:40)+'px;height:'+(oro?52:40)+'px;border-radius:999px;'+
+            'background:var(--surface-alt,#232327);display:flex;align-items:center;justify-content:center;'+
+            'font-weight:800;font-size:'+(oro?18:14)+'px;color:'+colori[p]+'">'+iniziali(v.nome)+'</span>'+
+          '<span style="font-size:11.5px;text-align:center;line-height:1.2">'+v.nome+'</span>'+
+          '<span class="cap">'+v.winRate+'% in utile</span>'+
+          '<div style="align-self:stretch;margin-top:6px;height:'+altezze[p]+'px;'+
+            'border:1px solid '+(oro?'var(--gold)':'var(--border)')+';border-bottom:none;'+
+            'border-radius:10px 10px 0 0;background:#232327;'+
+            'display:flex;align-items:center;justify-content:center;'+
+            'font-size:26px;font-weight:800;color:'+colori[p]+'">'+p+'</div>'+
+          '</div>';
+      }).join('')+'</div>';
+
+    const premiate=Math.max(...Object.keys(PX_PUNTI_POS).map(Number));
+    document.getElementById('pxComeSi').textContent =
+      'I primi '+premiate+' della classifica del mese ricevono punti premio: '+
+      PX_PUNTI_POS[1]+' al primo posto, a scendere.';
+  }
+
+  function iniziali(nome){
+    return nome.split(/\s+/).slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+  }
+
   function renderPremi(){
     const saldo=pxSaldo();
+    renderPodio();
 
     document.getElementById('pxHero').innerHTML=
       '<span class="lb">I tuoi punti</span>'+
       '<span class="big" style="color:var(--gold)">'+fmt(saldo,0)+'</span>'+
-      '<span class="sb">I punti premio sono una valuta a parte: riscattare non tocca il tuo rank.</span>';
+      '<span class="sb">Si vincono con la classifica trader del mese. Sono una valuta a parte: riscattare non tocca il tuo rank.</span>';
 
     // Il prossimo traguardo è quello subito dopo, non il più costoso.
     const obiettivo = PX_PREMI

@@ -511,6 +511,17 @@ export const t = {
       'Le metriche di trading non si condividono: dentro la rete un win rate è un dato, su un social diventa una promessa.',
   },
 
+  podio: {
+    titolo: (mese: string) => `Podio di ${mese}`,
+    vuoto: 'Nessun podio per questo mese: nessuno ha raggiunto le operazioni minime.',
+    medaglia: { 1: '🥇', 2: '🥈', 3: '🥉' } as Record<number, string>,
+    winRate: (v: number) => `${v}% in utile`,
+    comeSiVincono: (posizioni: number, primo: string) =>
+      `I primi ${posizioni} della classifica del mese ricevono punti premio: ${primo} al primo posto, a scendere.`,
+    // La cosa che va detta accanto a un podio sul win rate.
+    nota: 'La classifica è sulla quota di operazioni in utile, mai su importi o rendimenti. Per entrarci servono le operazioni minime del mese e un profit factor almeno pari a 1: vincere spesso perdendo tanto non premia.',
+  },
+
   premi: {
     titolo: 'Punti e premi',
     saldo: 'I tuoi punti',
@@ -518,7 +529,7 @@ export const t = {
 
     // La distinzione più importante di tutta la schermata.
     diversiDalRank:
-      'I punti premio sono una valuta a parte: riscattare un premio non tocca il tuo rank.',
+      'Si vincono con la classifica trader del mese. Sono una valuta a parte: riscattare un premio non tocca il tuo rank.',
 
     obiettivo: 'Il prossimo traguardo',
     mancano: (n: string, premio: string) => `Ti mancano ${n} punti per «${premio}»`,
@@ -548,12 +559,16 @@ export const t = {
     } as Record<string, string>,
 
     movimenti: 'Come li hai guadagnati',
-    nessunMovimento: 'Nessun movimento: i punti arrivano completando lezioni e acquisendo clienti.',
+    nessunMovimento:
+      'Nessun movimento: i punti arrivano dalla tua posizione nella classifica trader del mese.',
     origine: {
-      maturazione: 'Maturati',
+      classifica: 'Classifica',
       bonus: 'Bonus',
       riscatto: 'Riscatto',
       rimborso: 'Rimborso',
+      // Resta per le righe scritte prima che i punti passassero alla
+      // classifica: il registro è storia e non si riscrive.
+      maturazione: 'Maturati',
     } as Record<string, string>,
     metrica: {
       lezioni_completate: 'Lezioni completate',

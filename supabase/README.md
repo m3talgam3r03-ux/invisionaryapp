@@ -255,10 +255,30 @@ select cron.schedule(
   '0 3 1 * *',                    -- il primo del mese alle 3
   $$ select public.congela_podio(); $$
 );
+select cron.schedule(
+  'punti-classifica-mensile',
+  '10 3 1 * *',                   -- dieci minuti dopo, a podio congelato
+  $$ select public.assegna_punti_classifica(); $$
+);
 ```
 
-Rieseguirlo è innocuo: il vincolo di unicità su `(periodo, posizione)` rifiuta
-il doppione invece di sovrascrivere.
+Rieseguirli è innocuo: il vincolo di unicità su `(periodo, posizione)` e la
+chiave primaria di `points_classifica_assegnati` rifiutano il doppione invece
+di sovrascrivere o pagare due volte.
+
+> ⚠️ **La 0016 aveva un difetto che la 0024 chiude.** `congela_podio()`
+> chiamava `classifica_trader()`, che filtra le righe con
+> `can_read_member(p.id)`. Da `pg_cron` non c'è nessun utente autenticato:
+> `auth.uid()` è NULL, quel predicato vale NULL per ogni riga, e **il podio
+> veniva congelato vuoto** senza che nessuno se ne accorgesse. Ora la
+> graduatoria si calcola con `graduatoria_mese()`, che non filtra per
+> visibilità; il filtro resta solo sulla classifica mostrata a video.
+>
+> Se hai già applicato la 0016 in produzione, controlla:
+> ```sql
+> select periodo, count(*) from public.leaderboard_snapshots group by periodo;
+> ```
+> I mesi con zero righe si rigenerano con `select public.congela_podio('2026-07-01');`
 
 ## Strumenti e cambi (migrazione 0020)
 
@@ -469,26 +489,39 @@ update` sulla riga del premio.
 riga opposta e rimette il pezzo a catalogo; la riga negativa originale resta.
 Un registro che si può riscrivere non spiega più niente.
 
-### La maturazione è ripetibile
+### Da dove arrivano i punti (migrazione 0024)
 
-`matura_punti()` accredita la differenza fra quanto si è fatto e quanto è già
-stato pagato — `points_accrual` tiene il conto. Chiamarla due volte non
-accredita nulla la seconda, quindi l'app può lanciarla a ogni apertura.
+**Dalla posizione nella classifica trader del mese**, non dalle metriche del
+rank. La 0024 rimuove `points_rules`, `points_accrual` e `matura_punti()`: le
+righe già accreditate restano nel registro, perché è storia.
 
 ```sql
-select public.matura_punti('<uuid>');   -- restituisce i punti accreditati adesso
+update public.points_classifica_regole set punti = 600 where posizione = 1;
+insert into public.reward_catalog (nome, costo_punti, disponibili) values ('Felpa', 300, null);
 ```
 
-`greatest(0, …)` non è una precauzione oziosa: se un cliente viene cancellato la
-metrica scende, e senza quel vincolo la funzione toglierebbe punti già
-guadagnati. **I punti maturati non si riprendono.**
+`assegna_punti_classifica()` è ripetibile: la chiave primaria di
+`points_classifica_assegnati` su `(periodo, user_id)` fa sì che la seconda
+esecuzione non paghi nulla.
 
-I valori stanno in `points_rules`, tabella separata da `rank_rules`: legarle
-significherebbe che ritoccare un peso del rank cambia il prezzo dei premi.
+> ⚠️ **Conseguenza da sapere:** chi non fa trading non guadagna più punti da
+> solo. Restano i bonus assegnati dall'admin. Se serve premiare anche
+> formazione e CRM va aggiunta una seconda sorgente — è una decisione di
+> prodotto, non una dimenticanza.
+
+### Perché serve un profit factor minimo
+
+Un podio premiato sul **solo win rate incoraggia il profilo di rischio
+sbagliato**: si può vincere il 95% delle volte e perdere soldi, se le poche
+operazioni negative sono enormi — niente stop loss, mediare al ribasso. È il
+modo più comune di bruciare un conto, e premiarlo pubblicamente lo insegna.
+
+Per questo entrano a podio e prendono punti solo i conti con profit factor
+almeno pari alla soglia, di base **1.0**: bisogna quantomeno non perdere.
 
 ```sql
-update public.points_rules set punti_per_unita = 15 where metric = 'lezioni_completate';
-insert into public.reward_catalog (nome, costo_punti, disponibili) values ('Felpa', 300, null);
+update public.trading_config set min_profit_factor = 1.2;   -- più selettivo
+update public.trading_config set min_profit_factor = 0;     -- filtro spento
 ```
 
 ### Chi può creare punti dal nulla

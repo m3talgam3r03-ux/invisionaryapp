@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import type { VocePodio } from './podio';
 import type { Premio, StatoRiscatto, VocePunti } from './premi';
 
 import { supabase } from './supabase';
@@ -142,25 +143,43 @@ export function useRiscatta() {
 }
 
 /**
- * Accredita i punti maturati e non ancora pagati.
+ * Il podio del mese chiuso.
  *
- * Ripetibile: il database tiene traccia di quanto è già stato accreditato per
- * ogni metrica, quindi chiamarla due volte non regala niente. Si lancia
- * all'apertura della schermata.
+ * Lo vede tutta la rete: `podio()` è SECURITY DEFINER perché deve restituire i
+ * NOMI dei primi tre, e i profili altrui un collaboratore non li vede. Escono
+ * solo posizione, nome e win rate — mai importi.
  */
-export function useMaturaPunti() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.rpc('matura_punti');
+export function usePodio(mese: string) {
+  return useQuery({
+    queryKey: ['podio', mese],
+    // Un mese chiuso non cambia più: inutile richiederlo di continuo.
+    staleTime: 1000 * 60 * 60,
+    queryFn: async (): Promise<VocePodio[]> => {
+      const { data, error } = await supabase.rpc('podio', { mese });
       if (error) throw error;
-      return Number(data ?? 0);
+      return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+        posizione: Number(r.posizione),
+        userId: r.user_id as string,
+        nome: (r.nome as string) ?? '—',
+        winRate: Number(r.win_rate),
+        operazioni: Number(r.operazioni),
+      }));
     },
-    onSuccess: (accreditati) => {
-      if (accreditati > 0) {
-        void qc.invalidateQueries({ queryKey: ['punti-saldo'] });
-        void qc.invalidateQueries({ queryKey: ['punti-registro'] });
-      }
+  });
+}
+
+/** Quanti punti vale ogni posizione. In tabella: l'admin le cambia senza rilasci. */
+export function useRegolePunti() {
+  return useQuery({
+    queryKey: ['punti-regole-classifica'],
+    staleTime: 1000 * 60 * 30,
+    queryFn: async (): Promise<Map<number, number>> => {
+      const { data, error } = await supabase
+        .from('points_classifica_regole')
+        .select('posizione, punti')
+        .order('posizione');
+      if (error) throw error;
+      return new Map((data ?? []).map((r) => [Number(r.posizione), Number(r.punti)] as const));
     },
   });
 }
