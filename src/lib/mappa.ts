@@ -1,65 +1,73 @@
+import italia from '@svg-maps/italy';
+
 /**
  * La mappa degli iscritti per regione — parte pura.
  *
- * ── PERCHÉ UNA MAPPA A CASELLE E NON LA SAGOMA DELL'ITALIA ──
- * Le regioni sono disposte a caselle, ognuna nella sua posizione geografica
- * relativa (Valle d'Aosta in alto a sinistra, Sicilia in basso). Due motivi:
+ * I contorni sono quelli veri: arrivano da `@svg-maps/italy` (dati ISTAT,
+ * CC-BY-4.0), 20 percorsi SVG in un `viewBox` di 610 × 793. Qui non si disegna
+ * niente — si traducono i nomi, si uniscono ai conteggi e si decide il colore.
  *
- * · Su uno schermo da telefono la sagoma vera è illeggibile dove serve di più:
- *   Liguria, Molise e Valle d'Aosta diventano striscioline di pochi pixel, e
- *   sono proprio quelle su cui non si capirebbe il colore.
- * · Un cartogramma a caselle dà a ogni regione lo stesso spazio, quindi il
- *   colore si legge allo stesso modo ovunque. Con la sagoma vera, il Piemonte
- *   sembra «più importante» del Molise solo perché è più grande.
+ * ── I NOMI SONO IN INGLESE, IL DATABASE LI VUOLE IN ITALIANO ──
+ * Il pacchetto dice «Lombardy», «Apulia», «Aosta Valley». Il CHECK su
+ * `profiles.regione` accetta solo i 20 nomi ufficiali italiani. La traduzione
+ * sta qui, in un posto solo, e un test verifica che copra tutte e venti: se un
+ * domani il pacchetto rinominasse una regione, il test cade prima che la mappa
+ * si ritrovi un buco muto.
  *
- * Le geometrie stanno in questo file come dati: sostituirle con i contorni
- * reali significa cambiare `REGIONI`, non il componente che le disegna.
- *
- * Modulo puro: nessun import.
+ * Modulo puro: nessun import da React Native. Il pacchetto della mappa è dati.
  */
 
-export type Regione = {
-  nome: string;
-  /** Sigla per le caselle strette. */
-  sigla: string;
-  /** Colonna sulla griglia, 0 = ovest. */
-  colonna: number;
-  /** Riga sulla griglia, 0 = nord. */
-  riga: number;
+/** Dal nome del pacchetto a quello ufficiale italiano. */
+const NOMI_ITALIANI: Record<string, string> = {
+  Abruzzo: 'Abruzzo',
+  'Aosta Valley': "Valle d'Aosta",
+  Apulia: 'Puglia',
+  Basilicata: 'Basilicata',
+  Calabria: 'Calabria',
+  Campania: 'Campania',
+  'Emilia-Romagna': 'Emilia-Romagna',
+  'Friuli-Venezia Giulia': 'Friuli-Venezia Giulia',
+  Lazio: 'Lazio',
+  Liguria: 'Liguria',
+  Lombardy: 'Lombardia',
+  Marche: 'Marche',
+  Molise: 'Molise',
+  Piedmont: 'Piemonte',
+  Sardinia: 'Sardegna',
+  Sicily: 'Sicilia',
+  'Trentino-South Tyrol': 'Trentino-Alto Adige',
+  Tuscany: 'Toscana',
+  Umbria: 'Umbria',
+  Veneto: 'Veneto',
 };
 
-/**
- * Le 20 regioni, disposte come stanno sulla carta.
- *
- * La griglia è 4 colonne × 10 righe: abbastanza per tenere il nord-ovest
- * separato dal nord-est e le isole al loro posto, senza diventare un mosaico
- * che nessuno riconosce.
- */
-export const REGIONI: Regione[] = [
-  { nome: 'Trentino-Alto Adige', sigla: 'TAA', colonna: 1, riga: 0 },
-  { nome: 'Friuli-Venezia Giulia', sigla: 'FVG', colonna: 2, riga: 0 },
-  { nome: "Valle d'Aosta", sigla: 'VdA', colonna: 0, riga: 1 },
-  { nome: 'Lombardia', sigla: 'LOM', colonna: 1, riga: 1 },
-  { nome: 'Veneto', sigla: 'VEN', colonna: 2, riga: 1 },
-  { nome: 'Piemonte', sigla: 'PIE', colonna: 0, riga: 2 },
-  { nome: 'Emilia-Romagna', sigla: 'EMR', colonna: 1, riga: 2 },
-  { nome: 'Liguria', sigla: 'LIG', colonna: 0, riga: 3 },
-  { nome: 'Toscana', sigla: 'TOS', colonna: 1, riga: 3 },
-  { nome: 'Marche', sigla: 'MAR', colonna: 2, riga: 3 },
-  { nome: 'Umbria', sigla: 'UMB', colonna: 1, riga: 4 },
-  { nome: 'Abruzzo', sigla: 'ABR', colonna: 2, riga: 4 },
-  { nome: 'Sardegna', sigla: 'SAR', colonna: 0, riga: 5 },
-  { nome: 'Lazio', sigla: 'LAZ', colonna: 1, riga: 5 },
-  { nome: 'Molise', sigla: 'MOL', colonna: 2, riga: 5 },
-  { nome: 'Campania', sigla: 'CAM', colonna: 1, riga: 6 },
-  { nome: 'Puglia', sigla: 'PUG', colonna: 2, riga: 6 },
-  { nome: 'Basilicata', sigla: 'BAS', colonna: 1, riga: 7 },
-  { nome: 'Calabria', sigla: 'CAL', colonna: 1, riga: 8 },
-  { nome: 'Sicilia', sigla: 'SIC', colonna: 0, riga: 9 },
-];
+type LocationSvg = { id: string; name: string; path: string };
+const MAPPA_SVG = (italia as unknown as { default?: unknown }).default ?? italia;
+const SORGENTE = MAPPA_SVG as { viewBox: string; locations: LocationSvg[] };
 
-export const COLONNE = 3;
-export const RIGHE = 10;
+/** Il riquadro entro cui vivono i percorsi. */
+export const VIEW_BOX = SORGENTE.viewBox;
+
+export type Regione = {
+  /** Nome ufficiale italiano: è quello che sta nel database. */
+  nome: string;
+  /** Identificativo del pacchetto, usato come chiave di disegno. */
+  id: string;
+  /** Il contorno vero, in coordinate del viewBox. */
+  contorno: string;
+};
+
+/** Le 20 regioni coi contorni reali, ordinate per nome italiano. */
+export const REGIONI: Regione[] = SORGENTE.locations
+  .map((l) => ({
+    nome: NOMI_ITALIANI[l.name] ?? l.name,
+    id: l.id,
+    contorno: l.path,
+  }))
+  .sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
+
+/** I 20 nomi ufficiali, come li accetta il CHECK del database. */
+export const NOMI_REGIONI: string[] = REGIONI.map((r) => r.nome);
 
 /**
  * Il conteggio di una regione.
@@ -71,7 +79,7 @@ export type ConteggioRegione = {
   iscritti: number | null;
 };
 
-export type CasellaMappa = Regione & {
+export type RegioneDisegnata = Regione & {
   /** `null` = nascosto per pochi iscritti; `0` = nessun iscritto. */
   iscritti: number | null;
   /** Livello di colore da 0 (vuoto) a 4 (il più pieno). */
@@ -87,7 +95,7 @@ export type CasellaMappa = Regione & {
  * di 50 persone e una di 5.000 devono produrre entrambe una mappa leggibile.
  * Con soglie fisse, la prima sarebbe tutta dello stesso colore.
  */
-export function costruisciMappa(conteggi: ConteggioRegione[]): CasellaMappa[] {
+export function costruisciMappa(conteggi: ConteggioRegione[]): RegioneDisegnata[] {
   const per = new Map(conteggi.map((c) => [c.regione, c.iscritti]));
   const massimo = Math.max(0, ...conteggi.map((c) => c.iscritti ?? 0));
 
@@ -158,5 +166,68 @@ export function regionePiuAffollata(conteggi: ConteggioRegione[]): ConteggioRegi
 
 /** Vero se il nome è una delle 20 regioni. Rispecchia il CHECK del database. */
 export function regioneValida(nome: string): boolean {
-  return REGIONI.some((r) => r.nome === nome);
+  return NOMI_REGIONI.includes(nome);
+}
+
+// --- Zoom e trascinamento ---------------------------------------------------
+
+export type Vista = { x: number; y: number; scala: number };
+
+export const VISTA_INIZIALE: Vista = { x: 0, y: 0, scala: 1 };
+export const SCALA_MIN = 1;
+export const SCALA_MAX = 6;
+
+/**
+ * Applica uno zoom tenendo fermo il punto toccato.
+ *
+ * Senza questo, ingrandire sposterebbe sotto le dita la zona che si stava
+ * guardando: si zooma sulla Sicilia e ci si ritrova sull'Emilia. Il punto
+ * `fuocoX/Y` è in coordinate del riquadro visibile, da 0 a 1.
+ */
+export function zooma(vista: Vista, fattore: number, fuocoX = 0.5, fuocoY = 0.5): Vista {
+  const nuova = limita(vista.scala * fattore, SCALA_MIN, SCALA_MAX);
+  if (nuova === vista.scala) return vista;
+
+  // La porzione visibile passa da 1/scala a 1/nuova: l'origine si sposta della
+  // differenza, pesata su dove si è puntato.
+  const x = vista.x + fuocoX * (1 / vista.scala - 1 / nuova);
+  const y = vista.y + fuocoY * (1 / vista.scala - 1 / nuova);
+  return contieni({ x, y, scala: nuova });
+}
+
+/** Trascina di uno spostamento espresso in frazioni di schermo. */
+export function trascina(vista: Vista, dx: number, dy: number): Vista {
+  return contieni({
+    x: vista.x - dx / vista.scala,
+    y: vista.y - dy / vista.scala,
+    scala: vista.scala,
+  });
+}
+
+/**
+ * Tiene la vista dentro la mappa.
+ *
+ * Senza, trascinando si porta l'Italia fuori dallo schermo e resta un
+ * rettangolo vuoto: da lì nessuno capisce come tornare indietro.
+ */
+export function contieni(vista: Vista): Vista {
+  const porzione = 1 / vista.scala;
+  const massimo = Math.max(0, 1 - porzione);
+  return {
+    scala: vista.scala,
+    x: limita(vista.x, 0, massimo),
+    y: limita(vista.y, 0, massimo),
+  };
+}
+
+/** Il `viewBox` da dare all'SVG per la vista corrente. */
+export function viewBoxDiVista(vista: Vista): string {
+  const [, , larghezza, altezza] = VIEW_BOX.split(/\s+/).map(Number);
+  const l = larghezza / vista.scala;
+  const a = altezza / vista.scala;
+  return `${vista.x * larghezza} ${vista.y * altezza} ${l} ${a}`;
+}
+
+function limita(v: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, v));
 }

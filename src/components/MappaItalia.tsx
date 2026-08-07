@@ -1,74 +1,117 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { PanResponder, Pressable, StyleSheet, View } from 'react-native';
+import Svg, { G, Path } from 'react-native-svg';
 
 import { ThemedText } from '@/components/ui';
 import { t } from '@/i18n/it';
-import { COLONNE, RIGHE, type CasellaMappa } from '@/lib/mappa';
+import {
+  SCALA_MAX,
+  SCALA_MIN,
+  VISTA_INIZIALE,
+  trascina,
+  viewBoxDiVista,
+  zooma,
+  type RegioneDisegnata,
+  type Vista,
+} from '@/lib/mappa';
 import { radius, spacing, useTheme } from '@/theme';
 
-/**
- * L'Italia a caselle: ogni regione nella sua posizione geografica relativa.
- *
- * Perché non la sagoma vera: su un telefono Liguria, Molise e Valle d'Aosta
- * diventerebbero striscioline di pochi pixel — proprio quelle su cui il colore
- * non si leggerebbe. A caselle ogni regione ha lo stesso spazio, quindi
- * l'intensità si confronta davvero. La geometria sta in `mappa.ts` come dati:
- * per passare ai contorni reali si cambia quella, non questo componente.
- *
- * Toccando una casella si legge il nome per esteso: le sigle da tre lettere
- * stanno nello spazio ma non le conosce nessuno a memoria.
- */
-export function MappaItalia({ caselle }: { caselle: CasellaMappa[] }) {
-  const { colors } = useTheme();
-  const [scelta, setScelta] = useState<CasellaMappa | null>(null);
+const ALTEZZA = 420;
 
-  // Colonne + 1 perché sono indici 0-based.
-  const larghezzaCella = 100 / (COLONNE + 1);
+/**
+ * L'Italia coi contorni veri, colorata per numero di iscritti.
+ *
+ * Zoom e trascinamento si fanno spostando il `viewBox` dell'SVG invece di
+ * applicare una trasformazione: così i contorni restano vettoriali a qualunque
+ * ingrandimento — con `scale` la Sicilia a 6× sarebbe una macchia sfocata.
+ *
+ * Il trascinamento usa `PanResponder`, che è dentro React Native: per un
+ * gesto solo non serviva tirare in ballo il gestore di gesti nativo.
+ */
+export function MappaItalia({ regioni }: { regioni: RegioneDisegnata[] }) {
+  const { colors } = useTheme();
+  const [vista, setVista] = useState<Vista>(VISTA_INIZIALE);
+  const [scelta, setScelta] = useState<RegioneDisegnata | null>(null);
+
+  /*
+   * Il gesto si crea una volta sola: ricrearlo a ogni render lo perderebbe a
+   * metà trascinamento.
+   *
+   * Gli spostamenti si applicano in modo INCREMENTALE — la differenza rispetto
+   * all'ultimo evento — e la vista si aggiorna in forma funzionale. Così non
+   * serve tenere da nessuna parte la vista di partenza: il gesto non ha bisogno
+   * di sapere dove eravamo, solo di quanto ci si è mossi da un evento all'altro.
+   */
+  const [gesto] = useState(() => {
+    let ultimoX = 0;
+    let ultimoY = 0;
+    let mosso = false;
+
+    const responder = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      // Sotto i 4 px è un tocco, non un trascinamento: senza questa soglia
+      // selezionare una regione diventerebbe quasi impossibile.
+      onMoveShouldSetPanResponder: (_, g) => Math.hypot(g.dx, g.dy) > 4,
+      onPanResponderGrant: () => {
+        ultimoX = 0;
+        ultimoY = 0;
+        mosso = false;
+      },
+      onPanResponderMove: (_, g) => {
+        mosso = true;
+        const dx = g.dx - ultimoX;
+        const dy = g.dy - ultimoY;
+        ultimoX = g.dx;
+        ultimoY = g.dy;
+        setVista((v) => trascina(v, dx / 320, dy / ALTEZZA));
+      },
+    });
+
+    return { responder, haTrascinato: () => mosso };
+  });
 
   return (
     <View style={{ gap: spacing.md }}>
-      <View style={{ aspectRatio: (COLONNE + 1) / RIGHE }}>
-        {caselle.map((c) => (
+      <View
+        {...gesto.responder.panHandlers}
+        style={[styles.tela, { borderColor: colors.border, backgroundColor: colors.surfaceAlt }]}
+      >
+        <Svg width="100%" height={ALTEZZA} viewBox={viewBoxDiVista(vista)}>
+          <G>
+            {regioni.map((r) => (
+              <Path
+                key={r.id}
+                d={r.contorno}
+                fill={sfondo(r.livello, colors.gold, colors.surface)}
+                stroke={scelta?.id === r.id ? colors.accent : colors.border}
+                strokeWidth={scelta?.id === r.id ? 2.5 : 0.8}
+                onPress={() => {
+                  // Dopo un trascinamento il rilascio non è una selezione.
+                  if (gesto.haTrascinato()) return;
+                  setScelta(scelta?.id === r.id ? null : r);
+                }}
+              />
+            ))}
+          </G>
+        </Svg>
+
+        {/* Comandi dello zoom: il pizzico a due dita non c'è, e un solo modo
+            per ingrandire è meglio di uno che funziona a metà. */}
+        <View style={styles.comandi}>
+          <Zoom segno="+" attivo={vista.scala < SCALA_MAX} onPress={() => setVista(zooma(vista, 1.6))} />
+          <Zoom segno="−" attivo={vista.scala > SCALA_MIN} onPress={() => setVista(zooma(vista, 1 / 1.6))} />
+        </View>
+        {vista.scala > SCALA_MIN && (
           <Pressable
-            key={c.nome}
-            onPress={() => setScelta(scelta?.nome === c.nome ? null : c)}
+            style={[styles.reimposta, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => setVista(VISTA_INIZIALE)}
             accessibilityRole="button"
-            accessibilityLabel={`${c.nome}: ${etichetta(c)}`}
-            style={{
-              position: 'absolute',
-              left: `${c.colonna * larghezzaCella}%`,
-              top: `${(c.riga * 100) / RIGHE}%`,
-              width: `${larghezzaCella}%`,
-              height: `${100 / RIGHE}%`,
-              padding: 2,
-            }}
           >
-            <View
-              style={[
-                styles.cella,
-                {
-                  backgroundColor: sfondo(c.livello, colors.gold, colors.surfaceAlt),
-                  borderColor: scelta?.nome === c.nome ? colors.accent : colors.border,
-                  borderWidth: scelta?.nome === c.nome ? 1.5 : StyleSheet.hairlineWidth,
-                },
-              ]}
-            >
-              <ThemedText
-                style={[styles.sigla, { color: c.livello >= 3 ? '#0E0E10' : colors.text }]}
-              >
-                {c.sigla}
-              </ThemedText>
-              <ThemedText
-                style={[styles.numero, { color: c.livello >= 3 ? '#0E0E10' : colors.textMuted }]}
-              >
-                {etichetta(c)}
-              </ThemedText>
-            </View>
+            <ThemedText variant="caption">{t.mappa.tuttaItalia}</ThemedText>
           </Pressable>
-        ))}
+        )}
       </View>
 
-      {/* Il nome per esteso della casella toccata */}
       <ThemedText variant="caption" tone={scelta ? 'default' : 'muted'} style={styles.centro}>
         {scelta ? `${scelta.nome} — ${dettaglio(scelta)}` : t.mappa.tocca}
       </ThemedText>
@@ -78,36 +121,49 @@ export function MappaItalia({ caselle }: { caselle: CasellaMappa[] }) {
   );
 }
 
-/** Cosa scrivere dentro la casella: `·` per il nascosto, `—` per il vuoto. */
-function etichetta(c: CasellaMappa): string {
-  if (c.nascosto) return '·';
-  if (!c.iscritti) return '—';
-  return String(c.iscritti);
-}
-
-function dettaglio(c: CasellaMappa): string {
-  if (c.nascosto) return t.mappa.nascosto;
-  if (!c.iscritti) return t.mappa.nessuno;
-  return t.mappa.iscritti(c.iscritti);
+function dettaglio(r: RegioneDisegnata): string {
+  if (r.nascosto) return t.mappa.nascosto;
+  if (!r.iscritti) return t.mappa.nessuno;
+  return t.mappa.iscritti(r.iscritti);
 }
 
 /** L'oro sfuma con l'intensità: il livello 0 resta la superficie neutra. */
 function sfondo(livello: number, oro: string, neutro: string): string {
   if (livello <= 0) return neutro;
-  const opacita = [0, 0.22, 0.45, 0.7, 1][Math.min(livello, 4)];
-  return mescola(oro, opacita);
-}
-
-/**
- * L'oro con trasparenza in notazione esadecimale.
- * `react-native-svg` e gli stili accettano `#RRGGBBAA`; comporlo qui evita di
- * dover portare in giro un colore diverso per ogni livello.
- */
-function mescola(colore: string, opacita: number): string {
-  const alfa = Math.round(Math.max(0, Math.min(1, opacita)) * 255)
+  const opacita = [0, 0.25, 0.5, 0.75, 1][Math.min(livello, 4)];
+  const alfa = Math.round(opacita * 255)
     .toString(16)
     .padStart(2, '0');
-  return `${colore}${alfa}`;
+  return `${oro}${alfa}`;
+}
+
+function Zoom({
+  segno,
+  attivo,
+  onPress,
+}: {
+  segno: string;
+  attivo: boolean;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      onPress={attivo ? onPress : undefined}
+      accessibilityRole="button"
+      accessibilityLabel={segno === '+' ? t.mappa.ingrandisci : t.mappa.rimpicciolisci}
+      style={[
+        styles.zoom,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          opacity: attivo ? 1 : 0.4,
+        },
+      ]}
+    >
+      <ThemedText style={styles.segno}>{segno}</ThemedText>
+    </Pressable>
+  );
 }
 
 function Legenda() {
@@ -122,10 +178,7 @@ function Legenda() {
           key={l}
           style={[
             styles.tacca,
-            {
-              backgroundColor: sfondo(l, colors.gold, colors.surfaceAlt),
-              borderColor: colors.border,
-            },
+            { backgroundColor: sfondo(l, colors.gold, colors.surface), borderColor: colors.border },
           ]}
         />
       ))}
@@ -137,14 +190,35 @@ function Legenda() {
 }
 
 const styles = StyleSheet.create({
-  cella: {
-    flex: 1,
-    borderRadius: radius.sm,
+  tela: {
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
+  comandi: {
+    position: 'absolute',
+    right: spacing.sm,
+    top: spacing.sm,
+    gap: spacing.xs,
+  },
+  zoom: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sigla: { fontSize: 10, fontWeight: '800', letterSpacing: 0.3 },
-  numero: { fontSize: 11, fontWeight: '700' },
+  segno: { fontSize: 20, fontWeight: '700', lineHeight: 24 },
+  reimposta: {
+    position: 'absolute',
+    left: spacing.sm,
+    bottom: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
   centro: { textAlign: 'center' },
   legenda: {
     flexDirection: 'row',

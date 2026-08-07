@@ -576,12 +576,23 @@ protegge ruolo e gerarchia, non questo campo). Il CHECK tiene l'elenco chiuso
 alle 20 regioni ufficiali: senza, la mappa si riempirebbe di «lombardia»,
 «Lombardia » e «LOMBARDIA».
 
-> La mappa in app è un **cartogramma a caselle**, non la sagoma dell'Italia. Su
-> uno schermo da telefono Liguria, Molise e Valle d'Aosta diventerebbero
-> striscioline di pochi pixel — proprio quelle su cui il colore non si
-> leggerebbe — e con la sagoma vera il Piemonte sembrerebbe «più importante» del
-> Molise solo perché più grande. Le geometrie stanno in `src/lib/mappa.ts` come
-> dati: passare ai contorni reali significa cambiare quelle, non il componente.
+### I contorni
+
+Vengono da **`@svg-maps/italy`** (114 kB, dati ISTAT, licenza **CC-BY-4.0**):
+20 percorsi SVG in un riquadro 610 × 793. I nomi del pacchetto sono in inglese
+(«Lombardy», «Apulia», «Aosta Valley») e la traduzione ai 20 nomi ufficiali sta
+in un posto solo, `src/lib/mappa.ts`. Un test verifica che l'elenco tradotto
+coincida esattamente con quello del CHECK: se il pacchetto rinominasse una
+regione, il test cade prima che la mappa si ritrovi un buco muto.
+
+Zoom e trascinamento spostano il **`viewBox`** invece di applicare una
+trasformazione: così i contorni restano vettoriali a qualunque ingrandimento —
+con `scale`, a 6× la Sicilia sarebbe una macchia sfocata.
+
+> **Attribuzione.** CC-BY-4.0 richiede di citare la fonte. La citazione va messa
+> nei crediti dell'app prima della pubblicazione sugli store:
+> *Mappa dell'Italia — [svg-maps](https://github.com/VictorCazanave/svg-maps),
+> CC-BY-4.0.*
 
 ## Agente AI — RAG (fase successiva)
 

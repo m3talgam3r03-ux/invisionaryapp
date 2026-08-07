@@ -5,7 +5,7 @@ import { MappaItalia } from '@/components/MappaItalia';
 import { Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
-import { REGIONI, costruisciMappa, regionePiuAffollata, testoRiepilogo } from '@/lib/mappa';
+import { NOMI_REGIONI, costruisciMappa, regionePiuAffollata, testoRiepilogo } from '@/lib/mappa';
 import { useImpostaRegione, useMappaIscritti, useRiepilogoMappa } from '@/lib/mappa-data';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -16,7 +16,7 @@ export default function Mappa() {
   const imposta = useImpostaRegione();
 
   const [apriScelta, setApriScelta] = useState(false);
-  const caselle = useMemo(() => costruisciMappa(conteggi ?? []), [conteggi]);
+  const regioni = useMemo(() => costruisciMappa(conteggi ?? []), [conteggi]);
   const prima = useMemo(() => regionePiuAffollata(conteggi ?? []), [conteggi]);
 
   const mia = profile?.regione ?? null;
@@ -35,7 +35,7 @@ export default function Mappa() {
         </ThemedText>
       ) : (
         <Card style={{ gap: spacing.md }}>
-          <MappaItalia caselle={caselle} />
+          <MappaItalia regioni={regioni} />
         </Card>
       )}
 
@@ -71,13 +71,13 @@ export default function Mappa() {
             style={{ maxHeight: 260 }}
             contentContainerStyle={styles.elenco}
           >
-            {REGIONI.map((r) => (
+            {NOMI_REGIONI.map((nome) => (
               <Chip
-                key={r.nome}
-                label={r.nome}
-                selezionato={mia === r.nome}
+                key={nome}
+                label={nome}
+                selezionato={mia === nome}
                 onPress={() => {
-                  imposta.mutate(mia === r.nome ? null : r.nome);
+                  imposta.mutate(mia === nome ? null : nome);
                   setApriScelta(false);
                 }}
               />

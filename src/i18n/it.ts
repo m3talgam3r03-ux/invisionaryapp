@@ -523,8 +523,11 @@ export const t = {
   mappa: {
     titolo: 'La rete in Italia',
     sottotitolo:
-      'Quante persone ci sono in ogni regione. Ogni casella è una regione, al suo posto sulla carta: tocca per il nome per esteso.',
-    tocca: 'Tocca una regione per vedere quale è.',
+      'Quante persone ci sono in ogni regione. Tocca una regione per il dettaglio, trascina per spostarti, usa + e − per ingrandire.',
+    tocca: 'Tocca una regione per vedere quanti iscritti ha.',
+    tuttaItalia: 'Tutta l’Italia',
+    ingrandisci: 'Ingrandisci',
+    rimpicciolisci: 'Rimpicciolisci',
     iscritti: (n: number) => `${n} ${n === 1 ? 'iscritto' : 'iscritti'}`,
     nessuno: 'nessun iscritto',
     // La differenza che tutta la schermata deve rendere evidente.

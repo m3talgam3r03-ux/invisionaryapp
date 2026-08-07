@@ -1,67 +1,92 @@
 /**
  * Test della mappa degli iscritti (src/lib/mappa.ts).
  *
- * Il punto che questi test presidiano non è la grafica: è la differenza fra
- * «qui non c'è nessuno» e «qui c'è qualcuno ma non posso dirti quanti».
- * Confonderle significherebbe o mentire, o pubblicare che in Molise c'è una
- * persona sola — che non è una statistica, è una persona.
+ * Due cose da presidiare, e nessuna delle due è grafica.
+ *
+ * 1. La differenza fra «qui non c'è nessuno» e «qui c'è qualcuno ma non posso
+ *    dirti quanti». Confonderle significherebbe o mentire, o pubblicare che in
+ *    Molise c'è una persona sola — che non è una statistica, è una persona.
+ * 2. Che i nomi del pacchetto arrivino tutti a un nome ufficiale italiano. Il
+ *    pacchetto dice «Lombardy» e il database vuole «Lombardia»: se una
+ *    traduzione mancasse, quella regione resterebbe muta sulla mappa senza che
+ *    nulla lo segnali.
  */
 import { describe, expect, it } from 'vitest';
 
 import {
-  COLONNE,
+  NOMI_REGIONI,
   REGIONI,
-  RIGHE,
+  SCALA_MAX,
+  SCALA_MIN,
+  VIEW_BOX,
+  VISTA_INIZIALE,
+  contieni,
   costruisciMappa,
   livelloColore,
   regionePiuAffollata,
   regioneValida,
   testoRiepilogo,
+  trascina,
+  viewBoxDiVista,
+  zooma,
   type ConteggioRegione,
 } from '@/lib/mappa';
 
-describe('le venti regioni', () => {
-  it('ci sono tutte, una volta sola', () => {
+/** I 20 nomi che il CHECK del database accetta. Copiati dalla migrazione 0025. */
+const UFFICIALI = [
+  'Abruzzo',
+  'Basilicata',
+  'Calabria',
+  'Campania',
+  'Emilia-Romagna',
+  'Friuli-Venezia Giulia',
+  'Lazio',
+  'Liguria',
+  'Lombardia',
+  'Marche',
+  'Molise',
+  'Piemonte',
+  'Puglia',
+  'Sardegna',
+  'Sicilia',
+  'Toscana',
+  'Trentino-Alto Adige',
+  'Umbria',
+  "Valle d'Aosta",
+  'Veneto',
+];
+
+describe('le venti regioni, coi contorni veri', () => {
+  it('ci sono tutte e i nomi coincidono con quelli del database', () => {
+    // Se il pacchetto rinominasse una regione, questo test cade prima che la
+    // mappa si ritrovi un buco muto.
     expect(REGIONI).toHaveLength(20);
-    expect(new Set(REGIONI.map((r) => r.nome)).size).toBe(20);
-    expect(new Set(REGIONI.map((r) => r.sigla)).size, 'sigle distinte').toBe(20);
+    expect([...NOMI_REGIONI].sort()).toEqual([...UFFICIALI].sort());
   });
 
-  it('nessuna casella si sovrappone a un’altra', () => {
-    const celle = REGIONI.map((r) => `${r.colonna},${r.riga}`);
-    expect(new Set(celle).size, 'due regioni nella stessa casella').toBe(20);
-  });
-
-  it('stanno tutte dentro la griglia', () => {
+  it('ogni regione ha un contorno vero, non un segnaposto', () => {
     for (const r of REGIONI) {
-      expect(r.colonna, r.nome).toBeGreaterThanOrEqual(0);
-      expect(r.colonna, r.nome).toBeLessThanOrEqual(COLONNE);
-      expect(r.riga, r.nome).toBeGreaterThanOrEqual(0);
-      expect(r.riga, r.nome).toBeLessThan(RIGHE);
+      expect(r.contorno.length, r.nome).toBeGreaterThan(100);
+      expect(r.contorno.startsWith('M') || r.contorno.startsWith('m'), r.nome).toBe(true);
     }
   });
 
-  it('la disposizione rispetta la geografia dove conta', () => {
-    const per = new Map(REGIONI.map((r) => [r.nome, r]));
-    const riga = (n: string) => per.get(n)!.riga;
-    const col = (n: string) => per.get(n)!.colonna;
+  it('nessun identificativo ripetuto', () => {
+    expect(new Set(REGIONI.map((r) => r.id)).size).toBe(20);
+  });
 
-    // Nord sopra, sud sotto.
-    expect(riga('Lombardia')).toBeLessThan(riga('Lazio'));
-    expect(riga('Lazio')).toBeLessThan(riga('Calabria'));
-    expect(riga('Calabria')).toBeLessThan(riga('Sicilia'));
-    // Ovest a sinistra, est a destra.
-    expect(col('Piemonte')).toBeLessThan(col('Veneto'));
-    expect(col('Lazio')).toBeLessThan(col('Puglia'));
-    // Le isole a ovest.
-    expect(col('Sardegna')).toBe(0);
+  it('il riquadro di disegno è quello del pacchetto', () => {
+    const parti = VIEW_BOX.split(/\s+/).map(Number);
+    expect(parti).toHaveLength(4);
+    expect(parti[2], 'larghezza').toBeGreaterThan(0);
+    expect(parti[3], 'altezza').toBeGreaterThan(parti[2]); // l'Italia è più alta che larga
   });
 
   it('regioneValida rispecchia l’elenco chiuso del database', () => {
     expect(regioneValida('Lombardia')).toBe(true);
     expect(regioneValida("Valle d'Aosta")).toBe(true);
+    expect(regioneValida('Lombardy'), 'il nome inglese non vale').toBe(false);
     expect(regioneValida('lombardia'), 'il confronto è esatto').toBe(false);
-    expect(regioneValida('Padania')).toBe(false);
     expect(regioneValida('')).toBe(false);
   });
 });
@@ -88,7 +113,7 @@ describe('IL CASO CHE CONTA: nascosto non è vuoto', () => {
     expect(sicilia.livello).toBe(0);
   });
 
-  it('la mappa ha sempre venti caselle, anche senza dati', () => {
+  it('la mappa ha sempre venti regioni, anche senza dati', () => {
     expect(costruisciMappa([])).toHaveLength(20);
     expect(costruisciMappa([]).every((c) => c.iscritti === 0)).toBe(true);
   });
@@ -129,6 +154,60 @@ describe('scala di colore', () => {
   });
 });
 
+describe('zoom e trascinamento', () => {
+  it('lo zoom tiene fermo il punto che si sta guardando', () => {
+    // Senza questo si zooma sulla Sicilia e ci si ritrova sull'Emilia.
+    const dopo = zooma(VISTA_INIZIALE, 2, 0.5, 0.9);
+    expect(dopo.scala).toBe(2);
+    // Puntando in basso, la finestra si sposta verso il basso.
+    expect(dopo.y).toBeGreaterThan(0);
+    // Puntando al centro in orizzontale, resta centrata.
+    expect(dopo.x).toBeCloseTo(0.25, 6);
+  });
+
+  it('non si ingrandisce oltre il limite né si rimpicciolisce sotto', () => {
+    let v = VISTA_INIZIALE;
+    for (let i = 0; i < 20; i++) v = zooma(v, 2);
+    expect(v.scala).toBe(SCALA_MAX);
+    for (let i = 0; i < 20; i++) v = zooma(v, 0.5);
+    expect(v.scala).toBe(SCALA_MIN);
+  });
+
+  it('a scala 1 non ci si può trascinare via la mappa', () => {
+    // Trascinare fuori lascerebbe un rettangolo vuoto, e da lì nessuno capisce
+    // come tornare indietro.
+    const v = trascina(VISTA_INIZIALE, 0.5, 0.5);
+    expect(v.x).toBe(0);
+    expect(v.y).toBe(0);
+  });
+
+  it('trascinando da ingranditi ci si muove, ma dentro i bordi', () => {
+    const ingrandita = zooma(VISTA_INIZIALE, 2);
+    const spostata = trascina(ingrandita, -0.3, -0.3);
+    expect(spostata.x).toBeGreaterThan(ingrandita.x);
+    expect(spostata.x).toBeLessThanOrEqual(0.5);
+
+    const oltre = trascina(ingrandita, -10, -10);
+    expect(oltre.x, 'si ferma al bordo').toBe(0.5);
+    expect(oltre.y).toBe(0.5);
+  });
+
+  it('contieni riporta dentro qualunque vista sballata', () => {
+    expect(contieni({ x: -5, y: 9, scala: 2 })).toEqual({ x: 0, y: 0.5, scala: 2 });
+  });
+
+  it('il viewBox mostra tutta l’Italia a scala 1', () => {
+    expect(viewBoxDiVista(VISTA_INIZIALE)).toBe(VIEW_BOX.trim());
+  });
+
+  it('raddoppiando la scala si vede metà larghezza e metà altezza', () => {
+    const [, , l, a] = VIEW_BOX.split(/\s+/).map(Number);
+    const vb = viewBoxDiVista({ x: 0, y: 0, scala: 2 }).split(/\s+/).map(Number);
+    expect(vb[2]).toBeCloseTo(l / 2, 6);
+    expect(vb[3]).toBeCloseTo(a / 2, 6);
+  });
+});
+
 describe('la riga sotto la mappa', () => {
   it('dice sempre quante regioni non sono mostrate', () => {
     // Una mappa che tace su ciò che non mostra fa credere che il vuoto sia
@@ -145,13 +224,14 @@ describe('la riga sotto la mappa', () => {
   });
 
   it('non parla di regioni nascoste quando non ce ne sono', () => {
-    const testo = testoRiepilogo({
-      totaleVisibile: 40,
-      regioniVisibili: 5,
-      regioniNascoste: 0,
-      senzaRegione: 0,
-    });
-    expect(testo).toBe('40 iscritti in 5 regioni.');
+    expect(
+      testoRiepilogo({
+        totaleVisibile: 40,
+        regioniVisibili: 5,
+        regioniNascoste: 0,
+        senzaRegione: 0,
+      }),
+    ).toBe('40 iscritti in 5 regioni.');
   });
 
   it('usa il singolare quando serve', () => {
