@@ -1,10 +1,14 @@
-import { useMemo } from 'react';
+import { router } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
-import { Card, Screen, ThemedText } from '@/components/ui';
+import { Podio } from '@/components/Podio';
+import { Button, Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { formatNumber } from '@/lib/format';
+import { etichettaMese, mesePrecedente, posizioniPremiate, puntiPerPosizione } from '@/lib/podio';
+import { usePodio, useRegolePunti, useSaldoPunti } from '@/lib/premi-data';
 import { useTraderLeaderboard, type TraderRanking } from '@/lib/trading';
 import { spacing, useTheme } from '@/theme';
 
@@ -13,7 +17,14 @@ const SOGLIA_INDICATIVA = 20;
 
 export default function ClassificaTrader() {
   const { data, isLoading, isError, error } = useTraderLeaderboard();
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
+
+  // Il podio è del mese CHIUSO: quello in corso cambia sotto gli occhi e non
+  // direbbe a nessuno chi ha vinto davvero.
+  const [mese] = useState(() => mesePrecedente(new Date()));
+  const { data: podio } = usePodio(mese);
+  const { data: regole } = useRegolePunti();
+  const { data: saldo = 0 } = useSaldoPunti(profile?.id);
 
   const { classificati, esclusi } = useMemo(() => {
     const righe = data ?? [];
@@ -32,6 +43,46 @@ export default function ClassificaTrader() {
         </ThemedText>
       </View>
 
+      {/* Il podio del mese chiuso, e i punti che si portano a casa */}
+      <View style={{ gap: spacing.sm }}>
+        <ThemedText variant="label" tone="muted">
+          {t.podio.titolo(etichettaMese(mese))}
+        </ThemedText>
+        <Card style={{ gap: spacing.md, paddingBottom: 0 }}>
+          <Podio voci={podio ?? []} />
+        </Card>
+      </View>
+
+      {/* Il proprio saldo e la via per spenderlo */}
+      <Card style={{ gap: spacing.sm }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <ThemedText variant="label" tone="muted">
+              {t.premi.saldo}
+            </ThemedText>
+            <ThemedText tone="gold" variant="title">
+              {t.premi.punti(formatNumber(saldo, 0))}
+            </ThemedText>
+          </View>
+          <Button
+            title={t.trading.classifica.riscatta}
+            variant="secondary"
+            onPress={() => router.push('/premi')}
+          />
+        </View>
+        {regole && posizioniPremiate(regole) > 0 && (
+          <ThemedText tone="muted" variant="caption">
+            {t.podio.comeSiVincono(
+              posizioniPremiate(regole),
+              formatNumber(puntiPerPosizione(regole, 1), 0),
+            )}
+          </ThemedText>
+        )}
+        <ThemedText tone="muted" variant="caption">
+          {t.podio.nota}
+        </ThemedText>
+      </Card>
+
       {isLoading && <ThemedText tone="muted">{t.trading.classifica.caricamento}</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
@@ -45,7 +96,13 @@ export default function ClassificaTrader() {
       )}
 
       {classificati.map((r, i) => (
-        <Riga key={r.user_id} riga={r} posizione={i + 1} io={r.user_id === session?.user.id} />
+        <Riga
+          key={r.user_id}
+          riga={r}
+          posizione={i + 1}
+          io={r.user_id === session?.user.id}
+          punti={regole ? puntiPerPosizione(regole, i + 1) : 0}
+        />
       ))}
 
       {/* Chi non ha ancora abbastanza operazioni: mostrato, ma fuori classifica */}
@@ -74,10 +131,13 @@ function Riga({
   riga,
   posizione,
   io,
+  punti = 0,
 }: {
   riga: TraderRanking;
   posizione?: number;
   io: boolean;
+  /** Punti premio che questa posizione porta a casa. Zero = fuori dai premiati. */
+  punti?: number;
 }) {
   const { colors } = useTheme();
   // L'oro solo al podio: è la regola del marchio sui traguardi.
@@ -110,9 +170,18 @@ function Riga({
             </ThemedText>
           )}
         </View>
-        <ThemedText tone="muted" variant="caption">
-          {t.trading.classifica.operazioni(riga.operazioni)}
-        </ThemedText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <ThemedText tone="muted" variant="caption">
+            {t.trading.classifica.operazioni(riga.operazioni)}
+          </ThemedText>
+          {/* Cosa porta a casa questa posizione: è l'informazione che manca
+              guardando una classifica, e va accanto al nome, non altrove. */}
+          {punti > 0 && (
+            <ThemedText tone="gold" variant="caption">
+              · {t.trading.classifica.puntiPosizione(formatNumber(punti, 0))}
+            </ThemedText>
+          )}
+        </View>
       </View>
 
       <View style={{ alignItems: 'flex-end' }}>

@@ -594,11 +594,25 @@
         <div id="tBoard" style="display:none" class="list">
           <button class="btn sec sm" style="align-self:flex-start" onclick="tSub('home')">‹ Trading</button>
           <h2 class="title">Classifica trader</h2>
-          <p class="cap">Per rendimento percentuale del periodo (sola lettura).</p>
-          <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">1</span><div style="flex:1"><h3 class="heading">Leader Demo</h3><p class="cap">Leader · 14 operazioni</p></div><span class="label success">+12,40 %</span></div>
-          <div class="card" style="flex-direction:row;align-items:center;gap:12px;border-color:var(--accent)"><span class="label muted" style="width:22px;text-align:center">2</span><div style="flex:1"><h3 class="heading">Admin Demo · tu</h3><p class="cap">Amministratore · 6 operazioni</p></div><span class="label gold">+3,80 %</span></div>
-          <div class="card" style="flex-direction:row;align-items:center;gap:12px"><span class="label muted" style="width:22px;text-align:center">3</span><div style="flex:1"><h3 class="heading">Collaboratore Demo</h3><p class="cap">Collaboratore · 9 operazioni</p></div><span class="label error">-1,20 %</span></div>
-          <p class="cap" style="text-align:center">Percentuali, non importi. Le performance passate non garantiscono risultati futuri.</p>
+          <p class="cap">Ordinata sulla quota di operazioni chiuse in utile del mese. Mai su importi né rendimenti.</p>
+
+          <!-- Il podio del mese chiuso: lo vede tutta la rete -->
+          <div class="sect"><span class="s">✦</span><span class="t" id="tbMese">Podio</span><span class="l"></span></div>
+          <div class="card" style="gap:14px;padding-bottom:0"><div id="tbPodio"></div></div>
+
+          <!-- Il proprio saldo e la via per spenderlo -->
+          <div class="card" style="gap:8px">
+            <div class="resline">
+              <span><span class="label">I tuoi punti</span><br><b class="gold" style="font-size:22px" id="tbSaldo">0</b></span>
+              <button class="btn sec sm" onclick="setScreen('premi')">Riscatta</button>
+            </div>
+            <p class="cap" id="tbComeSi" style="margin:0"></p>
+            <p class="cap" style="margin:0">Per entrarci servono le operazioni minime del mese e un <b>profit factor almeno pari a 1</b>: vincere spesso perdendo tanto non premia.</p>
+          </div>
+
+          <div class="sect"><span class="s">✦</span><span class="t">Mese in corso</span><span class="l"></span></div>
+          <div id="tbRighe" class="list"></div>
+          <p class="cap" style="text-align:center">La classifica mostra la quota di operazioni in utile, mai importi né percentuali di guadagno. Le performance passate non garantiscono risultati futuri.</p>
         </div>
       </section>
 
@@ -930,11 +944,9 @@
 
       <!-- PUNTI E PREMI -->
       <section class="view" data-view="premi">
-        <!-- Il podio in cima: lo vede tutta la rete -->
-        <div class="sect"><span class="s">✦</span><span class="t" id="pxMese">Podio</span><span class="l"></span></div>
-        <div class="card" style="gap:14px;padding-bottom:0"><div id="pxPodio"></div></div>
-        <p class="cap" id="pxComeSi"></p>
-        <p class="cap">La classifica è sulla quota di operazioni in utile, mai su importi o rendimenti. Per entrarci servono le operazioni minime del mese e un <b>profit factor almeno pari a 1</b>: vincere spesso perdendo tanto non premia.</p>
+        <!-- Podio e classifica stanno in Trading: è lì che i punti si vincono,
+             e una classifica lontana da dove nasce non se la guarda nessuno. -->
+        <button class="btn sec sm" style="align-self:flex-start" onclick="setScreen('trading');tSub('board')">← Podio e classifica del mese</button>
 
         <div class="hero" id="pxHero"></div>
         <p class="cap" id="pxIncoerente" style="color:var(--accent);display:none"></p>
@@ -1583,7 +1595,7 @@
   function fmSub(v){ ['menu','course','lesson','cal','rete'].forEach(k=>{ const el=document.getElementById('fm'+k.charAt(0).toUpperCase()+k.slice(1)); if(el) el.style.display=(k===v)?'':'none'; }); }
   function cSub(v){ document.getElementById('cMenu').style.display=(v==='menu')?'':'none'; document.getElementById('cLot').style.display=(v==='lot')?'':'none'; document.getElementById('cComp').style.display=(v==='comp')?'':'none'; if(v==='lot')calcLot(); if(v==='comp')calcComp(); }
   function adSub(v){ document.getElementById('adminList').style.display=(v==='list')?'':'none'; document.getElementById('adminDetail').style.display=(v==='detail')?'':'none'; }
-  function tSub(v){ document.getElementById('tHome').style.display=(v==='home')?'':'none'; document.getElementById('tConnect').style.display=(v==='connect')?'':'none'; document.getElementById('tBoard').style.display=(v==='board')?'':'none'; if(v==='connect') document.getElementById('mtMsg').innerHTML=''; }
+  function tSub(v){ document.getElementById('tHome').style.display=(v==='home')?'':'none'; document.getElementById('tConnect').style.display=(v==='connect')?'':'none'; document.getElementById('tBoard').style.display=(v==='board')?'':'none'; if(v==='connect') document.getElementById('mtMsg').innerHTML=''; if(v==='board') renderClassificaTrader(); }
 
   /* ===== Toast ===== */
   let toastT=null;
@@ -2869,10 +2881,10 @@
   /* Il podio si disegna 2 · 1 · 3: il primo al centro e più in alto. È come si
      legge un podio da sempre — disporli 1-2-3 da sinistra farebbe sembrare il
      vincitore un terzo classificato. */
-  function renderPodio(){
+  function renderPodio(idMese, idPodio, idComeSi){
     const oggi=new Date();
     const chiuso=new Date(oggi.getFullYear(), oggi.getMonth()-1, 1);
-    document.getElementById('pxMese').textContent =
+    document.getElementById(idMese).textContent =
       'Podio di '+PX_MESI[chiuso.getMonth()]+' '+chiuso.getFullYear();
 
     const per={}; PX_PODIO.forEach(v=>per[v.posizione]=v);
@@ -2880,7 +2892,7 @@
     const altezze={1:84,2:62,3:44};
     const colori={1:'var(--gold)',2:'var(--text)',3:'var(--muted)'};
 
-    document.getElementById('pxPodio').innerHTML=
+    document.getElementById(idPodio).innerHTML=
       '<div style="display:flex;align-items:flex-end;justify-content:center;gap:8px">'+
       [2,1,3].filter(p=>per[p]).map(p=>{
         const v=per[p], oro=(p===1);
@@ -2901,7 +2913,7 @@
       }).join('')+'</div>';
 
     const premiate=Math.max(...Object.keys(PX_PUNTI_POS).map(Number));
-    document.getElementById('pxComeSi').textContent =
+    document.getElementById(idComeSi).textContent =
       'I primi '+premiate+' della classifica del mese ricevono punti premio: '+
       PX_PUNTI_POS[1]+' al primo posto, a scendere.';
   }
@@ -2910,9 +2922,48 @@
     return nome.split(/\s+/).slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
   }
 
+  /* La classifica del mese in corso: win rate, non rendimenti.
+     Fino alla migrazione 0016 questa schermata mostrava «+12,40 %» — un
+     rendimento percentuale, cioè esattamente ciò che il vincolo di prodotto
+     vieta di pubblicare. La metrica è la quota di operazioni chiuse in utile. */
+  const TB_RIGHE = [
+    {nome:'Giulia Ferrari',   ruolo:'Leader',          winRate:71.0, operazioni:48},
+    {nome:'Marco Bianchi',    ruolo:'Leader',          winRate:68.0, operazioni:52},
+    {nome:'Luca Esposito',    ruolo:'Collaboratore',   winRate:64.0, operazioni:31},
+    {nome:'Admin Demo · tu',  ruolo:'Amministratore',  winRate:58.5, operazioni:26, io:true},
+    {nome:'Sara Conti',       ruolo:'Collaboratore',   winRate:55.0, operazioni:22}
+  ];
+  const TB_NON_CLASSIFICATI = [
+    {nome:'Collaboratore Demo', ruolo:'Collaboratore', operazioni:9}
+  ];
+
+  function renderClassificaTrader(){
+    renderPodio('tbMese','tbPodio','tbComeSi');
+    document.getElementById('tbSaldo').textContent = fmt(pxSaldo(),0);
+
+    document.getElementById('tbRighe').innerHTML =
+      TB_RIGHE.map((r,i)=>{
+        const pos=i+1, punti=PX_PUNTI_POS[pos]||0, podio=pos<=3;
+        return '<div class="card" style="flex-direction:row;align-items:center;gap:12px'+
+          (r.io?';border-color:var(--accent)':'')+'">'+
+          '<span class="label '+(podio?'gold':'muted')+'" style="width:26px;text-align:center">'+pos+'°</span>'+
+          '<div style="flex:1"><h3 class="heading">'+r.nome+'</h3>'+
+          '<p class="cap">'+r.ruolo+' · '+r.operazioni+' operazioni'+
+          (punti>0?' · <span class="gold">'+punti+' punti</span>':'')+'</p></div>'+
+          '<div style="text-align:right">'+
+          '<span class="label '+(podio?'gold':'muted')+'">'+fmt(r.winRate,1)+'%</span>'+
+          '<p class="cap" style="margin:0">operazioni in utile</p></div></div>';
+      }).join('') +
+      '<p class="cap" style="margin-top:6px"><b>Non ancora in classifica</b> — servono almeno 20 operazioni nel mese: poche operazioni non dicono nulla sul metodo.</p>' +
+      TB_NON_CLASSIFICATI.map(r=>
+        '<div class="card" style="flex-direction:row;align-items:center;gap:12px;opacity:.75">'+
+        '<span class="label muted" style="width:26px;text-align:center">—</span>'+
+        '<div style="flex:1"><h3 class="heading">'+r.nome+'</h3>'+
+        '<p class="cap">'+r.ruolo+' · '+r.operazioni+' operazioni</p></div></div>').join('');
+  }
+
   function renderPremi(){
     const saldo=pxSaldo();
-    renderPodio();
 
     document.getElementById('pxHero').innerHTML=
       '<span class="lb">I tuoi punti</span>'+

@@ -356,6 +356,10 @@ export const t = {
       podio: 'Podi dei mesi scorsi',
       podioVuoto: 'Nessun mese ancora chiuso.',
       posizione: (n: number) => `${n}°`,
+      // I punti si vincono qui, quindi qui vanno mostrati: una classifica che
+      // non dice cosa porta a casa una posizione è metà informazione.
+      puntiPosizione: (n: string) => `${n} punti`,
+      riscatta: 'Riscatta',
       /** Il disclaimer non è opzionale e non va nascosto. */
       disclaimer:
         'Solo conti collegati in sola lettura. La classifica mostra la quota di operazioni in utile, mai importi né rendimenti: i risultati di altri non sono risultati ottenibili. Contenuti a scopo educativo, non consulenza finanziaria.',
@@ -531,6 +535,7 @@ export const t = {
     diversiDalRank:
       'Si vincono con la classifica trader del mese. Sono una valuta a parte: riscattare un premio non tocca il tuo rank.',
 
+    vaiAllaClassifica: '← Podio e classifica del mese',
     obiettivo: 'Il prossimo traguardo',
     mancano: (n: string, premio: string) => `Ti mancano ${n} punti per «${premio}»`,
     tuttoAllaPortata: 'Puoi riscattare tutto quello che c’è a catalogo.',

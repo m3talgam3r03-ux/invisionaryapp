@@ -1,13 +1,12 @@
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Podio } from '@/components/Podio';
 import { Button, Card, Screen, ThemedText } from '@/components/ui';
 import { ProgressBar } from '@/components/ProgressBar';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { formatNumber } from '@/lib/format';
-import { etichettaMese, mesePrecedente, posizioniPremiate, puntiPerPosizione } from '@/lib/podio';
 import {
   avanzamento,
   impedimento,
@@ -20,9 +19,7 @@ import {
 import {
   useCatalogo,
   useMieiRiscatti,
-  usePodio,
   useRegistroPunti,
-  useRegolePunti,
   useRiscatta,
   useSaldoPunti,
 } from '@/lib/premi-data';
@@ -37,13 +34,7 @@ export default function Premi() {
   const { data: registro } = useRegistroPunti(userId);
   const { data: catalogo, isLoading } = useCatalogo();
   const { data: riscatti } = useMieiRiscatti(userId);
-  const { data: regole } = useRegolePunti();
   const riscatta = useRiscatta();
-
-  // Il mese chiuso, non quello in corso: un podio che cambia sotto gli occhi
-  // non dice a nessuno chi ha vinto davvero.
-  const [mese] = useState(() => mesePrecedente(new Date()));
-  const { data: podio } = usePodio(mese);
 
   const [messaggio, setMessaggio] = useState<{ testo: string; errore: boolean } | null>(null);
 
@@ -62,27 +53,13 @@ export default function Premi() {
 
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
-      {/* Il podio del mese chiuso, in cima e visibile a tutta la rete.
-          Solo posizione, nome e win rate: mai importi. */}
-      <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.podio.titolo(etichettaMese(mese))}
-        </ThemedText>
-        <Card style={{ gap: spacing.md, paddingBottom: 0 }}>
-          <Podio voci={podio ?? []} />
-        </Card>
-        {regole && posizioniPremiate(regole) > 0 && (
-          <ThemedText tone="muted" variant="caption">
-            {t.podio.comeSiVincono(
-              posizioniPremiate(regole),
-              formatNumber(puntiPerPosizione(regole, 1), 0),
-            )}
-          </ThemedText>
-        )}
-        <ThemedText tone="muted" variant="caption">
-          {t.podio.nota}
-        </ThemedText>
-      </View>
+      {/* Il podio e la classifica stanno in Trading: è lì che i punti si
+          vincono, e una classifica lontana da dove nasce non si guarda. */}
+      <Button
+        title={t.premi.vaiAllaClassifica}
+        variant="secondary"
+        onPress={() => router.push('/trading/classifica')}
+      />
 
       {/* Il saldo, e subito la cosa che si fraintende sempre */}
       <Card style={{ gap: spacing.xs, alignItems: 'center' }}>
