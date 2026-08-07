@@ -534,6 +534,55 @@ di prodotto, non un limite tecnico: va rivista consapevolmente se servirà.
 Nessuna tabella dei punti ha policy di scrittura: si passa dalle funzioni. Una
 `insert` diretta su `points_ledger` significherebbe potersi regalare punti.
 
+## La mappa degli iscritti (migrazione 0025)
+
+Quante persone ci sono in ogni regione. Sembra innocuo, e quasi lo è.
+
+### Il problema dei numeri piccoli
+
+**«Molise: 1» non è una statistica: è una persona.** Chiunque nella rete sappia
+che Tizio è molisano ha appena scoperto che è l'unico iscritto lì, e ogni altro
+dato regionale che aggiungessimo in futuro parlerebbe di lui.
+
+Per questo `mappa_iscritti()` restituisce **NULL** sotto la soglia (5 di
+default), e la soppressione avviene **nel database**: nasconderlo
+nell'interfaccia lascerebbe comunque arrivare il numero vero sul telefono.
+
+`NULL` non è `0`. Zero direbbe «lì non c'è nessuno», che è un'altra
+informazione e per giunta falsa. L'app colora comunque la regione — si vede che
+c'è qualcuno — senza dire quanti.
+
+### E il problema della sottrazione
+
+Sopprimere una cella e mostrare il totale generale è inutile: si ricava per
+differenza. Per questo `riepilogo_mappa()` restituisce il totale delle **sole
+regioni mostrate**, più quante regioni sono nascoste — mai la loro somma.
+
+```sql
+select * from public.mappa_iscritti();      -- soglia 5
+select * from public.mappa_iscritti(10);    -- più prudente
+select * from public.riepilogo_mappa();
+```
+
+Entrambe sono `SECURITY DEFINER` perché un collaboratore vede solo il proprio
+profilo: per contare tutti bisogna scavalcare la RLS. Il che è accettabile solo
+restituendo **conteggi e nient'altro** — nessun id, nessun nome, nessuna riga.
+
+### La regione
+
+`profiles.regione` è **facoltativa** e la imposta il diretto interessato
+(`profiles_update` della 0001 lo consente già; `protect_profile_privileged_columns()`
+protegge ruolo e gerarchia, non questo campo). Il CHECK tiene l'elenco chiuso
+alle 20 regioni ufficiali: senza, la mappa si riempirebbe di «lombardia»,
+«Lombardia » e «LOMBARDIA».
+
+> La mappa in app è un **cartogramma a caselle**, non la sagoma dell'Italia. Su
+> uno schermo da telefono Liguria, Molise e Valle d'Aosta diventerebbero
+> striscioline di pochi pixel — proprio quelle su cui il colore non si
+> leggerebbe — e con la sagoma vera il Piemonte sembrerebbe «più importante» del
+> Molise solo perché più grande. Le geometrie stanno in `src/lib/mappa.ts` come
+> dati: passare ai contorni reali significa cambiare quelle, non il componente.
+
 ## Agente AI — RAG (fase successiva)
 
 Architettura: **embedding domanda (Voyage AI) → retrieval su pgvector → generazione con Claude**.

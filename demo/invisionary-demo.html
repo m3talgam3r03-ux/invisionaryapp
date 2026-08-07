@@ -526,7 +526,12 @@
         </div>
         <div class="ctool" style="color:#C9A227" onclick="setScreen('premi')">
           <span class="ci">🎁</span>
-          <span class="cm"><b>Punti e premi</b><span>I punti che accumuli lavorando si riscattano a catalogo</span></span>
+          <span class="cm"><b>Punti e premi</b><span>I punti che vinci in classifica si riscattano a catalogo</span></span>
+          <span class="chev" style="color:#4a4a52;font-size:19px">›</span>
+        </div>
+        <div class="ctool" style="color:#C8102E" onclick="setScreen('mappa')">
+          <span class="ci">⬢</span>
+          <span class="cm"><b>La rete in Italia</b><span>Quante persone ci sono in ogni regione</span></span>
           <span class="chev" style="color:#4a4a52;font-size:19px">›</span>
         </div>
         <button class="btn sec" onclick="setScreen('login')">Esci</button>
@@ -965,6 +970,32 @@
         <p class="cap">Il registro è la verità: il saldo è solo la sua somma. Un riscatto rifiutato non cancella la riga, ne aggiunge una opposta — un registro che si può riscrivere non spiega più niente. I premi sono riconoscimenti interni alla rete, non compensi né promesse di guadagno.</p>
       </section>
 
+      <!-- LA RETE IN ITALIA -->
+      <section class="view" data-view="mappa">
+        <div class="phead"><h2>La rete in Italia</h2><p>Quante persone ci sono in ogni regione. Ogni casella è una regione, al suo posto sulla carta: tocca per il nome per esteso.</p></div>
+
+        <div class="card" style="gap:14px">
+          <div id="mpGriglia"></div>
+          <p class="cap" id="mpScelta" style="text-align:center;margin:0">Tocca una regione per vedere quale è.</p>
+          <div style="display:flex;align-items:center;justify-content:center;gap:6px">
+            <span class="cap">meno</span><div id="mpLegenda" style="display:flex;gap:4px"></div><span class="cap">più</span>
+          </div>
+        </div>
+
+        <p class="cap" id="mpRiepilogo"></p>
+        <p class="cap gold" id="mpPrima" style="font-weight:700"></p>
+
+        <div class="sect"><span class="s">✦</span><span class="t">La tua regione</span><span class="l"></span></div>
+        <div class="card" style="gap:10px">
+          <div class="resline"><b id="mpMia" style="font-size:14px">Non indicata</b>
+            <button class="btn sec sm" onclick="mpApri()">Scegli</button></div>
+          <div id="mpElenco" class="presets" style="display:none"></div>
+          <p class="cap" style="margin:0">Indicarla è facoltativo, e si può togliere in qualsiasi momento toccando di nuovo la stessa regione.</p>
+        </div>
+
+        <p class="cap">Sulla mappa escono <b>solo conteggi</b>: mai nomi, mai indirizzi. Le regioni con pochi iscritti non mostrano il numero — un conteggio di uno non è una statistica, è una persona. La soppressione avviene nel <b>database</b>, non nell'interfaccia: un numero nascosto solo a schermo sarebbe comunque già arrivato sul telefono.</p>
+      </section>
+
       <!-- COMMUNITY -->
       <section class="view" data-view="community">
         <button class="btn sm" onclick="toast('Modulo «Nuovo feedback» con foto (demo)')">+ Nuovo feedback</button>
@@ -1189,14 +1220,15 @@
   /* ===== Navigazione: schermate, barra, menu a tendina, Indietro ===== */
   const SCREENS = [
     ['dashboard','Dashboard'],['agente','Agente AI'],['trading','Trading'],['crm','Network'],['renewals','Scadenzario'],
-    ['formazione','Formazione'],['calc','Calcolatori'],['agenda','Appuntamenti'],['premi','Premi'],['rank','Rank'],['community','Community'],['admin','Admin']
+    ['formazione','Formazione'],['calc','Calcolatori'],['agenda','Appuntamenti'],['premi','Premi'],['mappa','Mappa'],['rank','Rank'],['community','Community'],['admin','Admin']
   ];
   const TITLES = {login:'Invisionary',dashboard:'Invisionary',agente:'Agente AI',trading:'Trading',crm:'Network / CRM',
-    renewals:'Scadenzario',formazione:'Formazione',calc:'Calcolatori',agenda:'Appuntamenti',premi:'Punti e premi',rank:'Rank',community:'Community',admin:'Admin'};
+    renewals:'Scadenzario',formazione:'Formazione',calc:'Calcolatori',agenda:'Appuntamenti',premi:'Punti e premi',mappa:'La rete in Italia',rank:'Rank',community:'Community',admin:'Admin'};
   const MENU = [
     ['dashboard','⌂','Dashboard'],['agente','◉','Agente AI'],['trading','♠','Trading'],['crm','♥','Network / CRM'],
     ['renewals','◷','Scadenzario'],['formazione','♦','Formazione'],['calc','∑','Calcolatori'],
-    ['agenda','◷','Appuntamenti'],['premi','🎁','Punti e premi'],['rank','★','Rank'],['community','♣','Community'],['admin','⚙','Admin']
+    ['agenda','◷','Appuntamenti'],['premi','🎁','Punti e premi'],['mappa','⬢','La rete in Italia'],
+    ['rank','★','Rank'],['community','♣','Community'],['admin','⚙','Admin']
   ];
   let role = 'admin';
   let history = [];
@@ -1291,6 +1323,7 @@
     if(id==='calc') cSub('menu');
     if(id==='agenda'){ agSub('home'); renderAgenda(); }
     if(id==='premi') renderPremi();
+    if(id==='mappa') renderMappa();
     if(id==='crm') crmSub('list');
     if(id==='trading'){ tSub('home'); renderTrading(); }
   }
@@ -3119,6 +3152,110 @@
   function shScarica(){
     if(!shVerifica(v('shTesto')).ok) return;
     toast('Nell\'app genera una PNG 1080×1920 e apre il foglio di condivisione.');
+  }
+
+  /* ===== La rete in Italia =====
+     Le regioni sono caselle, ognuna nella sua posizione geografica relativa.
+     Non la sagoma vera per due motivi: su un telefono Liguria, Molise e Valle
+     d'Aosta diventerebbero striscioline di pochi pixel — proprio quelle su cui
+     il colore non si leggerebbe; e a caselle ogni regione ha lo stesso spazio,
+     quindi l'intensità si confronta davvero invece di dipendere dall'area.
+
+     ⚠️ NASCOSTO NON È VUOTO. Le regioni sotto la soglia arrivano dal database
+     con il conteggio già soppresso: si colorano (c'è qualcuno) ma non mostrano
+     il numero. Mostrarle vuote direbbe «lì non c'è nessuno», che è falso. */
+  const MP_REGIONI = [
+    ['Trentino-Alto Adige','TAA',1,0], ['Friuli-Venezia Giulia','FVG',2,0],
+    ["Valle d'Aosta",'VdA',0,1],       ['Lombardia','LOM',1,1], ['Veneto','VEN',2,1],
+    ['Piemonte','PIE',0,2],            ['Emilia-Romagna','EMR',1,2],
+    ['Liguria','LIG',0,3],             ['Toscana','TOS',1,3],   ['Marche','MAR',2,3],
+    ['Umbria','UMB',1,4],              ['Abruzzo','ABR',2,4],
+    ['Sardegna','SAR',0,5],            ['Lazio','LAZ',1,5],     ['Molise','MOL',2,5],
+    ['Campania','CAM',1,6],            ['Puglia','PUG',2,6],
+    ['Basilicata','BAS',1,7],
+    ['Calabria','CAL',1,8],
+    ['Sicilia','SIC',0,9]
+  ];
+  // Conteggi finti. `null` = soppresso dal database perché sotto la soglia di 5.
+  const MP_CONTEGGI = {
+    'Lombardia':42, 'Lazio':28, 'Campania':24, 'Veneto':19, 'Piemonte':17,
+    'Sicilia':15, 'Puglia':13, 'Emilia-Romagna':12, 'Toscana':11, 'Marche':7,
+    'Abruzzo':6, 'Calabria':6, 'Liguria':5,
+    'Molise':null, 'Umbria':null, 'Basilicata':null   // meno di 5: numero nascosto
+  };
+  let mpMia=null, mpApertoElenco=false;
+
+  function mpLivello(n, max){
+    if(n===null) return 1;              // c'è qualcuno, ma non si dice quanti
+    if(!n || max<=0) return 0;
+    const q=n/max;
+    return q>0.75?4 : q>0.5?3 : q>0.25?2 : 1;
+  }
+  function mpColore(l){
+    if(l<=0) return '#232327';
+    const alfa=[0,0.22,0.45,0.7,1][Math.min(l,4)];
+    return 'rgba(201,162,39,'+alfa+')';
+  }
+
+  function renderMappa(){
+    const valori=Object.values(MP_CONTEGGI).filter(v=>typeof v==='number');
+    const max=valori.length?Math.max(...valori):0;
+
+    document.getElementById('mpGriglia').innerHTML =
+      '<div style="position:relative;width:100%;padding-top:'+(10/4*100)+'%">'+
+      MP_REGIONI.map(([nome,sigla,c,r])=>{
+        const presente = Object.prototype.hasOwnProperty.call(MP_CONTEGGI, nome);
+        const n = presente ? MP_CONTEGGI[nome] : 0;
+        const l = mpLivello(presente?n:0, max);
+        const testo = (presente && n===null) ? '·' : (n ? n : '—');
+        const scuro = l>=3;
+        return '<div onclick="mpTocca(\''+nome.replace(/'/g,"\\'")+'\')" '+
+          'style="position:absolute;left:'+(c*25)+'%;top:'+(r*10)+'%;width:25%;height:10%;padding:2px;cursor:pointer">'+
+          '<div style="height:100%;border-radius:6px;border:1px solid var(--border);'+
+            'background:'+mpColore(l)+';display:flex;flex-direction:column;'+
+            'align-items:center;justify-content:center;line-height:1.1">'+
+          '<span style="font-size:9px;font-weight:800;letter-spacing:.3px;color:'+(scuro?'#0E0E10':'var(--text)')+'">'+sigla+'</span>'+
+          '<span style="font-size:10px;font-weight:700;color:'+(scuro?'#0E0E10':'var(--muted)')+'">'+testo+'</span>'+
+          '</div></div>';
+      }).join('')+'</div>';
+
+    document.getElementById('mpLegenda').innerHTML =
+      [0,1,2,3,4].map(l=>'<span style="display:block;width:20px;height:10px;border-radius:2px;'+
+        'border:1px solid var(--border);background:'+mpColore(l)+'"></span>').join('');
+
+    // Il riepilogo NON dà il totale generale: con quello le regioni nascoste si
+    // ricaverebbero per differenza e la soppressione non servirebbe a niente.
+    const visibili=valori.length, totale=valori.reduce((a,b)=>a+b,0);
+    const nascoste=Object.values(MP_CONTEGGI).filter(v=>v===null).length;
+    document.getElementById('mpRiepilogo').textContent =
+      totale+' iscritti in '+visibili+' regioni'+
+      (nascoste?' · '+nascoste+' regioni hanno troppi pochi iscritti per essere mostrate':'')+
+      ' · 4 non hanno indicato la regione.';
+
+    const primo=Object.entries(MP_CONTEGGI).filter(([,v])=>typeof v==='number')
+      .sort((a,b)=>b[1]-a[1])[0];
+    document.getElementById('mpPrima').textContent = primo
+      ? 'La regione più numerosa è '+primo[0]+', con '+primo[1]+' iscritti.' : '';
+
+    document.getElementById('mpMia').textContent = mpMia || 'Non indicata';
+    document.getElementById('mpElenco').style.display = mpApertoElenco ? '' : 'none';
+    document.getElementById('mpElenco').innerHTML = MP_REGIONI.map(([nome])=>
+      '<button class="preset'+(mpMia===nome?' on':'')+'" onclick="mpScegli(\''+nome.replace(/'/g,"\\'")+'\')">'+nome+'</button>').join('');
+  }
+
+  function mpTocca(nome){
+    const presente = Object.prototype.hasOwnProperty.call(MP_CONTEGGI, nome);
+    const n = presente ? MP_CONTEGGI[nome] : 0;
+    const dettaglio = (presente && n===null) ? 'pochi iscritti, il numero non si mostra'
+                    : n ? n+(n===1?' iscritto':' iscritti') : 'nessun iscritto';
+    document.getElementById('mpScelta').textContent = nome+' — '+dettaglio;
+  }
+  function mpApri(){ mpApertoElenco=!mpApertoElenco; renderMappa(); }
+  function mpScegli(nome){
+    mpMia = (mpMia===nome) ? null : nome;   // ritoccando la stessa si toglie
+    mpApertoElenco=false;
+    toast(mpMia ? 'Regione impostata: '+mpMia : 'Regione rimossa.');
+    renderMappa();
   }
 
   /* ===== init ===== */

@@ -92,8 +92,13 @@ export const t = {
     },
     premi: {
       titolo: 'Punti e premi',
-      testo: 'I punti che accumuli lavorando si riscattano a catalogo. Non toccano il rank.',
+      testo: 'I punti che vinci in classifica si riscattano a catalogo. Non toccano il rank.',
       azione: 'Apri il catalogo',
+    },
+    mappa: {
+      titolo: 'La rete in Italia',
+      testo: 'Quante persone ci sono in ogni regione, e dove la rete deve ancora arrivare.',
+      azione: 'Apri la mappa',
     },
     rank: {
       titolo: 'Rank & classifica',
@@ -513,6 +518,28 @@ export const t = {
       'La card esce dall’app col marchio sopra: quello che ci scrivi diventa comunicazione dell’azienda, non tua. Per questo importi e promesse di guadagno non passano.',
     nienteTrading:
       'Le metriche di trading non si condividono: dentro la rete un win rate è un dato, su un social diventa una promessa.',
+  },
+
+  mappa: {
+    titolo: 'La rete in Italia',
+    sottotitolo:
+      'Quante persone ci sono in ogni regione. Ogni casella è una regione, al suo posto sulla carta: tocca per il nome per esteso.',
+    tocca: 'Tocca una regione per vedere quale è.',
+    iscritti: (n: number) => `${n} ${n === 1 ? 'iscritto' : 'iscritti'}`,
+    nessuno: 'nessun iscritto',
+    // La differenza che tutta la schermata deve rendere evidente.
+    nascosto: 'pochi iscritti, il numero non si mostra',
+    meno: 'meno',
+    piu: 'più',
+    primaRegione: (regione: string, n: number) =>
+      `La regione più numerosa è ${regione}, con ${n} ${n === 1 ? 'iscritto' : 'iscritti'}.`,
+
+    tuaRegione: 'La tua regione',
+    nonIndicata: 'Non indicata — tocca per sceglierla',
+    facoltativa:
+      'Indicarla è facoltativo, e si può togliere in qualsiasi momento toccando di nuovo la stessa regione.',
+    privacy:
+      'Sulla mappa escono solo conteggi: mai nomi, mai indirizzi. Le regioni con pochi iscritti non mostrano il numero — un conteggio di uno non è una statistica, è una persona.',
   },
 
   podio: {

@@ -8,6 +8,11 @@ export type Profile = {
   leader_id: string | null;
   /** Conduce le call VIP: lo assegna solo l'admin. */
   vip_call_host: boolean;
+  /**
+   * Regione dichiarata, facoltativa. Esce solo aggregata sulla mappa, mai per
+   * riga: il CHECK del database tiene l'elenco chiuso alle 20 ufficiali.
+   */
+  regione: string | null;
   created_at: string;
 };
 

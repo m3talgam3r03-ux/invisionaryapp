@@ -114,6 +114,19 @@ export default function Dashboard() {
         />
       </Card>
 
+      {/* Azione rapida: la rete in Italia */}
+      <Card style={{ gap: spacing.sm }}>
+        <ThemedText variant="heading">{t.dashboard.mappa.titolo}</ThemedText>
+        <ThemedText tone="muted" variant="caption">
+          {t.dashboard.mappa.testo}
+        </ThemedText>
+        <Button
+          title={t.dashboard.mappa.azione}
+          variant="secondary"
+          onPress={() => router.push('/mappa')}
+        />
+      </Card>
+
       {/* Azione rapida: punti e premi */}
       <Card style={{ gap: spacing.sm }}>
         <ThemedText variant="heading">{t.dashboard.premi.titolo}</ThemedText>

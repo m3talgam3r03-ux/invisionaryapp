@@ -17,6 +17,7 @@ function profilo(role: Profile['role'], id = 'me', leaderId: string | null = nul
     role,
     leader_id: leaderId,
     vip_call_host: false,
+    regione: null,
     created_at: '2026-01-01T00:00:00Z',
   };
 }
