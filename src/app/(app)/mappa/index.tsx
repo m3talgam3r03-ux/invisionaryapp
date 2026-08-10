@@ -21,8 +21,10 @@ export default function Mappa() {
 
   const mia = profile?.regione ?? null;
 
+  // `larga`: incolonnare una mappa la rimpicciolirebbe e basta; qui il
+  // limite è più generoso perché il disegno ha bisogno di respiro.
   return (
-    <Screen scroll contentStyle={{ gap: spacing.lg }}>
+    <Screen scroll larga contentStyle={{ gap: spacing.lg, maxWidth: 900, alignSelf: 'center' }}>
       <ThemedText tone="muted" variant="caption">
         {t.mappa.sottotitolo}
       </ThemedText>

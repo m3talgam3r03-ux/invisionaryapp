@@ -7,6 +7,7 @@ export * from './typography';
 export * from './spacing';
 export * from './brand';
 export * from './navigation';
+export * from './layout';
 
 export type Theme = {
   isDark: boolean;

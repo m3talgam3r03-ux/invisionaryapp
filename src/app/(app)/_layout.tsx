@@ -1,11 +1,11 @@
 import { Tabs } from 'expo-router';
 import { useEffect } from 'react';
-import { StyleSheet, Text, type ColorValue } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, type ColorValue } from 'react-native';
 
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { registerPushToken } from '@/lib/push';
-import { spacing, useTheme } from '@/theme';
+import { BARRA_LATERALE, navigazioneDiLato, spacing, useTheme } from '@/theme';
 
 /**
  * Navigazione principale: barra in basso con i quattro pilastri del marchio
@@ -19,7 +19,13 @@ import { spacing, useTheme } from '@/theme';
 export default function AppLayout() {
   const { session } = useAuth();
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
   const userId = session?.user.id;
+
+  // Su un monitor la barra in basso è un pulsante a mezzo metro dagli occhi:
+  // si attraversa tutto lo schermo per cambiare sezione. Di lato sta dove
+  // sta lo sguardo. Sotto la soglia resta in basso, dov'è giusta.
+  const diLato = navigazioneDiLato(width);
 
   // Registra il token push quando l'utente è autenticato (no-op su web/emulatore).
   useEffect(() => {
@@ -32,27 +38,38 @@ export default function AppLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarPosition: diLato ? 'left' : 'bottom',
         tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textMuted,
         // Stesso colore del contenuto e un filetto al posto dell'ombra: la barra
         // appartiene alla schermata invece di galleggiarci sopra.
-        tabBarStyle: {
-          backgroundColor: colors.background,
-          borderTopColor: colors.border,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          elevation: 0,
-          height: 60,
-          paddingTop: spacing.xs,
-          paddingBottom: spacing.xs,
-        },
+        tabBarStyle: diLato
+          ? {
+              backgroundColor: colors.background,
+              borderRightColor: colors.border,
+              borderRightWidth: StyleSheet.hairlineWidth,
+              elevation: 0,
+              width: BARRA_LATERALE,
+              paddingTop: spacing.xl,
+            }
+          : {
+              backgroundColor: colors.background,
+              borderTopColor: colors.border,
+              borderTopWidth: StyleSheet.hairlineWidth,
+              elevation: 0,
+              height: 60,
+              paddingTop: spacing.xs,
+              paddingBottom: spacing.xs,
+            },
         // Etichette piccole sotto icone grandi: si naviga guardando le icone,
         // l'etichetta serve solo a togliere il dubbio la prima volta.
-        tabBarLabelStyle: {
-          fontSize: 10,
-          letterSpacing: 0.2,
-          fontWeight: '600',
-        },
-        tabBarItemStyle: { paddingVertical: 2 },
+        // Di lato c'è spazio: l'etichetta diventa leggibile e sta accanto.
+        tabBarLabelStyle: diLato
+          ? { fontSize: 14, letterSpacing: 0.2, fontWeight: '600' }
+          : { fontSize: 10, letterSpacing: 0.2, fontWeight: '600' },
+        tabBarItemStyle: diLato
+          ? { paddingVertical: spacing.sm, justifyContent: 'flex-start' }
+          : { paddingVertical: 2 },
       }}
     >
       <Tabs.Screen

@@ -189,7 +189,7 @@ Il ruolo **non è nel token**. Ogni policy risolve il ruolo con una sotto-query.
 | **M8** | Calendario | 🔴 quasi da zero | **Medio** | Disponibilità, prenotazioni, `btree_gist` + exclusion constraint, fusi orari, `.ics` |
 | **M9** | Punti e premi | 🔴 da zero | **Basso** | Tabelle nuove, dipende da M4 |
 | **M10** | Condivisione social | 🔴 da zero | **Basso** | Nuove dipendenze (`react-native-view-shot`, `expo-sharing`) |
-| **M11** | Web / desktop | 🔴 ristrutturazione | **Alto** | Da app singola a monorepo: tocca *tutti* i path di import. Da isolare in una milestone dedicata senza altre modifiche |
+| **M11** | Web / desktop | 🟡 metà fatta | **Alto** | **M11a fatta**: l'app girava già sul web, ma col layout del telefono stirato (ogni blocco largo quanto la finestra). Ora colonna di contenuto limitata e navigazione di lato su schermo ampio. **M11b da fare**: il monorepo, che serve solo a ospitare il sito Next.js di M13 — conviene farlo *subito prima* di M13, non ora: è una ristrutturazione che tocca tutti i path di import e senza un consumatore non porta niente |
 | **M12** | Agente IA | 🟡 da estendere | **Medio** | Base RAG solida. Da aggiungere: `ai_memory` per utente con isolamento verificato, cap di spesa, aggancio CRM |
 | **M13** | Funnel | 🔴 da zero | **Medio** | Dipende da M11 (Next.js) e M6 |
 | **M14** | Freemium e paywall | 🔴 da zero | **Alto** | RevenueCat + IAP + gating server-side. Nuove dipendenze e configurazione store |
