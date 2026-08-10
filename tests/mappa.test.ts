@@ -20,6 +20,7 @@ import {
   SCALA_MIN,
   VIEW_BOX,
   VISTA_INIZIALE,
+  centroContorno,
   contieni,
   costruisciMappa,
   livelloColore,
@@ -73,6 +74,56 @@ describe('le venti regioni, coi contorni veri', () => {
 
   it('nessun identificativo ripetuto', () => {
     expect(new Set(REGIONI.map((r) => r.id)).size).toBe(20);
+  });
+
+  it('ogni regione ha un centro dentro il riquadro di disegno', () => {
+    // Che cada dentro il CONTORNO l'ha verificato il browser con
+    // `isPointInFill` — qui si controlla che il calcolo dei percorsi relativi
+    // non sia andato a finire fuori mappa, che è il modo in cui si romperebbe
+    // se qualcuno trattasse quei numeri come coordinate assolute.
+    const [, , L, A] = VIEW_BOX.split(/\s+/).map(Number);
+    for (const r of REGIONI) {
+      expect(r.centro.x, r.nome).toBeGreaterThan(0);
+      expect(r.centro.x, r.nome).toBeLessThan(L);
+      expect(r.centro.y, r.nome).toBeGreaterThan(0);
+      expect(r.centro.y, r.nome).toBeLessThan(A);
+    }
+  });
+
+  it('i centri seguono la geografia: nord in alto, isole a ovest', () => {
+    const per = new Map(REGIONI.map((r) => [r.nome, r.centro]));
+    expect(per.get('Lombardia')!.y).toBeLessThan(per.get('Lazio')!.y);
+    expect(per.get('Lazio')!.y).toBeLessThan(per.get('Sicilia')!.y);
+    expect(per.get('Piemonte')!.x).toBeLessThan(per.get('Veneto')!.x);
+    expect(per.get('Sardegna')!.x).toBeLessThan(per.get('Puglia')!.x);
+  });
+
+  it('due regioni non condividono lo stesso centro', () => {
+    const chiavi = REGIONI.map((r) => `${r.centro.x.toFixed(1)},${r.centro.y.toFixed(1)}`);
+    expect(new Set(chiavi).size).toBe(20);
+  });
+
+  it('centroContorno legge gli spostamenti come RELATIVI', () => {
+    // Un quadrato 10×10 con angolo in (100,100), scritto con `m` relativi.
+    // Sommandoli come assoluti il centro finirebbe altrove.
+    const quadrato = 'm 100,100 10,0 0,10 -10,0 z';
+    const c = centroContorno(quadrato);
+    expect(c.x).toBeCloseTo(105, 6);
+    expect(c.y).toBeCloseTo(105, 6);
+  });
+
+  it('sceglie il sotto-percorso più grande, non il primo', () => {
+    // La Sicilia comincia con un isolotto da cinque punti: mettere lì il suo
+    // numero sarebbe come scrivere «Roma» su Ponza.
+    const isolottoPoiIsola = 'm 10,10 2,0 0,2 -2,0 z m 90,90 100,0 0,100 -100,0 z';
+    const c = centroContorno(isolottoPoiIsola);
+    expect(c.x).toBeGreaterThan(100);
+    expect(c.y).toBeGreaterThan(100);
+  });
+
+  it('un contorno vuoto non produce NaN', () => {
+    expect(centroContorno('')).toEqual({ x: 0, y: 0 });
+    expect(Number.isNaN(centroContorno('m 5,5 z').x)).toBe(false);
   });
 
   it('il riquadro di disegno è quello del pacchetto', () => {

@@ -48,6 +48,8 @@ const SORGENTE = MAPPA_SVG as { viewBox: string; locations: LocationSvg[] };
 /** Il riquadro entro cui vivono i percorsi. */
 export const VIEW_BOX = SORGENTE.viewBox;
 
+export type Punto = { x: number; y: number };
+
 export type Regione = {
   /** Nome ufficiale italiano: è quello che sta nel database. */
   nome: string;
@@ -55,19 +57,167 @@ export type Regione = {
   id: string;
   /** Il contorno vero, in coordinate del viewBox. */
   contorno: string;
+  /** Dove appoggiare etichetta e conteggio. */
+  centro: Punto;
+};
+
+/**
+ * Aggiustamenti a mano per le regioni in cui il centro calcolato cade male.
+ *
+ * Il baricentro di un poligono finisce fuori dalla figura quando questa è molto
+ * concava: la Liguria è un arco, la Puglia una virgola, la Calabria una punta.
+ * Su quelle il numero atterrerebbe in mare. Gli scostamenti sono in unità del
+ * riquadro di disegno e li ha verificati il browser, non l'occhio: un test
+ * nella demo controlla che ogni centro cada DENTRO il suo contorno.
+ */
+const SCOSTAMENTI: Record<string, Punto> = {
+  // Il baricentro della Liguria cade in mare, davanti a Genova: la regione è
+  // un arco e il suo centro geometrico sta nel golfo. Spostato nel punto più
+  // interno del ponente, trovato scandagliando il contorno nel browser.
+  Liguria: { x: -44.2, y: 22 },
 };
 
 /** Le 20 regioni coi contorni reali, ordinate per nome italiano. */
 export const REGIONI: Regione[] = SORGENTE.locations
-  .map((l) => ({
-    nome: NOMI_ITALIANI[l.name] ?? l.name,
-    id: l.id,
-    contorno: l.path,
-  }))
+  .map((l) => {
+    const nome = NOMI_ITALIANI[l.name] ?? l.name;
+    const base = centroContorno(l.path);
+    const scostamento = SCOSTAMENTI[nome];
+    return {
+      nome,
+      id: l.id,
+      contorno: l.path,
+      centro: scostamento
+        ? { x: base.x + scostamento.x, y: base.y + scostamento.y }
+        : base,
+    };
+  })
   .sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
+
+/**
+ * Il punto su cui appoggiare l'etichetta di una regione.
+ *
+ * I contorni del pacchetto usano solo `m` (spostamenti RELATIVI) e `z`: dopo il
+ * primo, ogni coppia di numeri è un delta rispetto al punto corrente, e `z`
+ * riporta all'inizio del sotto-percorso. Sommarli come se fossero assoluti
+ * darebbe una mappa accartocciata sull'origine.
+ *
+ * Fra i sotto-percorsi si sceglie il PIÙ GRANDE: la Sicilia comincia con un
+ * isolotto da cinque punti, e mettere lì il numero della Sicilia sarebbe come
+ * scrivere «Roma» su Ponza.
+ */
+export function centroContorno(d: string): Punto {
+  const parti = spezzaSottoPercorsi(d);
+  if (parti.length === 0) return { x: 0, y: 0 };
+
+  const piuGrande = parti.reduce((a, b) => (areaRiquadro(b) > areaRiquadro(a) ? b : a));
+  return baricentro(piuGrande);
+}
+
+/** I sotto-percorsi come elenchi di punti assoluti. */
+function spezzaSottoPercorsi(d: string): Punto[][] {
+  const parti: Punto[][] = [];
+  let corrente: Punto[] = [];
+  let x = 0;
+  let y = 0;
+  let inizioX = 0;
+  let inizioY = 0;
+  let nuovoSottoPercorso = true;
+
+  // Comandi (m/z) e numeri, nell'ordine in cui compaiono.
+  const gettoni = d.match(/[mMzZ]|-?\d*\.?\d+(?:e-?\d+)?/g) ?? [];
+  let i = 0;
+
+  while (i < gettoni.length) {
+    const g = gettoni[i];
+
+    if (g === 'm' || g === 'M') {
+      if (corrente.length > 1) parti.push(corrente);
+      corrente = [];
+      nuovoSottoPercorso = true;
+      i += 1;
+      continue;
+    }
+    if (g === 'z' || g === 'Z') {
+      // `z` torna all'inizio del sotto-percorso: il punto corrente cambia.
+      x = inizioX;
+      y = inizioY;
+      i += 1;
+      continue;
+    }
+
+    const dx = Number(g);
+    const dy = Number(gettoni[i + 1]);
+    i += 2;
+    if (!Number.isFinite(dx) || !Number.isFinite(dy)) continue;
+
+    x += dx;
+    y += dy;
+    if (nuovoSottoPercorso) {
+      inizioX = x;
+      inizioY = y;
+      nuovoSottoPercorso = false;
+    }
+    corrente.push({ x, y });
+  }
+
+  if (corrente.length > 1) parti.push(corrente);
+  return parti;
+}
+
+function areaRiquadro(punti: Punto[]): number {
+  const xs = punti.map((p) => p.x);
+  const ys = punti.map((p) => p.y);
+  return (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
+}
+
+/** Baricentro del poligono (formula dell'area con segno). */
+function baricentro(punti: Punto[]): Punto {
+  let area = 0;
+  let cx = 0;
+  let cy = 0;
+
+  for (let i = 0; i < punti.length; i++) {
+    const a = punti[i];
+    const b = punti[(i + 1) % punti.length];
+    const incrocio = a.x * b.y - b.x * a.y;
+    area += incrocio;
+    cx += (a.x + b.x) * incrocio;
+    cy += (a.y + b.y) * incrocio;
+  }
+
+  // Area nulla (linea degenere): si ripiega sulla media dei punti.
+  if (Math.abs(area) < 1e-9) {
+    return {
+      x: punti.reduce((s, p) => s + p.x, 0) / punti.length,
+      y: punti.reduce((s, p) => s + p.y, 0) / punti.length,
+    };
+  }
+  return { x: cx / (3 * area), y: cy / (3 * area) };
+}
 
 /** I 20 nomi ufficiali, come li accetta il CHECK del database. */
 export const NOMI_REGIONI: string[] = REGIONI.map((r) => r.nome);
+
+export type EtichettaMare = { nome: string; x: number; y: number; dimensione: number };
+
+/**
+ * I nomi dei mari.
+ *
+ * Non servono a niente e sono la cosa che fa sembrare una mappa una mappa.
+ *
+ * Le posizioni non sono a occhio: le ha verificate il browser contro i contorni
+ * veri, controllando tutta l'ESTENSIONE della scritta e non solo il suo centro.
+ * Un'etichetta è un rettangolo: «MAR ADRIATICO» centrato in mare finisce
+ * comunque con la coda sulla costa marchigiana se si guarda solo il punto di
+ * mezzo. Lo Ionio ha richiesto tre tentativi prima di stare tutto in acqua.
+ */
+export const MARI: EtichettaMare[] = [
+  { nome: 'MAR LIGURE', x: 118, y: 252, dimensione: 13 },
+  { nome: 'MAR TIRRENO', x: 290, y: 520, dimensione: 15 },
+  { nome: 'MAR ADRIATICO', x: 455, y: 265, dimensione: 14 },
+  { nome: 'MAR IONIO', x: 505, y: 660, dimensione: 13 },
+];
 
 /**
  * Il conteggio di una regione.
