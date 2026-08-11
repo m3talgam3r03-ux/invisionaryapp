@@ -239,6 +239,58 @@ async function evalSync(brain) {
       (corpusOk ? '' : '\n     rigenera con: node scripts/build-corpus.mjs'),
   );
 
+  // 3. L'estrazione dei ricordi è duplicata fra app (testata) e Edge Function.
+  //
+  //    Deno e React Native non condividono moduli, quindi `estraiMemorie` vive
+  //    in due file. Se divergono, il server smette di ripulire il marcatore e
+  //    l'utente si ritrova le istruzioni interne dell'agente a video — senza
+  //    che nessun test lo segnali, perché il test gira solo sulla copia
+  //    dell'app. Qui si confronta il CORPO delle due funzioni, normalizzato.
+  //    Il blocco condiviso è delimitato da marcatori espliciti nei due file.
+  //    Un primo tentativo contava le graffe a partire dalla firma: si fermava
+  //    sul TIPO DI RITORNO — `{ fatto: string; categoria: Categoria } | null` —
+  //    e finiva per confrontare solo le firme, che erano identiche. Il
+  //    controllo passava sempre, anche cambiando il corpo: una guardia che dà
+  //    falsa sicurezza è peggio di nessuna guardia.
+  total++;
+  const condiviso = (testo) => {
+    const da = testo.indexOf('INIZIO PARTE CONDIVISA');
+    const a = testo.indexOf('FINE PARTE CONDIVISA');
+    if (da < 0 || a < 0 || a < da) return null;
+    return testo.slice(testo.indexOf('\n', da), a);
+  };
+  // Si confronta il CODICE, non la prosa: i commenti possono differire — la
+  // copia dell'app spiega di più — e segnalarli sarebbe un falso allarme che
+  // insegna a ignorare il controllo.
+  const normalizza = (s) =>
+    (s ?? '')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .split('\n')
+      .map((riga) => riga.replace(/\/\/.*$/, ''))
+      .join('\n')
+      .replace(/\s+/g, ' ')
+      .replace(/export /g, '')
+      .trim();
+
+  const appAgente = await readFile(join(ROOT, 'src/lib/agente.ts'), 'utf8');
+  const denoMemoria = await readFile(
+    join(ROOT, 'supabase/functions/_shared/memoria.ts'),
+    'utf8',
+  );
+  const bloccoApp = condiviso(appAgente);
+  const bloccoDeno = condiviso(denoMemoria);
+  const trovati = bloccoApp !== null && bloccoDeno !== null;
+  const memoriaOk = trovati && normalizza(bloccoApp) === normalizza(bloccoDeno);
+  if (memoriaOk) passed++;
+  console.log(
+    `  ${memoriaOk ? '✓' : '✗'} estrazione della memoria identica fra app e Edge Function` +
+      (memoriaOk
+        ? ''
+        : !trovati
+          ? '\n     marcatori PARTE CONDIVISA mancanti in uno dei due file'
+          : '\n     la copia testata è src/lib/agente.ts: allinea supabase/functions/_shared/memoria.ts'),
+  );
+
   return { passed, total, failed: total - passed };
 }
 

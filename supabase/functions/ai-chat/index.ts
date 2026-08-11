@@ -2,7 +2,8 @@
 // Edge Function (Deno) — Agente AI di Invisionary.
 //
 // Pipeline:
-//   1. identità del chiamante (JWT) e contesto utente  -> _shared/context.ts
+//   0. tetto di spesa: si chiede il permesso PRIMA di pagare qualsiasi cosa
+//   1. identità del chiamante (JWT), contesto utente e memoria
 //   2. router di dominio (lessicale, costo zero)       -> _shared/brain.ts
 //   3. query di retrieval contestualizzata sui follow-up
 //   4. embedding (Voyage) + ricerca ampia con boost di dominio
@@ -18,6 +19,7 @@ import Anthropic from 'npm:@anthropic-ai/sdk';
 
 import { buildRetrievalQuery, buildSystem, detectDomains, domainLabels } from '../_shared/brain.ts';
 import { loadUserContext, renderUserContext } from '../_shared/context.ts';
+import { caricaMemorie, estraiMemorie, istruzioniMemoria, salvaMemorie } from '../_shared/memoria.ts';
 import { embedTexts, rerank } from '../_shared/voyage.ts';
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
@@ -65,16 +67,39 @@ Deno.serve(async (req) => {
       data: { user },
     } = await userClient.auth.getUser();
 
-    let userContext: string | null = null;
-    if (user) {
-      try {
-        const ctx = await loadUserContext(admin, user.id);
-        if (ctx) userContext = renderUserContext(ctx);
-      } catch (e) {
-        // Il contesto è un miglioramento, non un requisito: se fallisce si
-        // risponde comunque, solo in modo meno calibrato.
-        console.error('Contesto utente non caricato:', e instanceof Error ? e.message : e);
+    // 1a. IL TETTO DI SPESA, prima di qualunque chiamata a pagamento.
+    //
+    //     Va qui e non più avanti: embedding e rerank costano già, e una
+    //     richiesta che verrà rifiutata non deve averli pagati. Il conteggio è
+    //     nel database perché due richieste simultanee devono trovare un
+    //     contatore serializzato, non due copie della stessa lettura.
+    //
+    //     Senza utente non si spende: è l'unico modo per non lasciare una
+    //     porta aperta a chiamate anonime su un'API a consumo.
+    if (!user) {
+      return json({ error: 'Sessione non valida.' }, 401);
+    }
+
+    const { error: erroreBudget } = await admin.rpc('consuma_richiesta_ai', { p_user: user.id });
+    if (erroreBudget) {
+      const codice = (erroreBudget as { code?: string }).code;
+      // 429: è un limite, non un guasto. Il client lo distingue e lo dice.
+      if (codice === 'P0002' || codice === 'P0003') {
+        return json({ error: erroreBudget.message, limite: codice }, 429);
       }
+      throw erroreBudget;
+    }
+
+    let userContext: string | null = null;
+    let memorie: string[] = [];
+    try {
+      const ctx = await loadUserContext(admin, user.id);
+      if (ctx) userContext = renderUserContext(ctx);
+      memorie = await caricaMemorie(admin, user.id);
+    } catch (e) {
+      // Contesto e memoria sono un miglioramento, non un requisito: se
+      // falliscono si risponde comunque, solo in modo meno calibrato.
+      console.error('Contesto o memoria non caricati:', e instanceof Error ? e.message : e);
     }
 
     // 2. Quali competenze servono per questa domanda.
@@ -124,7 +149,7 @@ Deno.serve(async (req) => {
       // Il tetto copre ragionamento + risposta: tenerlo largo evita troncamenti
       // (i token non usati non si pagano).
       max_tokens: 8192,
-      system: buildSystem(domains, userContext),
+      system: buildSystem(domains, userContext) + istruzioniMemoria(memorie),
       // Ragionamento adattivo a sforzo medio: qualità sulle domande di metodo
       // senza allungare troppo i tempi di una chat mobile.
       thinking: { type: 'adaptive' },
@@ -137,17 +162,35 @@ Deno.serve(async (req) => {
 
     const response = (await anthropic.messages.create(
       params as Parameters<typeof anthropic.messages.create>[0],
-    )) as { content: Array<{ type: string; text?: string }> };
+    )) as {
+      content: Array<{ type: string; text?: string }>;
+      usage?: { input_tokens?: number; output_tokens?: number };
+    };
 
-    const answer = response.content
+    const grezza = response.content
       .filter((b) => b.type === 'text')
       .map((b) => b.text ?? '')
       .join('');
 
+    // Quanto è costata davvero: i token si sanno solo adesso. Si registra
+    // sempre, anche se il salvataggio della memoria fallisce — altrimenti il
+    // tetto mensile conterebbe meno di quanto si è speso.
+    await admin.rpc('registra_token_ai', {
+      p_user: user.id,
+      p_in: response.usage?.input_tokens ?? 0,
+      p_out: response.usage?.output_tokens ?? 0,
+    });
+
+    // Il marcatore va tolto SEMPRE: è un'istruzione interna dell'agente, e a
+    // video mostrerebbe a chi legge come si comanda l'agente.
+    const { risposta, fatti } = estraiMemorie(grezza);
+    await salvaMemorie(admin, user.id, fatti);
+
     return json({
-      answer,
+      answer: risposta,
       domains: domainLabels(domains),
       sources: dedupeSources(matches),
+      ricordati: fatti.length,
     });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : 'Errore interno.' }, 500);

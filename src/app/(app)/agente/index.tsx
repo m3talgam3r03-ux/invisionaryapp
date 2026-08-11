@@ -16,9 +16,10 @@ import { Crest } from '@/components/Crest';
 import { ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { useDictation } from '@/hooks/use-dictation';
+import { t } from '@/i18n/it';
 import { useSpeech } from '@/hooks/use-speech';
 import { mergeDictation } from '@/lib/dictation';
-import { askAgent, type ChatMessage } from '@/lib/ai';
+import { LimiteAgente, askAgent, type ChatMessage } from '@/lib/ai';
 import { createConversation, getLatestConversationId, loadMessages, saveMessage } from '@/lib/conversations';
 import { can } from '@/lib/permissions';
 import { isSupabaseConfigured } from '@/lib/supabase';
@@ -145,14 +146,19 @@ export default function Agente() {
         }
       }
     } catch (e) {
+      // Il tetto di spesa non è un guasto: è un'informazione, e va detta
+      // com'è. «Errore 429» non spiega niente a chi legge.
+      const testo =
+        e instanceof LimiteAgente
+          ? e.tipo === 'limite_giornaliero'
+            ? t.agente.limiteGiornaliero
+            : t.agente.limiteMensile
+          : e instanceof Error
+            ? e.message
+            : 'Errore. Riprova.';
       setMessages((prev) => [
         ...prev,
-        {
-          id: nextId(),
-          role: 'assistant',
-          content: e instanceof Error ? e.message : 'Errore. Riprova.',
-          error: true,
-        },
+        { id: nextId(), role: 'assistant', content: testo, error: true },
       ]);
     } finally {
       setSending(false);
@@ -177,6 +183,11 @@ export default function Agente() {
         >
           <ThemedText tone={autoRead ? 'accent' : 'muted'} variant="caption">
             {autoRead ? '🔊 Lettura attiva' : '🔇 Lettura'}
+          </ThemedText>
+        </Pressable>
+        <Pressable onPress={() => router.push('/agente/memoria')} accessibilityRole="button">
+          <ThemedText tone="muted" variant="caption">
+            {t.agente.memoriaTitolo} ›
           </ThemedText>
         </Pressable>
         {canManageKnowledge && (

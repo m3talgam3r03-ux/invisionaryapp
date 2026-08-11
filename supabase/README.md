@@ -594,6 +594,76 @@ con `scale`, a 6× la Sicilia sarebbe una macchia sfocata.
 > *Mappa dell'Italia — [svg-maps](https://github.com/VictorCazanave/svg-maps),
 > CC-BY-4.0.*
 
+## Agente AI — memoria e tetto di spesa (migrazione 0026)
+
+### Il tetto viene prima della memoria
+
+`ai-chat` chiama Claude Opus con `max_tokens: 8192` e ragionamento adattivo. È
+**l'unica parte dell'app che costa denaro a ogni tocco**, e non aveva alcun
+limite: una persona che tiene premuto invio, un ciclo in un client, o
+semplicemente una rete entusiasta, e il conto cresce finché non arriva la
+fattura.
+
+Il conteggio sta nel **database**, non nella function, per lo stesso motivo per
+cui ci stanno le prenotazioni: due richieste simultanee devono trovare un
+contatore serializzato, non due copie della stessa lettura.
+
+```sql
+update public.ai_budget set richieste_giorno = 60, token_mese = 500000;
+update public.ai_budget set richieste_giorno = 0;   -- 0 = nessun limite
+select * from public.ai_usage where user_id = '<uuid>' order by giorno desc;
+```
+
+Il permesso si chiede **prima di pagare qualunque cosa** — prima di embedding e
+rerank, che costano già. Chi supera il tetto riceve un **429** con `limite`
+`P0003` (giorno) o `P0002` (mese): l'app li distingue perché sono due attese
+diverse, domani contro il mese prossimo.
+
+> **`0` significa «nessun limite», non «limite zero».** È il modo in cui un
+> admin toglie il tetto: leggerlo come zero lo renderebbe invalicabile.
+
+### La memoria è privata. Davvero privata.
+
+`ai_memory` contiene quello che l'agente ha capito di una persona parlandole:
+obiettivi, difficoltà, vincoli. **Non sono dati di lavoro** come i clienti nel
+CRM — dove la visibilità del leader *è* il prodotto — sono appunti presi da
+conversazioni private.
+
+Per questo qui **non** si usa `can_read_member()` e **nemmeno** `is_admin()`:
+
+```sql
+create policy ai_memory_select on public.ai_memory
+  for select using (user_id = auth.uid());
+```
+
+Un amministratore che li leggesse starebbe leggendo un diario, non un rapporto
+commerciale. È una scelta di prodotto, ed è deliberata.
+
+Non c'è policy di **insert**: scrive solo la Edge Function col `service_role`.
+Se scrivesse il client, chiunque potrebbe iniettare istruzioni nel prompt
+dell'agente spacciandole per ricordi. E non c'è **update**: un ricordo sbagliato
+si cancella, non si riscrive.
+
+Un trigger tiene le ultime 40 righe per persona: senza, la memoria cresce
+all'infinito e finisce per occupare tutto il prompt, facendo **peggiorare** le
+risposte invece di migliorarle.
+
+### Come l'agente decide cosa ricordare
+
+Aggiunge in coda alla risposta un blocco `<<<RICORDA: … >>>` che la function
+stacca e salva. Si è scelto un marcatore nel testo invece di una seconda
+chiamata al modello perché quella **raddoppierebbe il costo di ogni messaggio**,
+ed è proprio il costo la cosa che questa migrazione deve tenere a bada.
+
+> ⚠️ **Il marcatore non deve mai arrivare all'utente.** È un'istruzione interna:
+> a video mostrerebbe a chi legge come si comanda l'agente. `estraiMemorie()` lo
+> toglie sempre, anche quando è malformato — e quattro test lo verificano.
+
+`estraiMemorie` è **duplicata** fra `src/lib/agente.ts` (testata) e
+`supabase/functions/_shared/memoria.ts`, perché Deno e React Native non
+condividono moduli. Le due copie sono delimitate da marcatori
+`PARTE CONDIVISA` e **`npm run eval` fallisce se divergono**.
+
 ## Agente AI — RAG (fase successiva)
 
 Architettura: **embedding domanda (Voyage AI) → retrieval su pgvector → generazione con Claude**.

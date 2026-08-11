@@ -41,6 +41,7 @@ export const t = {
     errore: 'Errore nel caricamento.',
     esci: 'Esci',
     salva: 'Salva',
+    annulla: 'Annulla',
   },
 
   dashboard: {
@@ -518,6 +519,36 @@ export const t = {
       'La card esce dall’app col marchio sopra: quello che ci scrivi diventa comunicazione dell’azienda, non tua. Per questo importi e promesse di guadagno non passano.',
     nienteTrading:
       'Le metriche di trading non si condividono: dentro la rete un win rate è un dato, su un social diventa una promessa.',
+  },
+
+  agente: {
+    memoriaTitolo: 'Cosa ricordo di te',
+    memoriaVuota:
+      'Non ho ancora annotato niente. Man mano che parliamo tengo a mente obiettivi, vincoli e preferenze, così non devi ripetermeli.',
+    // La cosa che va detta senza giri di parole.
+    memoriaPrivata:
+      'Questi appunti li vedi solo tu. Non il tuo leader, non l’amministratore: sono presi da conversazioni private, e restano tue.',
+    categoria: {
+      obiettivo: 'Obiettivo',
+      preferenza: 'Preferenza',
+      situazione: 'Situazione',
+      vincolo: 'Vincolo',
+    } as Record<string, string>,
+    dimentica: 'Dimentica',
+    dimenticaTutto: 'Dimentica tutto',
+    confermaTutto: 'Sicuro? Cancello tutto quello che ho annotato su di te.',
+    dimenticato: 'Fatto, l’ho dimenticato.',
+    annotati: (n: number) =>
+      n === 1 ? 'Ho annotato una cosa su di te.' : `Ho annotato ${n} cose su di te.`,
+
+    budget: 'Utilizzo',
+    domandeOggi: (fatte: number, max: number) => `${fatte} domande di ${max} oggi`,
+    domandeSenzaLimite: (fatte: number) => `${fatte} domande oggi`,
+    budgetQuasi: 'Stai per raggiungere il limite di oggi.',
+    limiteGiornaliero:
+      'Hai finito le domande di oggi. L’agente costa a ogni risposta, per questo c’è un tetto: riprova domani.',
+    limiteMensile:
+      'Hai raggiunto il limite di utilizzo del mese. Riprende dal primo del mese prossimo.',
   },
 
   mappa: {

@@ -547,7 +547,9 @@
         </div>
         <div class="row" style="gap:8px;justify-content:center;margin-bottom:6px">
           <button class="btn sec sm" id="voiceToggle" onclick="toggleAutoRead()">🔇 Lettura</button>
+          <button class="btn sec sm" onclick="agMemoriaApri()">Cosa ricordo di te ›</button>
         </div>
+        <p class="cap" id="agBudget" style="text-align:center;margin:0 0 6px"></p>
         <div id="chatList" class="list"></div>
         <div id="dictBar" class="cap" style="display:none;text-align:center;padding:4px 0"></div>
         <div class="inputbar">
@@ -556,6 +558,15 @@
           <button class="send" id="chatSend" onclick="sendChat()" disabled aria-label="Invia">↑</button>
         </div>
         <p class="cap" style="text-align:center">Nell'app risponde Claude con la base di conoscenza della piattaforma (RAG). Solo temi di network, trading e imprenditoria. Nessuna consulenza finanziaria personalizzata né promesse di guadagno.</p>
+
+        <!-- Memoria: quello che l'agente ha annotato su di te -->
+        <div id="agMemoria" style="display:none">
+          <div class="sect"><span class="s">✦</span><span class="t">Cosa ricordo di te</span><span class="l"></span></div>
+          <p class="cap"><b>Questi appunti li vedi solo tu.</b> Non il tuo leader, non l'amministratore: sono presi da conversazioni private, e restano tue. Nell'app è la RLS del database a garantirlo — la riga la vede solo chi l'ha generata.</p>
+          <div id="agMemLista" class="list"></div>
+          <button class="btn sec sm" onclick="agDimenticaTutto()">Dimentica tutto</button>
+          <button class="btn sec sm" onclick="agMemoriaChiudi()">‹ Torna alla chat</button>
+        </div>
       </section>
 
       <!-- TRADING -->
@@ -1321,6 +1332,7 @@
     if(id==='admin') renderAdmin();
     if(id==='formazione'){ fmSub('menu'); renderFormazione(); }
     if(id==='calc') cSub('menu');
+    if(id==='agente'){ agMemoriaChiudi(); agRenderBudget(); }
     if(id==='agenda'){ agSub('home'); renderAgenda(); }
     if(id==='premi') renderPremi();
     if(id==='mappa') renderMappa();
@@ -1831,7 +1843,15 @@
     const inp=document.getElementById('chatInput'); const t=inp.value.trim(); if(!t||chatBusy) return;
     if(listening && recog) recog.stop();
     stopSpeech();
-    addMsg('user',t); inp.value=''; updateSend(); chatBusy=true;
+    addMsg('user',t); inp.value=''; updateSend();
+    // Il tetto si applica PRIMA di pagare qualcosa. Nell'app è il database a
+    // rifiutare, non l'interfaccia a nascondere il pulsante: due richieste
+    // simultanee devono trovare un contatore serializzato.
+    if(agRichiesteOggi>=AG_MAX_GIORNO){
+      addMsg('assistant','Hai finito le domande di oggi. L\'agente costa a ogni risposta, per questo c\'è un tetto: riprova domani.');
+      return;
+    }
+    agRichiesteOggi++; agRenderBudget(); chatBusy=true;
     const typing=addMsg('assistant','Sto pensando…');
     setTimeout(()=>{ typing.remove(); const r=answer(t); addMsg('assistant',r.a,r.s,detectDomains(t)); chatBusy=false; }, 650);
   }
@@ -3406,6 +3426,67 @@
     mpApertoElenco=false;
     toast(mpMia ? 'Regione impostata: '+mpMia : 'Regione rimossa.');
     renderMappa();
+  }
+
+  /* ===== Memoria e tetto di spesa dell'agente =====
+     Due cose che un'app di solito non mostra, e che qui si mostrano apposta:
+     i propri appunti (sono tuoi e devi poterli cancellare) e il consumo
+     (c'è un tetto, e scoprirlo sbattendoci contro è il modo peggiore).
+
+     ⚠️ IL TETTO NON È UN VEZZO. L'agente chiama Claude Opus a ogni messaggio:
+     senza limite, una persona che tiene premuto invio fa crescere il conto
+     finché non arriva la fattura. Nell'app il contatore sta nel DATABASE, non
+     nella function, perché due richieste simultanee devono trovare un
+     contatore serializzato e non due copie della stessa lettura. */
+  const AG_MAX_GIORNO = 40;
+  let agRichiesteOggi = 12;
+  let agMemorie = [
+    {categoria:'obiettivo',  fatto:'vuole passare da collaboratore a leader entro l\'anno'},
+    {categoria:'vincolo',    fatto:'può lavorare al progetto solo la sera e nel fine settimana'},
+    {categoria:'preferenza', fatto:'preferisce esempi concreti e numeri, non teoria'}
+  ];
+
+  const AG_ETICHETTE = {obiettivo:'Obiettivo', preferenza:'Preferenza', situazione:'Situazione', vincolo:'Vincolo'};
+
+  function agRenderBudget(){
+    const p=document.getElementById('agBudget');
+    if(!p) return;
+    const quota = agRichiesteOggi/AG_MAX_GIORNO;
+    // Si avvisa all'80%: a filo di limite non si fa più in tempo a cambiare
+    // comportamento.
+    p.style.color = quota>=1 ? 'var(--accent)' : quota>=0.8 ? 'var(--gold)' : 'var(--muted)';
+    p.textContent = agRichiesteOggi+' domande di '+AG_MAX_GIORNO+' oggi'+
+      (quota>=1 ? ' · hai finito le domande di oggi' : quota>=0.8 ? ' · stai per raggiungere il limite' : '');
+  }
+
+  function agRenderMemoria(){
+    document.getElementById('agMemLista').innerHTML = agMemorie.length===0
+      ? '<p class="cap">Non ho ancora annotato niente. Man mano che parliamo tengo a mente obiettivi, vincoli e preferenze, così non devi ripetermeli.</p>'
+      : agMemorie.map((m,i)=>
+          '<div class="card" style="gap:6px">'+
+          '<span class="gold" style="font-size:12px;font-weight:800">'+AG_ETICHETTE[m.categoria]+'</span>'+
+          '<span style="font-size:13px">'+m.fatto+'</span>'+
+          '<button class="btn sec sm" onclick="agDimentica('+i+')">Dimentica</button></div>').join('');
+  }
+
+  function agMemoriaApri(){
+    document.getElementById('agMemoria').style.display='';
+    document.getElementById('chatList').style.display='none';
+    agRenderMemoria();
+  }
+  function agMemoriaChiudi(){
+    document.getElementById('agMemoria').style.display='none';
+    document.getElementById('chatList').style.display='';
+  }
+  function agDimentica(i){
+    agMemorie.splice(i,1);
+    toast('Fatto, l\'ho dimenticato.');
+    agRenderMemoria();
+  }
+  function agDimenticaTutto(){
+    agMemorie=[];
+    toast('Ho dimenticato tutto quello che avevo annotato.');
+    agRenderMemoria();
   }
 
   /* ===== init ===== */
