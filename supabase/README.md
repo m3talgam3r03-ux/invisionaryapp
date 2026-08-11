@@ -594,6 +594,71 @@ con `scale`, a 6× la Sicilia sarebbe una macchia sfocata.
 > *Mappa dell'Italia — [svg-maps](https://github.com/VictorCazanave/svg-maps),
 > CC-BY-4.0.*
 
+## Funnel di acquisizione (migrazione 0027)
+
+> ⚠️ **È la prima porta pubblica dell'app.** Tutto il resto sta dietro un login.
+> Un modulo su una pagina pubblica no: lo vede internet, e internet ci scrive
+> dentro.
+
+```bash
+# ⚠️ Senza --no-verify-jwt una pagina pubblica non può chiamarla.
+npx supabase functions deploy funnel-submit --no-verify-jwt
+npx supabase secrets set FUNNEL_IP_SALT="$(openssl rand -hex 32)"
+```
+
+### Cosa NON si accetta dal client
+
+| Dato | Perché no |
+| --- | --- |
+| `owner_id` | Lo decide il funnel, lato database. Altrimenti chiunque potrebbe scrivere nel CRM di chiunque |
+| Testo del consenso | Sarebbe una prova scritta dall'imputato |
+| Canali non richiesti dal funnel | Basterebbe modificare il modulo nel browser per regalarsi consensi |
+
+Limite orario e deduplica stanno in `registra_lead()`, **non** nella function:
+due invii simultanei devono trovare lo stesso stato.
+
+### I tre filtri anti-robot
+
+Un modulo pubblico senza freni raccoglie robot nel giro di ore, e cento righe
+finte rendono il CRM **inservibile** — che è peggio di non avere il funnel.
+
+1. **Campo civetta** — invisibile a chi legge, irresistibile per un robot.
+2. **Tempo minimo (3 s)** — pochi per una persona, un'eternità per un robot che
+   compila e invia nello stesso istante.
+3. **Limite orario per funnel** (`max_lead_ora`, default 60).
+
+Ai primi due la function risponde **200, non un errore**: a un robot non si
+spiega cosa ha sbagliato, altrimenti impara a evitarlo.
+
+### Il consenso, uno per canale
+
+`funnels.canali` dichiara cosa il funnel chiede, e la pagina mostra **una
+spunta per canale**. Mai una sola per tutti: la 0018 esiste proprio perché
+email, SMS, WhatsApp e telefono sono decisioni separate, e chi acconsente a una
+non ha acconsentito alle altre.
+
+`registra_lead()` concede solo l'**intersezione** fra ciò che il funnel chiede,
+ciò che è stato spuntato e i recapiti presenti — un consenso email senza email
+non vuol dire niente.
+
+> **Il testo si copia sulla riga del lead, non si referenzia.** Se domani si
+> corregge l'informativa del funnel, ciò che quella persona ha accettato non
+> deve cambiare. Per una contestazione è esattamente il documento che serve —
+> stessa ragione della fotografia del prezzo sui premi.
+
+### L'indirizzo IP
+
+È un dato personale. Serve a limitare gli abusi, e per quello basta
+un'impronta: si sala con `FUNNEL_IP_SALT` e si tronca. **Senza sale non si
+salva niente**: un hash di un IPv4 senza sale si inverte in pochi secondi —
+quattro miliardi di possibilità non sono un numero grande.
+
+```sql
+insert into public.funnels (slug, titolo, owner_id, canali, testo_consenso)
+values ('metodo', 'Scopri il metodo', '<uuid>', array['email','whatsapp'],
+        'Acconsento a essere ricontattato…');
+```
+
 ## Agente AI — memoria e tetto di spesa (migrazione 0026)
 
 ### Il tetto viene prima della memoria

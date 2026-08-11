@@ -114,6 +114,21 @@ export default function Dashboard() {
         />
       </Card>
 
+      {/* Azione rapida: funnel — solo per chi guida la rete */}
+      {can(profile, 'clients.network') && (
+        <Card style={{ gap: spacing.sm }}>
+          <ThemedText variant="heading">{t.dashboard.funnel.titolo}</ThemedText>
+          <ThemedText tone="muted" variant="caption">
+            {t.dashboard.funnel.testo}
+          </ThemedText>
+          <Button
+            title={t.dashboard.funnel.azione}
+            variant="secondary"
+            onPress={() => router.push('/funnel')}
+          />
+        </Card>
+      )}
+
       {/* Azione rapida: la rete in Italia */}
       <Card style={{ gap: spacing.sm }}>
         <ThemedText variant="heading">{t.dashboard.mappa.titolo}</ThemedText>

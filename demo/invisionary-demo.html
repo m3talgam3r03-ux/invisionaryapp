@@ -1007,6 +1007,50 @@
         <p class="cap">Sulla mappa escono <b>solo conteggi</b>: mai nomi, mai indirizzi. Le regioni con pochi iscritti non mostrano il numero — un conteggio di uno non è una statistica, è una persona. La soppressione avviene nel <b>database</b>, non nell'interfaccia: un numero nascosto solo a schermo sarebbe comunque già arrivato sul telefono.</p>
       </section>
 
+      <!-- FUNNEL -->
+      <section class="view" data-view="funnel">
+        <div class="phead"><h2>Funnel</h2><p>Una pagina pubblica che raccoglie contatti. Chi la compila entra nel tuo CRM già col consenso registrato.</p></div>
+
+        <div class="sect"><span class="s">✦</span><span class="t">I tuoi funnel</span><span class="l"></span></div>
+        <div id="fnLista" class="list"></div>
+
+        <div class="sect"><span class="s">✦</span><span class="t">Come la vede chi ci arriva</span><span class="l"></span></div>
+        <p class="cap">Questa è la pagina pubblica. Provala: è l'unica porta dell'app che <b>non richiede login</b> — e per questo ha tre filtri che qui puoi mettere alla prova.</p>
+
+        <div class="card" style="gap:10px;border-color:var(--gold)">
+          <b style="font-size:16px" id="fnTitolo">Scopri il metodo Invisionary</b>
+          <span class="cap" id="fnSottotitolo">Ti ricontattiamo entro 24 ore</span>
+          <div class="field"><span class="label">Nome</span><input id="fnNome" value="Marco Rossi"></div>
+          <div class="field"><span class="label">Email</span><input id="fnEmail" value="marco.rossi@example.com"></div>
+          <div class="field"><span class="label">Telefono</span><input id="fnTel" placeholder="facoltativo"></div>
+
+          <!-- Campo civetta: invisibile a chi legge, irresistibile per un robot -->
+          <div style="position:absolute;left:-9999px" aria-hidden="true">
+            <input id="fnCivetta" tabindex="-1" autocomplete="off">
+          </div>
+
+          <span class="label">Cosa ci autorizzi a fare</span>
+          <div class="presets" id="fnCanali"></div>
+          <p class="cap" id="fnConsenso" style="margin:0"></p>
+          <button class="btn sm" onclick="fnInvia()">Invia</button>
+          <p class="cap" id="fnEsito" style="margin:0"></p>
+        </div>
+
+        <div class="sect"><span class="s">✦</span><span class="t">Prova i filtri</span><span class="l"></span></div>
+        <div class="presets">
+          <button class="preset" onclick="fnProva('civetta')">Simula un robot (campo civetta)</button>
+          <button class="preset" onclick="fnProva('veloce')">Invio in mezzo secondo</button>
+          <button class="preset" onclick="fnProva('senzaConsenso')">Senza spuntare nulla</button>
+          <button class="preset" onclick="fnProva('senzaRecapito')">Senza email né telefono</button>
+          <button class="preset" onclick="fnProva('limite')">Supera il limite orario</button>
+        </div>
+        <p class="cap">Un modulo pubblico senza freni raccoglie robot nel giro di ore, e cento righe finte rendono il CRM inservibile — che è peggio di non avere il funnel. Il limite orario e la deduplica stanno nel <b>database</b>, non nella pagina: due invii simultanei devono trovare lo stesso stato.</p>
+
+        <div class="sect"><span class="s">✦</span><span class="t">Contatti arrivati</span><span class="l"></span></div>
+        <div class="card" style="padding:6px 14px"><div id="fnLead"></div></div>
+        <p class="cap">Di ogni contatto resta <b>copia del testo che ha accettato</b>, non un riferimento: se domani correggi l'informativa, quello che le persone hanno già accettato non cambia. Per una contestazione è esattamente il documento che serve.</p>
+      </section>
+
       <!-- COMMUNITY -->
       <section class="view" data-view="community">
         <button class="btn sm" onclick="toast('Modulo «Nuovo feedback» con foto (demo)')">+ Nuovo feedback</button>
@@ -1231,14 +1275,14 @@
   /* ===== Navigazione: schermate, barra, menu a tendina, Indietro ===== */
   const SCREENS = [
     ['dashboard','Dashboard'],['agente','Agente AI'],['trading','Trading'],['crm','Network'],['renewals','Scadenzario'],
-    ['formazione','Formazione'],['calc','Calcolatori'],['agenda','Appuntamenti'],['premi','Premi'],['mappa','Mappa'],['rank','Rank'],['community','Community'],['admin','Admin']
+    ['formazione','Formazione'],['calc','Calcolatori'],['agenda','Appuntamenti'],['premi','Premi'],['mappa','Mappa'],['funnel','Funnel'],['rank','Rank'],['community','Community'],['admin','Admin']
   ];
   const TITLES = {login:'Invisionary',dashboard:'Invisionary',agente:'Agente AI',trading:'Trading',crm:'Network / CRM',
-    renewals:'Scadenzario',formazione:'Formazione',calc:'Calcolatori',agenda:'Appuntamenti',premi:'Punti e premi',mappa:'La rete in Italia',rank:'Rank',community:'Community',admin:'Admin'};
+    renewals:'Scadenzario',formazione:'Formazione',calc:'Calcolatori',agenda:'Appuntamenti',premi:'Punti e premi',mappa:'La rete in Italia',funnel:'Funnel',rank:'Rank',community:'Community',admin:'Admin'};
   const MENU = [
     ['dashboard','⌂','Dashboard'],['agente','◉','Agente AI'],['trading','♠','Trading'],['crm','♥','Network / CRM'],
     ['renewals','◷','Scadenzario'],['formazione','♦','Formazione'],['calc','∑','Calcolatori'],
-    ['agenda','◷','Appuntamenti'],['premi','🎁','Punti e premi'],['mappa','⬢','La rete in Italia'],
+    ['agenda','◷','Appuntamenti'],['premi','🎁','Punti e premi'],['mappa','⬢','La rete in Italia'],['funnel','⌾','Funnel'],
     ['rank','★','Rank'],['community','♣','Community'],['admin','⚙','Admin']
   ];
   let role = 'admin';
@@ -1253,6 +1297,8 @@
    */
   function canSee(v){
     if(v==='renewals') return role!=='collaborator';
+    // Un funnel raccoglie contatti per la rete: lo gestisce chi la guida.
+    if(v==='funnel')   return role!=='collaborator';
     if(v==='admin')    return role==='admin';
     return true;
   }
@@ -1336,6 +1382,7 @@
     if(id==='agenda'){ agSub('home'); renderAgenda(); }
     if(id==='premi') renderPremi();
     if(id==='mappa') renderMappa();
+    if(id==='funnel'){ fnApertoIl=Date.now(); fnRender(); }
     if(id==='crm') crmSub('list');
     if(id==='trading'){ tSub('home'); renderTrading(); }
   }
@@ -3487,6 +3534,109 @@
     agMemorie=[];
     toast('Ho dimenticato tutto quello che avevo annotato.');
     agRenderMemoria();
+  }
+
+  /* ===== Funnel =====
+     ⚠️ È l'unica porta pubblica dell'app: tutto il resto sta dietro un login,
+     un modulo su una pagina pubblica no. Lo vede internet, e internet ci scrive
+     dentro. Da qui i tre filtri — campo civetta, tempo minimo, limite orario —
+     e il consenso UNO PER CANALE, mai una spunta sola per tutti. */
+  const FN_CONSENSO = 'Acconsento a essere ricontattato per ricevere informazioni sul percorso. ' +
+    'I miei dati saranno trattati secondo l\'informativa privacy e potrò revocare il consenso in qualsiasi momento.';
+  const FN_NOMI = {email:'Email', sms:'SMS', whatsapp:'WhatsApp', telefono:'Telefono'};
+
+  let fnFunnels = [
+    {slug:'metodo-invisionary', titolo:'Scopri il metodo Invisionary', sottotitolo:'Ti ricontattiamo entro 24 ore',
+     canali:['email','whatsapp'], attivo:true, maxOra:60, consenso:FN_CONSENSO}
+  ];
+  let fnCanaliSpuntati = [];
+  let fnLead = [];
+  let fnApertoIl = Date.now();       // per il tempo minimo di compilazione
+  let fnArrivatiOra = 0;             // finestra dell'ultima ora
+
+  const FN_TEMPO_MINIMO = 3000;
+
+  function fnRender(){
+    const f = fnFunnels[0];
+    document.getElementById('fnLista').innerHTML = fnFunnels.map(x=>
+      '<div class="card" style="gap:6px">'+
+      '<div class="resline"><b style="font-size:15px">'+x.titolo+'</b>'+
+      '<span class="cap" style="color:'+(x.attivo?'var(--success)':'var(--muted)')+'">'+(x.attivo?'Attivo':'Spento')+'</span></div>'+
+      '<span class="cap">/'+x.slug+'</span>'+
+      '<span class="cap">'+x.canali.map(c=>FN_NOMI[c]).join(' · ')+'</span>'+
+      '<span class="cap">Massimo '+x.maxOra+' contatti all\'ora: oltre, la pagina rifiuta.</span></div>').join('');
+
+    document.getElementById('fnTitolo').textContent = f.titolo;
+    document.getElementById('fnSottotitolo').textContent = f.sottotitolo;
+    document.getElementById('fnConsenso').textContent = f.consenso;
+
+    // Una spunta per canale: email, SMS, WhatsApp e telefono sono decisioni
+    // separate, e chi acconsente a una non ha acconsentito alle altre.
+    document.getElementById('fnCanali').innerHTML = f.canali.map(c=>
+      '<button class="preset'+(fnCanaliSpuntati.includes(c)?' on':'')+'" onclick="fnSpunta(\''+c+'\')">'+
+      (fnCanaliSpuntati.includes(c)?'✓ ':'')+FN_NOMI[c]+'</button>').join('');
+
+    document.getElementById('fnLead').innerHTML = fnLead.length===0
+      ? '<p class="cap">Nessun contatto per ora.</p>'
+      : fnLead.map(l=>
+          '<div class="resline" style="padding:8px 0;border-bottom:1px solid var(--border)">'+
+          '<span style="font-size:13px">'+(l.nome||l.email||l.telefono)+'</span>'+
+          '<span class="gold cap">'+l.canali.map(c=>FN_NOMI[c]).join(' · ')+'</span></div>').join('');
+  }
+
+  function fnSpunta(c){
+    fnCanaliSpuntati = fnCanaliSpuntati.includes(c)
+      ? fnCanaliSpuntati.filter(x=>x!==c) : fnCanaliSpuntati.concat([c]);
+    fnRender();
+  }
+
+  function fnEsito(testo, ok){
+    const p=document.getElementById('fnEsito');
+    p.style.color = ok ? 'var(--success)' : 'var(--accent)';
+    p.textContent = testo;
+  }
+
+  /* L'ordine dei controlli conta: i segnali di robot vengono per primi, perché
+     a un robot non si spiega cosa ha sbagliato — gli si dice di no e basta.
+     Nell'app la pagina risponde perfino «ok» ai robot, così non imparano a
+     evitare il filtro. */
+  function fnInvia(){
+    const f = fnFunnels[0];
+    const nome=v('fnNome').trim(), email=v('fnEmail').trim(), tel=v('fnTel').trim();
+
+    if(v('fnCivetta').trim()!==''){ fnEsito('Rifiutato: campo civetta compilato (l\'ha fatto un robot).', false); return; }
+    if(Date.now()-fnApertoIl < FN_TEMPO_MINIMO){ fnEsito('Rifiutato: compilato troppo in fretta perché l\'abbia scritto una persona.', false); return; }
+    if(email==='' && tel===''){ fnEsito('Serve un\'email o un numero di telefono.', false); return; }
+    if(email!=='' && !/^[^@\s]+@[^@.\s]+(\.[^@.\s]+)+$/.test(email)){ fnEsito('Email non valida.', false); return; }
+    if(fnCanaliSpuntati.length===0){ fnEsito('Senza consenso non si raccoglie niente: spunta almeno un canale.', false); return; }
+    if(fnArrivatiOra >= f.maxOra){ fnEsito('Troppe richieste in poco tempo. Riprova fra qualche minuto.', false); return; }
+
+    fnArrivatiOra++;
+    // Del contatto resta COPIA del testo accettato, non un riferimento.
+    fnLead.unshift({nome, email, telefono:tel, canali:fnCanaliSpuntati.slice(), consenso:f.consenso});
+    fnEsito('Contatto registrato: è entrato nel CRM con i consensi spuntati.', true);
+    fnCanaliSpuntati = [];
+    fnRender();
+  }
+
+  /** I filtri, messi alla prova uno per uno. */
+  function fnProva(quale){
+    const f = fnFunnels[0];
+    document.getElementById('fnCivetta').value='';
+    fnApertoIl = Date.now() - 10000;
+    document.getElementById('fnEmail').value='marco.rossi@example.com';
+    document.getElementById('fnTel').value='';
+    fnCanaliSpuntati=['email'];
+
+    if(quale==='civetta')        document.getElementById('fnCivetta').value='http://spam.example';
+    if(quale==='veloce')         fnApertoIl = Date.now() - 500;
+    if(quale==='senzaConsenso')  fnCanaliSpuntati=[];
+    if(quale==='senzaRecapito'){ document.getElementById('fnEmail').value=''; }
+    if(quale==='limite')         fnArrivatiOra = f.maxOra;
+
+    fnRender();
+    fnInvia();
+    if(quale==='limite') fnArrivatiOra = fnLead.length;   // si rimette a posto
   }
 
   /* ===== init ===== */

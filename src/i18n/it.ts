@@ -101,6 +101,11 @@ export const t = {
       testo: 'Quante persone ci sono in ogni regione, e dove la rete deve ancora arrivare.',
       azione: 'Apri la mappa',
     },
+    funnel: {
+      titolo: 'Funnel',
+      testo: 'Una pagina pubblica che raccoglie contatti già col consenso registrato.',
+      azione: 'Gestisci i funnel',
+    },
     rank: {
       titolo: 'Rank & classifica',
       testo: 'Il tuo avanzamento nella rete: diventa un Asso.',
@@ -519,6 +524,53 @@ export const t = {
       'La card esce dall’app col marchio sopra: quello che ci scrivi diventa comunicazione dell’azienda, non tua. Per questo importi e promesse di guadagno non passano.',
     nienteTrading:
       'Le metriche di trading non si condividono: dentro la rete un win rate è un dato, su un social diventa una promessa.',
+  },
+
+  funnel: {
+    titolo: 'Funnel',
+    sottotitolo:
+      'Una pagina pubblica che raccoglie contatti. Chi la compila entra nel tuo CRM già col consenso registrato.',
+    nessuno: 'Non hai ancora nessun funnel.',
+
+    nuovo: 'Nuovo funnel',
+    campoTitolo: 'Titolo della pagina',
+    campoSottotitolo: 'Sottotitolo (facoltativo)',
+    campoSlug: 'Indirizzo',
+    slugAiuto: 'Solo minuscole, numeri e trattini. È la parte finale del link pubblico.',
+    slugNonValido: 'Indirizzo non valido: solo minuscole, numeri e trattini.',
+    campoConsenso: 'Testo dell’informativa',
+    consensoAiuto:
+      'È quello che la persona legge prima di accettare, e viene copiato su ogni contatto raccolto: se domani lo correggi, ciò che gli altri hanno già accettato non cambia.',
+    consensoCorto: 'Il testo dell’informativa è troppo corto per essere un’informativa.',
+
+    canali: 'Cosa chiedi di poter fare',
+    canaliAiuto:
+      'Una spunta per canale, mai una sola per tutti: email, SMS, WhatsApp e telefono sono decisioni separate, e chi acconsente a una non ha acconsentito alle altre.',
+    canaleNome: {
+      email: 'Email',
+      sms: 'SMS',
+      whatsapp: 'WhatsApp',
+      telefono: 'Telefono',
+    } as Record<string, string>,
+    nessunCanale: 'Scegli almeno un canale.',
+
+    crea: 'Crea funnel',
+    creato: 'Funnel creato.',
+    attivo: 'Attivo',
+    spento: 'Spento',
+    accendi: 'Accendi',
+    spegni: 'Spegni',
+    spegniAiuto:
+      'Spegnere non cancella: la pagina smette di accettare contatti, quelli già arrivati restano.',
+
+    contatti: 'Contatti arrivati',
+    nessunContatto: 'Nessun contatto per ora.',
+    limite: (n: number) => `Massimo ${n} contatti all’ora: oltre, la pagina rifiuta.`,
+
+    erroreFunnel: 'Questo funnel non è disponibile.',
+    erroreTroppe: 'Troppe richieste in poco tempo. Riprova fra qualche minuto.',
+    erroreRecapito: 'Serve un’email o un numero di telefono.',
+    erroreGenerico: 'Non è stato possibile registrare la richiesta.',
   },
 
   agente: {
