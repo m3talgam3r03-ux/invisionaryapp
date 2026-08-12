@@ -113,6 +113,20 @@ export const t = {
     },
     pilastroApri: 'Apri →',
     pilastroInArrivo: 'In arrivo',
+    /** Le scorciatoie: nomi corti, perché stanno sotto un'icona. */
+    scorciatoie: 'Tutto il resto',
+    breve: {
+      agente: 'Agente AI',
+      scadenzario: 'Scadenzario',
+      scadenzarioMio: 'I miei rinnovi',
+      calcolatori: 'Calcolatori',
+      calendario: 'Appuntamenti',
+      premi: 'Punti e premi',
+      mappa: 'La rete',
+      funnel: 'Funnel',
+      rank: 'Rank',
+      admin: 'Admin',
+    },
     disclaimer:
       'Contenuti a scopo educativo e informativo. Nessuna promessa di rendimento né consulenza finanziaria personalizzata.',
   },

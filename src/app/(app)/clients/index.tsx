@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { StatoBadge } from '@/components/StatoBadge';
-import { Avatar, EmptyState, SearchField, ThemedText } from '@/components/ui';
+import { Avatar, EmptyState, SearchField, ThemedText, Colonna } from '@/components/ui';
 import { t } from '@/i18n/it';
 import { useClients, useClientsPerStato } from '@/lib/clients';
 import { byName, matchesQuery, parseContact } from '@/lib/contact';
@@ -40,116 +40,118 @@ export default function ClientsList() {
 
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={styles.header}>
-        <SearchField value={query} onChangeText={setQuery} placeholder={t.crm.cerca} />
-
-        {/* Le fasi della trattativa: toccarne una restringe l'elenco */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chips}
-        >
-          <FiltroChip
-            label={t.crm.tutti}
-            attivo={stato === null}
-            onPress={() => setStato(null)}
-          />
-          {CONTACT_STATI.map((s) => (
+      <Colonna>
+        <View style={styles.header}>
+          <SearchField value={query} onChangeText={setQuery} placeholder={t.crm.cerca} />
+  
+          {/* Le fasi della trattativa: toccarne una restringe l'elenco */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chips}
+          >
             <FiltroChip
-              key={s}
-              label={t.crm.stato[s]}
-              conteggio={conteggi?.[s]}
-              attivo={stato === s}
-              onPress={() => setStato(stato === s ? null : s)}
+              label={t.crm.tutti}
+              attivo={stato === null}
+              onPress={() => setStato(null)}
             />
-          ))}
-        </ScrollView>
-
-        <View style={styles.metaRow}>
-          <ThemedText tone="muted" variant="caption">
-            {query
-              ? `${clients.length} di ${total}`
-              : total === 1
-                ? '1 contatto'
-                : `${total} contatti`}
-          </ThemedText>
-          <View style={{ flexDirection: 'row', gap: spacing.md }}>
-            <Pressable
-              onPress={() => router.push('/clients/rubrica')}
-              accessibilityRole="button"
-              hitSlop={8}
-            >
-              <ThemedText tone="accent" variant="caption">
-                ☎ {t.crm.rubrica.apri}
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => router.push('/clients/import')}
-              accessibilityRole="button"
-              hitSlop={8}
-            >
-              <ThemedText tone="muted" variant="caption">
-                File ›
-              </ThemedText>
-            </Pressable>
+            {CONTACT_STATI.map((s) => (
+              <FiltroChip
+                key={s}
+                label={t.crm.stato[s]}
+                conteggio={conteggi?.[s]}
+                attivo={stato === s}
+                onPress={() => setStato(stato === s ? null : s)}
+              />
+            ))}
+          </ScrollView>
+  
+          <View style={styles.metaRow}>
+            <ThemedText tone="muted" variant="caption">
+              {query
+                ? `${clients.length} di ${total}`
+                : total === 1
+                  ? '1 contatto'
+                  : `${total} contatti`}
+            </ThemedText>
+            <View style={{ flexDirection: 'row', gap: spacing.md }}>
+              <Pressable
+                onPress={() => router.push('/clients/rubrica')}
+                accessibilityRole="button"
+                hitSlop={8}
+              >
+                <ThemedText tone="accent" variant="caption">
+                  ☎ {t.crm.rubrica.apri}
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                onPress={() => router.push('/clients/import')}
+                accessibilityRole="button"
+                hitSlop={8}
+              >
+                <ThemedText tone="muted" variant="caption">
+                  File ›
+                </ThemedText>
+              </Pressable>
+            </View>
           </View>
         </View>
-      </View>
-
-      <FlatList
-        data={clients}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        keyboardDismissMode="on-drag"
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.textMuted} />
-        }
-        ListEmptyComponent={
-          isLoading ? (
-            <ThemedText tone="muted">Caricamento clienti…</ThemedText>
-          ) : isError ? (
-            <EmptyState
-              tone="error"
-              title="Impossibile caricare i clienti"
-              hint={error instanceof Error ? error.message : 'Errore sconosciuto.'}
+  
+        <FlatList
+          data={clients}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          keyboardDismissMode="on-drag"
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.textMuted} />
+          }
+          ListEmptyComponent={
+            isLoading ? (
+              <ThemedText tone="muted">Caricamento clienti…</ThemedText>
+            ) : isError ? (
+              <EmptyState
+                tone="error"
+                title="Impossibile caricare i clienti"
+                hint={error instanceof Error ? error.message : 'Errore sconosciuto.'}
+              />
+            ) : query ? (
+              <EmptyState
+                title="Nessun risultato"
+                hint={`Nessun cliente corrisponde a «${query}».`}
+                actionLabel="Cancella la ricerca"
+                onAction={() => setQuery('')}
+              />
+            ) : (
+              <EmptyState
+                title="Nessun cliente"
+                hint="Aggiungi il primo contatto, oppure importa un elenco da CSV o Excel."
+                actionLabel="+ Aggiungi cliente"
+                onAction={() => router.push('/clients/new')}
+              />
+            )
+          }
+          renderItem={({ item }) => (
+            <ClientRow
+              client={item}
+              onPress={() => router.push({ pathname: '/clients/[id]', params: { id: item.id } })}
             />
-          ) : query ? (
-            <EmptyState
-              title="Nessun risultato"
-              hint={`Nessun cliente corrisponde a «${query}».`}
-              actionLabel="Cancella la ricerca"
-              onAction={() => setQuery('')}
-            />
-          ) : (
-            <EmptyState
-              title="Nessun cliente"
-              hint="Aggiungi il primo contatto, oppure importa un elenco da CSV o Excel."
-              actionLabel="+ Aggiungi cliente"
-              onAction={() => router.push('/clients/new')}
-            />
-          )
-        }
-        renderItem={({ item }) => (
-          <ClientRow
-            client={item}
-            onPress={() => router.push({ pathname: '/clients/[id]', params: { id: item.id } })}
-          />
-        )}
-        ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
-      />
-
-      {/* Azione primaria unica e sempre raggiungibile col pollice. */}
-      <Pressable
-        onPress={() => router.push('/clients/new')}
-        accessibilityRole="button"
-        accessibilityLabel="Aggiungi cliente"
-        style={({ pressed }) => [
-          styles.fab,
-          { backgroundColor: colors.accent, opacity: pressed ? 0.85 : 1 },
-        ]}
-      >
-        <ThemedText style={styles.fabGlyph}>+</ThemedText>
-      </Pressable>
+          )}
+          ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
+        />
+  
+        {/* Azione primaria unica e sempre raggiungibile col pollice. */}
+        <Pressable
+          onPress={() => router.push('/clients/new')}
+          accessibilityRole="button"
+          accessibilityLabel="Aggiungi cliente"
+          style={({ pressed }) => [
+            styles.fab,
+            { backgroundColor: colors.accent, opacity: pressed ? 0.85 : 1 },
+          ]}
+        >
+          <ThemedText style={styles.fabGlyph}>+</ThemedText>
+        </Pressable>
+      </Colonna>
     </SafeAreaView>
   );
 }

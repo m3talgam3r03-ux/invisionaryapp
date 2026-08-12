@@ -393,6 +393,13 @@
 
   /* ===== Calcolatori ===== */
   /* Card d'ingresso colorata per strumento */
+  .scorciatoie{display:flex;flex-wrap:wrap;gap:8px}
+  .scorc{flex:1 1 22%;min-width:74px;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:4px;min-height:78px;padding:12px 4px;border-radius:12px;
+    background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:border-color .15s,transform .12s}
+  .scorc:hover{border-color:#43434E;transform:translateY(-1px)}
+  .scorc .g{font-size:22px;line-height:26px}
+  .scorc .n{font-size:11px;text-align:center;color:var(--text);line-height:1.25}
   .ctool{position:relative;overflow:hidden;border-radius:var(--r-lg);border:1px solid #2B2B31;padding:18px 16px;
     display:flex;align-items:center;gap:14px;cursor:pointer;transition:.18s;
     background:linear-gradient(135deg,#1F1F24,#17171B)}
@@ -519,21 +526,15 @@
           <div class="pillar press" onclick="setScreen('community')"><span class="ace low" style="color:var(--text)"><b>A</b><i>♣</i></span><span class="label" style="color:var(--text)">Community</span><span class="cap accent">Apri →</span></div>
         </div>
         </div>
-        <div class="ctool" style="color:#C9A227" onclick="setScreen('agenda')">
-          <span class="ci">◷</span>
-          <span class="cm"><b>Appuntamenti</b><span>Prenota una call scegliendo fra gli orari liberi</span></span>
-          <span class="chev" style="color:#4a4a52;font-size:19px">›</span>
-        </div>
-        <div class="ctool" style="color:#C9A227" onclick="setScreen('premi')">
-          <span class="ci">🎁</span>
-          <span class="cm"><b>Punti e premi</b><span>I punti che vinci in classifica si riscattano a catalogo</span></span>
-          <span class="chev" style="color:#4a4a52;font-size:19px">›</span>
-        </div>
-        <div class="ctool" style="color:#C8102E" onclick="setScreen('mappa')">
-          <span class="ci">⬢</span>
-          <span class="cm"><b>La rete in Italia</b><span>Quante persone ci sono in ogni regione</span></span>
-          <span class="chev" style="color:#4a4a52;font-size:19px">›</span>
-        </div>
+        <!-- Tutto il resto in una griglia, non in una pila di schede.
+             La dashboard era arrivata a dieci riquadri tutti uguali — titolo,
+             paragrafo, pulsante — uno per ogni sezione aggiunta nel tempo: su
+             un telefono erano quattro schermate di scorrimento per arrivare ai
+             pilastri, che sono la cosa che si usa di più. Niente è stato tolto:
+             ci stanno tutte sotto gli occhi invece che una sotto l'altra. -->
+        <div class="sect"><span class="s">✦</span><span class="t">Tutto il resto</span><span class="l"></span></div>
+        <div class="scorciatoie" id="dashScorciatoie"></div>
+
         <button class="btn sec" onclick="setScreen('login')">Esci</button>
         <p class="cap" style="text-align:center">Contenuti a scopo educativo e informativo. Nessuna promessa di rendimento né consulenza finanziaria personalizzata.</p>
       </section>
@@ -1444,6 +1445,7 @@
   }
 
   function renderDashboard(){
+    renderScorciatoie();
     document.getElementById('greet').textContent='Ciao, '+ROLE_NAME[role];
     document.getElementById('rolePill').textContent=ROLE_LABEL[role];
     const s=netStats();            // ciò che il ruolo può vedere
@@ -3637,6 +3639,37 @@
     fnRender();
     fnInvia();
     if(quale==='limite') fnArrivatiOra = fnLead.length;   // si rimette a posto
+  }
+
+  /* Le scorciatoie della dashboard. Le voci che non competono al ruolo non
+     compaiono — la stessa regola che applica `can()` nell'app. */
+  const SCORCIATOIE = [
+    ['agente',    '◉', 'Agente AI',      'var(--gold)',   () => true],
+    ['renewals',  '◷', 'Scadenzario',    null,            () => role !== 'collaborator'],
+    ['renewals',  '◷', 'I miei rinnovi', null,            () => role === 'collaborator'],
+    ['calc',      '∑', 'Calcolatori',    null,            () => true],
+    ['agenda',    '◴', 'Appuntamenti',   null,            () => true],
+    ['premi',     '★', 'Punti e premi',  'var(--gold)',   () => true],
+    ['mappa',     '⬢', 'La rete',        'var(--accent)', () => true],
+    ['funnel',    '⌾', 'Funnel',         'var(--accent)', () => role !== 'collaborator'],
+    ['admin',     '⚙', 'Admin',          null,            () => role === 'admin']
+  ];
+
+  function renderScorciatoie(){
+    const el = document.getElementById('dashScorciatoie');
+    if (!el) return;
+    // Destinazione in un attributo invece che dentro un `onclick`: le
+    // virgolette annidate in una stringa dentro un attributo dentro una
+    // stringa sono il modo più rapido per rompere un file come questo.
+    el.innerHTML = SCORCIATOIE.filter(v => v[4]()).map(function(v){
+      return '<div class="scorc" data-vai="' + v[0] + '">' +
+        '<span class="g" style="color:' + (v[3] || 'var(--muted)') + '">' + v[1] + '</span>' +
+        '<span class="n">' + v[2] + '</span></div>';
+    }).join('');
+
+    el.querySelectorAll('.scorc').forEach(function(d){
+      d.onclick = function(){ setScreen(d.dataset.vai); };
+    });
   }
 
   /* ===== init ===== */

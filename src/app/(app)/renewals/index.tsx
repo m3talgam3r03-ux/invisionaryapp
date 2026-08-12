@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, EmptyState, ThemedText } from '@/components/ui';
+import { Button, EmptyState, ThemedText, Colonna } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { daysUntil } from '@/lib/date';
@@ -44,43 +44,45 @@ export default function RenewalsList() {
 
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.textMuted} />
-        }
-      >
-        <View style={{ gap: spacing.xs, marginBottom: spacing.lg }}>
-          <ThemedText variant="title">
-            {vedeLaRete ? t.rinnovi.titoloRete : t.rinnovi.titoloMiei}
-          </ThemedText>
-          <ThemedText tone="muted" variant="caption">
-            {vedeLaRete ? t.rinnovi.sottotitoloRete : t.rinnovi.sottotitoloMiei}
-          </ThemedText>
-        </View>
-
-        <Button
-          title={t.rinnovi.nuovo}
-          onPress={() => router.push('/renewals/new')}
-          style={{ marginBottom: spacing.lg }}
-        />
-
-        {isLoading && <ThemedText tone="muted">{t.rinnovi.caricamento}</ThemedText>}
-
-        {isError && (
-          <EmptyState
-            tone="error"
-            title={t.rinnovi.erroreElenco}
-            hint={error instanceof Error ? error.message : t.comune.errore}
+      <Colonna>
+        <ScrollView
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.textMuted} />
+          }
+        >
+          <View style={{ gap: spacing.xs, marginBottom: spacing.lg }}>
+            <ThemedText variant="title">
+              {vedeLaRete ? t.rinnovi.titoloRete : t.rinnovi.titoloMiei}
+            </ThemedText>
+            <ThemedText tone="muted" variant="caption">
+              {vedeLaRete ? t.rinnovi.sottotitoloRete : t.rinnovi.sottotitoloMiei}
+            </ThemedText>
+          </View>
+  
+          <Button
+            title={t.rinnovi.nuovo}
+            onPress={() => router.push('/renewals/new')}
+            style={{ marginBottom: spacing.lg }}
           />
-        )}
-
-        {vuoto && <EmptyState title={t.rinnovi.nessuno} hint={t.rinnovi.nessunoSuggerimento} />}
-
-        <Sezione titolo={t.rinnovi.daApprovare} righe={gruppi.daApprovare} evidenza />
-        <Sezione titolo={t.rinnovi.inScadenza} righe={gruppi.inScadenza} />
-        <Sezione titolo={t.rinnovi.resto} righe={gruppi.resto} />
-      </ScrollView>
+  
+          {isLoading && <ThemedText tone="muted">{t.rinnovi.caricamento}</ThemedText>}
+  
+          {isError && (
+            <EmptyState
+              tone="error"
+              title={t.rinnovi.erroreElenco}
+              hint={error instanceof Error ? error.message : t.comune.errore}
+            />
+          )}
+  
+          {vuoto && <EmptyState title={t.rinnovi.nessuno} hint={t.rinnovi.nessunoSuggerimento} />}
+  
+          <Sezione titolo={t.rinnovi.daApprovare} righe={gruppi.daApprovare} evidenza />
+          <Sezione titolo={t.rinnovi.inScadenza} righe={gruppi.inScadenza} />
+          <Sezione titolo={t.rinnovi.resto} righe={gruppi.resto} />
+        </ScrollView>
+      </Colonna>
     </SafeAreaView>
   );
 }

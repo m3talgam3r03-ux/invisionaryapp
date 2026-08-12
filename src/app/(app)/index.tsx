@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Crest } from '@/components/Crest';
+import { Scorciatoia } from '@/components/Scorciatoia';
 import { ProgressBar } from '@/components/ProgressBar';
 import { RankBadge } from '@/components/RankBadge';
 import { Button, Card, Screen, ThemedText } from '@/components/ui';
@@ -11,6 +12,14 @@ import { useMyStats } from '@/lib/leaderboard';
 import { can } from '@/lib/permissions';
 import { progressoVersoProssimo, rankLabel } from '@/lib/rank';
 import { PILLARS, RED_SUITS, radius, spacing, useTheme } from '@/theme';
+
+/** Dove porta ogni pilastro. Erano cinque ternari annidati dentro il render. */
+const ROTTE_PILASTRI = {
+  trading: '/trading',
+  network: '/clients',
+  formazione: '/formazione',
+  community: '/community',
+} as const;
 
 export default function Dashboard() {
   const { profile, isProfileLoading, signOut } = useAuth();
@@ -53,6 +62,29 @@ export default function Dashboard() {
         </View>
       </View>
 
+      {/* I quattro pilastri, in cima: sono la cosa che si usa di più, e prima
+          stavano in fondo a dieci schede di scorrimento. */}
+      <View style={styles.pillars}>
+        {PILLARS.map((p) => {
+          const href = ROTTE_PILASTRI[p.key];
+          const colore = RED_SUITS.has(p.suit) ? colors.accent : colors.text;
+          return (
+            <Pressable
+              key={p.key}
+              style={styles.pillarItem}
+              accessibilityRole="button"
+              accessibilityLabel={p.label}
+              onPress={() => router.push(href)}
+            >
+              <Card style={styles.pillarCard}>
+                <ThemedText style={[styles.suit, { color: colore }]}>{p.suit}</ThemedText>
+                <ThemedText variant="label">{p.label}</ThemedText>
+              </Card>
+            </Pressable>
+          );
+        })}
+      </View>
+
       {/* Riquadro che cambia con il ruolo: il testo arriva da i18n, l'azione dai permessi */}
       {profile && (
         <Card style={{ gap: spacing.md }}>
@@ -66,94 +98,67 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Agente AI (feature di punta) */}
-      <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">{t.dashboard.agente.titolo}</ThemedText>
-        <ThemedText tone="muted" variant="caption">
-          {t.dashboard.agente.testo}
+      {/* Tutto il resto, in una griglia invece che in sette schede impilate.
+          Ogni destinazione resta raggiungibile: cambia che ci stanno tutte
+          sotto gli occhi, invece che una sotto l'altra. */}
+      <View style={{ gap: spacing.sm }}>
+        <ThemedText variant="label" tone="muted">
+          {t.dashboard.scorciatoie}
         </ThemedText>
-        <Button title={t.dashboard.agente.azione} onPress={() => router.push('/agente')} />
-      </Card>
-
-      {/* Rinnovi: al collaboratore solo i propri, senza lo scadenzario della rete */}
-      <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">{scadenzario.titolo}</ThemedText>
-        <ThemedText tone="muted" variant="caption">
-          {scadenzario.testo}
-        </ThemedText>
-        <Button
-          title={scadenzario.azione}
-          variant="secondary"
-          onPress={() => router.push('/renewals')}
-        />
-      </Card>
-
-      {/* Azione rapida: calcolatori */}
-      <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">{t.dashboard.calcolatori.titolo}</ThemedText>
-        <ThemedText tone="muted" variant="caption">
-          {t.dashboard.calcolatori.testo}
-        </ThemedText>
-        <Button
-          title={t.dashboard.calcolatori.azione}
-          variant="secondary"
-          onPress={() => router.push('/calcolatori')}
-        />
-      </Card>
-
-      {/* Azione rapida: appuntamenti */}
-      <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">{t.dashboard.calendario.titolo}</ThemedText>
-        <ThemedText tone="muted" variant="caption">
-          {t.dashboard.calendario.testo}
-        </ThemedText>
-        <Button
-          title={t.dashboard.calendario.azione}
-          variant="secondary"
-          onPress={() => router.push('/calendario')}
-        />
-      </Card>
-
-      {/* Azione rapida: funnel — solo per chi guida la rete */}
-      {can(profile, 'clients.network') && (
-        <Card style={{ gap: spacing.sm }}>
-          <ThemedText variant="heading">{t.dashboard.funnel.titolo}</ThemedText>
-          <ThemedText tone="muted" variant="caption">
-            {t.dashboard.funnel.testo}
-          </ThemedText>
-          <Button
-            title={t.dashboard.funnel.azione}
-            variant="secondary"
-            onPress={() => router.push('/funnel')}
+        <View style={styles.scorciatoie}>
+          <Scorciatoia
+            glifo="◉"
+            etichetta={t.dashboard.breve.agente}
+            colore={colors.gold}
+            onPress={() => router.push('/agente')}
           />
-        </Card>
-      )}
-
-      {/* Azione rapida: la rete in Italia */}
-      <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">{t.dashboard.mappa.titolo}</ThemedText>
-        <ThemedText tone="muted" variant="caption">
-          {t.dashboard.mappa.testo}
-        </ThemedText>
-        <Button
-          title={t.dashboard.mappa.azione}
-          variant="secondary"
-          onPress={() => router.push('/mappa')}
-        />
-      </Card>
-
-      {/* Azione rapida: punti e premi */}
-      <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">{t.dashboard.premi.titolo}</ThemedText>
-        <ThemedText tone="muted" variant="caption">
-          {t.dashboard.premi.testo}
-        </ThemedText>
-        <Button
-          title={t.dashboard.premi.azione}
-          variant="secondary"
-          onPress={() => router.push('/premi')}
-        />
-      </Card>
+          <Scorciatoia
+            glifo="◷"
+            etichetta={scadenzario === t.dashboard.scadenzario
+              ? t.dashboard.breve.scadenzario
+              : t.dashboard.breve.scadenzarioMio}
+            onPress={() => router.push('/renewals')}
+          />
+          <Scorciatoia
+            glifo="∑"
+            etichetta={t.dashboard.breve.calcolatori}
+            onPress={() => router.push('/calcolatori')}
+          />
+          <Scorciatoia
+            glifo="◴"
+            etichetta={t.dashboard.breve.calendario}
+            onPress={() => router.push('/calendario')}
+          />
+          <Scorciatoia
+            glifo="★"
+            etichetta={t.dashboard.breve.premi}
+            colore={colors.gold}
+            onPress={() => router.push('/premi')}
+          />
+          <Scorciatoia
+            glifo="⬢"
+            etichetta={t.dashboard.breve.mappa}
+            colore={colors.accent}
+            onPress={() => router.push('/mappa')}
+          />
+          {/* Il funnel raccoglie contatti per la rete: lo gestisce chi la guida */}
+          {can(profile, 'clients.network') && (
+            <Scorciatoia
+              glifo="⌾"
+              etichetta={t.dashboard.breve.funnel}
+              colore={colors.accent}
+              onPress={() => router.push('/funnel')}
+            />
+          )}
+          {can(profile, 'admin.panel') && (
+            <Scorciatoia
+              glifo="⚙"
+              etichetta={t.dashboard.breve.admin}
+              onPress={() => router.push('/admin')}
+            />
+          )}
+        </View>
+      </View>
 
       {/* Rank a carte: punti e distanza dal livello successivo, a colpo d'occhio */}
       <Card style={{ gap: spacing.sm }}>
@@ -189,47 +194,6 @@ export default function Dashboard() {
         />
       </Card>
 
-      {/* I quattro pilastri: Network è attivo (CRM), gli altri arrivano nelle prossime milestone */}
-      <View style={styles.pillars}>
-        {PILLARS.map((p) => {
-          const href =
-            p.key === 'trading'
-              ? '/trading'
-              : p.key === 'network'
-                ? '/clients'
-                : p.key === 'formazione'
-                  ? '/formazione'
-                  : p.key === 'community'
-                    ? '/community'
-                    : null;
-          const active = href !== null;
-          const card = (
-            <Card style={styles.pillarCard}>
-              <ThemedText style={[styles.suit, { color: RED_SUITS.has(p.suit) ? colors.accent : colors.text }]}>
-                {p.suit}
-              </ThemedText>
-              <ThemedText variant="label">{p.label}</ThemedText>
-              <ThemedText tone={active ? 'accent' : 'muted'} variant="caption">
-                {active ? t.dashboard.pilastroApri : t.dashboard.pilastroInArrivo}
-              </ThemedText>
-            </Card>
-          );
-          return active ? (
-            <Pressable
-              key={p.key}
-              style={styles.pillarItem}
-              onPress={() => href && router.push(href)}
-            >
-              {card}
-            </Pressable>
-          ) : (
-            <View key={p.key} style={styles.pillarItem}>
-              {card}
-            </View>
-          );
-        })}
-      </View>
-
       <Button title={t.comune.esci} variant="secondary" onPress={() => void signOut()} />
 
       <ThemedText tone="muted" variant="caption" style={styles.disclaimer}>
@@ -264,6 +228,12 @@ const styles = StyleSheet.create({
   },
   pillarCard: {
     alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.lg,
+  },
+  scorciatoie: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   suit: {

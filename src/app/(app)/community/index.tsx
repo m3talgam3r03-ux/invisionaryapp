@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, Card, EmptyState, ThemedText } from '@/components/ui';
+import { Button, Card, EmptyState, ThemedText, Colonna } from '@/components/ui';
 import { useFeedbackPosts } from '@/lib/feedback';
 import { radius, spacing, useTheme } from '@/theme';
 import type { FeedbackPost } from '@/types/models';
@@ -21,36 +21,38 @@ export default function Community() {
 
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={styles.actions}>
-        <Button title="+ Nuovo feedback" onPress={() => router.push('/community/nuovo')} style={{ flex: 1 }} />
-      </View>
-
-      <FlatList
-        data={data ?? []}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.textMuted} />
-        }
-        ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-        ListEmptyComponent={
-          isLoading ? (
-            <ThemedText tone="muted">Caricamento…</ThemedText>
-          ) : isError ? (
-            <EmptyState
-              tone="error"
-              title="Impossibile caricare la community"
-              hint={error instanceof Error ? error.message : 'Errore sconosciuto.'}
-            />
-          ) : (
-            <EmptyState
-              title="Ancora nessun feedback"
-              hint="Condividi un traguardo o un pensiero con la tua rete."
-            />
-          )
-        }
-        renderItem={({ item }) => <PostCard post={item} />}
-      />
+      <Colonna>
+        <View style={styles.actions}>
+          <Button title="+ Nuovo feedback" onPress={() => router.push('/community/nuovo')} style={{ flex: 1 }} />
+        </View>
+  
+        <FlatList
+          data={data ?? []}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.textMuted} />
+          }
+          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          ListEmptyComponent={
+            isLoading ? (
+              <ThemedText tone="muted">Caricamento…</ThemedText>
+            ) : isError ? (
+              <EmptyState
+                tone="error"
+                title="Impossibile caricare la community"
+                hint={error instanceof Error ? error.message : 'Errore sconosciuto.'}
+              />
+            ) : (
+              <EmptyState
+                title="Ancora nessun feedback"
+                hint="Condividi un traguardo o un pensiero con la tua rete."
+              />
+            )
+          }
+          renderItem={({ item }) => <PostCard post={item} />}
+        />
+      </Colonna>
     </SafeAreaView>
   );
 }

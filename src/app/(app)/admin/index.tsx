@@ -2,7 +2,7 @@ import { Redirect, useRouter } from 'expo-router';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Card, ThemedText } from '@/components/ui';
+import { Card, ThemedText, Colonna } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { ROLE_LABEL, t } from '@/i18n/it';
 import { useAllProfiles } from '@/lib/admin';
@@ -27,38 +27,40 @@ export default function AdminUsers() {
 
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
-      <FlatList
-        data={data ?? []}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.textMuted} />
-        }
-        ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-        ListHeaderComponent={
-          <ThemedText tone="muted" variant="caption" style={{ marginBottom: spacing.md }}>
-            {t.admin.introElenco}
-          </ThemedText>
-        }
-        ListEmptyComponent={
-          isLoading ? (
-            <ThemedText tone="muted">{t.admin.caricamentoUtenti}</ThemedText>
-          ) : isError ? (
-            <ThemedText tone="error" variant="caption">
-              {error instanceof Error ? error.message : t.comune.errore}
+      <Colonna>
+        <FlatList
+          data={data ?? []}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.textMuted} />
+          }
+          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          ListHeaderComponent={
+            <ThemedText tone="muted" variant="caption" style={{ marginBottom: spacing.md }}>
+              {t.admin.introElenco}
             </ThemedText>
-          ) : (
-            <ThemedText tone="muted">{t.admin.nessunUtente}</ThemedText>
-          )
-        }
-        renderItem={({ item }) => (
-          <UserRow
-            profile={item}
-            leaderName={item.leader_id ? nameById.get(item.leader_id) ?? null : null}
-            onPress={() => router.push({ pathname: '/admin/[id]', params: { id: item.id } })}
-          />
-        )}
-      />
+          }
+          ListEmptyComponent={
+            isLoading ? (
+              <ThemedText tone="muted">{t.admin.caricamentoUtenti}</ThemedText>
+            ) : isError ? (
+              <ThemedText tone="error" variant="caption">
+                {error instanceof Error ? error.message : t.comune.errore}
+              </ThemedText>
+            ) : (
+              <ThemedText tone="muted">{t.admin.nessunUtente}</ThemedText>
+            )
+          }
+          renderItem={({ item }) => (
+            <UserRow
+              profile={item}
+              leaderName={item.leader_id ? nameById.get(item.leader_id) ?? null : null}
+              onPress={() => router.push({ pathname: '/admin/[id]', params: { id: item.id } })}
+            />
+          )}
+        />
+      </Colonna>
     </SafeAreaView>
   );
 }

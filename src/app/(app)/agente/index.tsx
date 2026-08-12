@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Crest } from '@/components/Crest';
-import { ThemedText } from '@/components/ui';
+import { ThemedText, Colonna } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { useDictation } from '@/hooks/use-dictation';
 import { t } from '@/i18n/it';
@@ -169,117 +169,119 @@ export default function Agente() {
 
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={[styles.toolbar, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={newConversation} accessibilityRole="button">
-          <ThemedText tone="accent" variant="caption">
-            ＋ Nuova conversazione
-          </ThemedText>
-        </Pressable>
-        <Pressable
-          onPress={() => setAutoRead(!autoRead)}
-          accessibilityRole="switch"
-          accessibilityState={{ checked: autoRead }}
-          accessibilityLabel="Leggi automaticamente le risposte"
-        >
-          <ThemedText tone={autoRead ? 'accent' : 'muted'} variant="caption">
-            {autoRead ? '🔊 Lettura attiva' : '🔇 Lettura'}
-          </ThemedText>
-        </Pressable>
-        <Pressable onPress={() => router.push('/agente/memoria')} accessibilityRole="button">
-          <ThemedText tone="muted" variant="caption">
-            {t.agente.memoriaTitolo} ›
-          </ThemedText>
-        </Pressable>
-        {canManageKnowledge && (
-          <Pressable onPress={() => router.push('/agente/documenti')} accessibilityRole="button">
-            <ThemedText tone="muted" variant="caption">
-              Base di conoscenza ›
+      <Colonna>
+        <View style={[styles.toolbar, { borderBottomColor: colors.border }]}>
+          <Pressable onPress={newConversation} accessibilityRole="button">
+            <ThemedText tone="accent" variant="caption">
+              ＋ Nuova conversazione
             </ThemedText>
           </Pressable>
-        )}
-      </View>
-
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 96 : 0}
-      >
-        {initializing ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <ActivityIndicator color={colors.textMuted} />
-          </View>
-        ) : (
-          <FlatList
-            ref={listRef}
-            data={messages}
-            keyExtractor={(m) => m.id}
-            contentContainerStyle={{ padding: spacing.lg, flexGrow: 1, gap: spacing.sm }}
-            renderItem={({ item }) => (
-              <Bubble
-                message={item}
-                speaking={speakingId === item.id}
-                onToggleSpeak={() => speak(item.id, item.content)}
-              />
-            )}
-            ListEmptyComponent={<Welcome />}
-            ListFooterComponent={sending ? <Typing /> : null}
-            onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-            keyboardDismissMode="interactive"
-          />
-        )}
-
-        {(dictation.listening || dictation.error) && (
-          <View style={[styles.dictationBar, { backgroundColor: colors.surfaceAlt, borderTopColor: colors.border }]}>
-            <ThemedText tone={dictation.error ? 'error' : 'muted'} variant="caption" numberOfLines={2}>
-              {dictation.error ?? (partial ? `“${partial}”` : 'Sto ascoltando… tocca ■ per fermare.')}
+          <Pressable
+            onPress={() => setAutoRead(!autoRead)}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: autoRead }}
+            accessibilityLabel="Leggi automaticamente le risposte"
+          >
+            <ThemedText tone={autoRead ? 'accent' : 'muted'} variant="caption">
+              {autoRead ? '🔊 Lettura attiva' : '🔇 Lettura'}
             </ThemedText>
-          </View>
-        )}
-
-        <View style={[styles.inputBar, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
-          {dictation.available && (
-            <Pressable
-              onPress={dictation.toggle}
-              disabled={sending}
-              accessibilityRole="button"
-              accessibilityLabel={dictation.listening ? 'Ferma la dettatura' : 'Detta la domanda'}
-              style={[
-                styles.mic,
-                {
-                  backgroundColor: dictation.listening ? colors.accent : 'transparent',
-                  borderColor: colors.border,
-                  opacity: sending ? 0.4 : 1,
-                },
-              ]}
-            >
-              <ThemedText style={{ fontSize: 18, color: dictation.listening ? '#FFFFFF' : colors.textMuted }}>
-                {dictation.listening ? '■' : '🎤'}
+          </Pressable>
+          <Pressable onPress={() => router.push('/agente/memoria')} accessibilityRole="button">
+            <ThemedText tone="muted" variant="caption">
+              {t.agente.memoriaTitolo} ›
+            </ThemedText>
+          </Pressable>
+          {canManageKnowledge && (
+            <Pressable onPress={() => router.push('/agente/documenti')} accessibilityRole="button">
+              <ThemedText tone="muted" variant="caption">
+                Base di conoscenza ›
               </ThemedText>
             </Pressable>
           )}
-          <TextInput
-            style={[typography.body, styles.input, { color: colors.text }]}
-            value={input}
-            onChangeText={setInput}
-            placeholder={dictation.listening ? 'Parla pure…' : "Scrivi all'agente…"}
-            placeholderTextColor={colors.textMuted}
-            multiline
-            editable={!sending}
-          />
-          <Pressable
-            onPress={send}
-            disabled={!canSend}
-            accessibilityRole="button"
-            style={[styles.send, { backgroundColor: colors.accent, opacity: canSend ? 1 : 0.4 }]}
-          >
-            {sending ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <ThemedText style={styles.sendGlyph}>↑</ThemedText>
-            )}
-          </Pressable>
         </View>
-      </KeyboardAvoidingView>
+  
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 96 : 0}
+        >
+          {initializing ? (
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              <ActivityIndicator color={colors.textMuted} />
+            </View>
+          ) : (
+            <FlatList
+              ref={listRef}
+              data={messages}
+              keyExtractor={(m) => m.id}
+              contentContainerStyle={{ padding: spacing.lg, flexGrow: 1, gap: spacing.sm }}
+              renderItem={({ item }) => (
+                <Bubble
+                  message={item}
+                  speaking={speakingId === item.id}
+                  onToggleSpeak={() => speak(item.id, item.content)}
+                />
+              )}
+              ListEmptyComponent={<Welcome />}
+              ListFooterComponent={sending ? <Typing /> : null}
+              onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+              keyboardDismissMode="interactive"
+            />
+          )}
+  
+          {(dictation.listening || dictation.error) && (
+            <View style={[styles.dictationBar, { backgroundColor: colors.surfaceAlt, borderTopColor: colors.border }]}>
+              <ThemedText tone={dictation.error ? 'error' : 'muted'} variant="caption" numberOfLines={2}>
+                {dictation.error ?? (partial ? `“${partial}”` : 'Sto ascoltando… tocca ■ per fermare.')}
+              </ThemedText>
+            </View>
+          )}
+  
+          <View style={[styles.inputBar, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
+            {dictation.available && (
+              <Pressable
+                onPress={dictation.toggle}
+                disabled={sending}
+                accessibilityRole="button"
+                accessibilityLabel={dictation.listening ? 'Ferma la dettatura' : 'Detta la domanda'}
+                style={[
+                  styles.mic,
+                  {
+                    backgroundColor: dictation.listening ? colors.accent : 'transparent',
+                    borderColor: colors.border,
+                    opacity: sending ? 0.4 : 1,
+                  },
+                ]}
+              >
+                <ThemedText style={{ fontSize: 18, color: dictation.listening ? '#FFFFFF' : colors.textMuted }}>
+                  {dictation.listening ? '■' : '🎤'}
+                </ThemedText>
+              </Pressable>
+            )}
+            <TextInput
+              style={[typography.body, styles.input, { color: colors.text }]}
+              value={input}
+              onChangeText={setInput}
+              placeholder={dictation.listening ? 'Parla pure…' : "Scrivi all'agente…"}
+              placeholderTextColor={colors.textMuted}
+              multiline
+              editable={!sending}
+            />
+            <Pressable
+              onPress={send}
+              disabled={!canSend}
+              accessibilityRole="button"
+              style={[styles.send, { backgroundColor: colors.accent, opacity: canSend ? 1 : 0.4 }]}
+            >
+              {sending ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <ThemedText style={styles.sendGlyph}>↑</ThemedText>
+              )}
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </Colonna>
     </SafeAreaView>
   );
 }
