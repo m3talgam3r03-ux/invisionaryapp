@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Button, Card, Screen, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, ThemedText, Sezione } from '@/components/ui';
 import { ProgressBar } from '@/components/ProgressBar';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
@@ -89,9 +89,7 @@ export default function Premi() {
       {/* Il prossimo traguardo: quello subito dopo, non il più costoso */}
       {obiettivo && (
         <View style={{ gap: spacing.sm }}>
-          <ThemedText variant="label" tone="muted">
-            {t.premi.obiettivo}
-          </ThemedText>
+          <Sezione titolo={t.premi.obiettivo} />
           <Card style={{ gap: spacing.sm }}>
             <ThemedText>{obiettivo.nome}</ThemedText>
             <ProgressBar percent={avanzamento(obiettivo, saldo) * 100} />
@@ -104,9 +102,7 @@ export default function Premi() {
 
       {/* Catalogo */}
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.premi.catalogo}
-        </ThemedText>
+        <Sezione titolo={t.premi.catalogo} />
         {isLoading ? (
           <ThemedText tone="muted" variant="caption">
             {t.comune.caricamento}
@@ -160,9 +156,7 @@ export default function Premi() {
 
       {/* I riscatti fatti */}
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.premi.mieiRiscatti}
-        </ThemedText>
+        <Sezione titolo={t.premi.mieiRiscatti} />
         {(riscatti ?? []).length === 0 ? (
           <ThemedText tone="muted" variant="caption">
             {t.premi.nessunRiscatto}
@@ -186,9 +180,7 @@ export default function Premi() {
 
       {/* Il registro: è ciò che spiega il saldo */}
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.premi.movimenti}
-        </ThemedText>
+        <Sezione titolo={t.premi.movimenti} />
         {(registro ?? []).length === 0 ? (
           <ThemedText tone="muted" variant="caption">
             {t.premi.nessunMovimento}

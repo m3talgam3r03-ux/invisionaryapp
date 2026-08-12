@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { Button, Card, Screen, TextField, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, TextField, ThemedText, Sezione } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { verificaRegola } from '@/lib/booking';
@@ -76,9 +76,7 @@ export default function Disponibilita() {
 
       {/* Nuova fascia */}
       <View style={{ gap: spacing.md }}>
-        <ThemedText variant="label" tone="muted">
-          {t.calendario.aggiungiFascia}
-        </ThemedText>
+        <Sezione titolo={t.calendario.aggiungiFascia} />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {t.calendario.giorniBrevi.map((etichetta, indice) => (

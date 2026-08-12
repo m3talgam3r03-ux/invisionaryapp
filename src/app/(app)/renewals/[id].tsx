@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { RenewalForm } from '@/components/RenewalForm';
-import { Button, Card, Screen, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, ThemedText, Sezione } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { formatDateIT } from '@/lib/date';
@@ -209,9 +209,7 @@ function Opzione({
 function Storico({ righe }: { righe: RenewalHistoryEntry[] }) {
   return (
     <View style={{ gap: spacing.sm }}>
-      <ThemedText variant="label" tone="muted">
-        {t.rinnovi.storico.titolo}
-      </ThemedText>
+      <Sezione titolo={t.rinnovi.storico.titolo} />
 
       {righe.length === 0 ? (
         <ThemedText tone="muted" variant="caption">

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { Card, Screen, TextField, ThemedText } from '@/components/ui';
+import { Card, Screen, TextField, ThemedText, Sezione } from '@/components/ui';
 import { t } from '@/i18n/it';
 import { parseLocaleNumber } from '@/lib/calculators';
 import { formatNumber } from '@/lib/format';
@@ -88,9 +88,7 @@ export default function Lottaggio() {
 
       {/* Strumento: l'elenco arriva dal database, non dal codice */}
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.lottaggio.strumento}
-        </ThemedText>
+        <Sezione titolo={t.lottaggio.strumento} />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

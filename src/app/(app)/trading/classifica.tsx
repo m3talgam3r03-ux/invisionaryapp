@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { Podio } from '@/components/Podio';
-import { Button, Card, Screen, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, ThemedText, Sezione } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { formatNumber } from '@/lib/format';
@@ -45,9 +45,7 @@ export default function ClassificaTrader() {
 
       {/* Il podio del mese chiuso, e i punti che si portano a casa */}
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.podio.titolo(etichettaMese(mese))}
-        </ThemedText>
+        <Sezione titolo={t.podio.titolo(etichettaMese(mese))} />
         <Card style={{ gap: spacing.md, paddingBottom: 0 }}>
           <Podio voci={podio ?? []} />
         </Card>

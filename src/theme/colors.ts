@@ -7,15 +7,39 @@
  * - Estetica premium/"mano vincente": nessun immaginario da azzardo.
  */
 
-// Palette base condivisa (i valori grezzi del brand).
+/**
+ * Palette base condivisa (i valori grezzi del brand).
+ *
+ * ── PERCHÉ I SCURI SONO CALDI ──
+ * Erano grigi neutri tendenti al blu (#0E0E10 → #2E2E33). Accanto all'oro del
+ * marchio un grigio freddo lo spegne: i due colori si contrastano invece di
+ * stare insieme, e l'oro sembra ottone. Questi scuri hanno una punta di rosso —
+ * pochissimo, ma basta a far cantare l'oro e il rosso carte.
+ *
+ * ── E PERCHÉ I LIVELLI SONO PIÙ DISTANTI ──
+ * Fra sfondo e superficie c'erano dodici punti di luminosità: le schede non si
+ * staccavano dallo sfondo e tutto leggeva come un'unica massa grigia. Ora lo
+ * scalino è più netto, così una scheda si vede che è una scheda.
+ */
 export const palette = {
-  ink900: '#0E0E10', // background
-  ink800: '#1A1A1D', // surface
-  ink700: '#232327', // surface alternativa / elevazione
-  ink600: '#2E2E33', // bordi
-  bone: '#F5F3EF', // testo
-  smoke: '#8A8A90', // testo attenuato
-  cardRed: '#C8102E', // accent (rosso carte)
+  ink900: '#0B0A0A', // background — più profondo, così le schede si sollevano
+  ink800: '#1A1817', // surface
+  ink700: '#262321', // surface alternativa / elevazione
+  ink600: '#38342F', // bordi — visibili senza gridare
+  bone: '#F5F3EF', // testo (già caldo: ora la famiglia è coerente)
+  smoke: '#918B84', // testo attenuato, riscaldato come il resto
+  cardRed: '#C8102E', // accent (rosso carte) — per i RIEMPIMENTI
+  /**
+   * Il rosso quando fa da TESTO.
+   *
+   * `cardRed` su una superficie scura dà un contrasto di 3,01 — sotto la
+   * soglia di 4,5 per il testo normale. Non si legge bene, e non è un
+   * problema nuovo: c'era anche prima, solo che nessuno l'aveva misurato.
+   * Questo schiarito sta a 4,82 e resta lo stesso rosso di carte.
+   *
+   * Il pieno resta `cardRed`, dove conta il bianco sopra (5,88: a posto).
+   */
+  cardRedText: '#EC4A62',
   gold: '#C9A227', // rank / vittorie
   green: '#2E8B57', // success
   red: '#D21F3C', // error
@@ -30,6 +54,8 @@ export type ThemeColors = {
   text: string;
   textMuted: string;
   accent: string;
+  /** Il rosso quando fa da testo: quello pieno non ha contrasto sufficiente. */
+  accentText: string;
   gold: string;
   success: string;
   error: string;
@@ -44,6 +70,7 @@ export const darkColors: ThemeColors = {
   text: palette.bone,
   textMuted: palette.smoke,
   accent: palette.cardRed,
+  accentText: palette.cardRedText,
   gold: palette.gold,
   success: palette.green,
   error: palette.red,
@@ -55,9 +82,11 @@ export const lightColors: ThemeColors = {
   surface: '#FFFFFF',
   surfaceAlt: '#ECEAE4',
   border: '#DAD7CF',
-  text: '#0E0E10',
-  textMuted: '#5A5A60',
+  text: palette.ink900,
+  textMuted: '#5F584F',
   accent: '#C8102E',
+  // Su fondo chiaro il rosso pieno ha contrasto a sufficienza: resta lui.
+  accentText: '#B00D28',
   gold: '#9A7B12', // oro più scuro per contrasto su sfondo chiaro
   success: '#2E8B57',
   error: '#D21F3C',

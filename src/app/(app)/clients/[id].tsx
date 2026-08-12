@@ -5,7 +5,7 @@ import { Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-nat
 import { ClientForm } from '@/components/ClientForm';
 import { ConsentPanel } from '@/components/ConsentPanel';
 import { StatoBadge } from '@/components/StatoBadge';
-import { Avatar, Button, Card, EmptyState, Screen, ThemedText } from '@/components/ui';
+import { Avatar, Button, Card, EmptyState, Screen, ThemedText, Sezione } from '@/components/ui';
 import { t } from '@/i18n/it';
 import { useClient, useClientHistory, useDeleteClient, useUpdateClient } from '@/lib/clients';
 import { parseContact } from '@/lib/contact';
@@ -163,9 +163,7 @@ export default function ClientDetail() {
 function Storico({ righe }: { righe: ContactStatusHistoryEntry[] }) {
   return (
     <View style={{ gap: spacing.sm }}>
-      <ThemedText variant="label" tone="muted">
-        {t.crm.storico.titolo}
-      </ThemedText>
+      <Sezione titolo={t.crm.storico.titolo} />
 
       {righe.length === 0 ? (
         <ThemedText tone="muted" variant="caption">

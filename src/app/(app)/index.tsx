@@ -5,7 +5,7 @@ import { Crest } from '@/components/Crest';
 import { Scorciatoia } from '@/components/Scorciatoia';
 import { ProgressBar } from '@/components/ProgressBar';
 import { RankBadge } from '@/components/RankBadge';
-import { Button, Card, Screen, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, ThemedText, Sezione } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { ROLE_LABEL, t } from '@/i18n/it';
 import { useMyStats } from '@/lib/leaderboard';
@@ -102,9 +102,7 @@ export default function Dashboard() {
           Ogni destinazione resta raggiungibile: cambia che ci stanno tutte
           sotto gli occhi, invece che una sotto l'altra. */}
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.dashboard.scorciatoie}
-        </ThemedText>
+        <Sezione titolo={t.dashboard.scorciatoie} />
         <View style={styles.scorciatoie}>
           <Scorciatoia
             glifo="◉"

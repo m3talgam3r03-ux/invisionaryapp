@@ -20,7 +20,10 @@ export function ThemedText({ variant = 'body', tone = 'default', style, ...rest 
   const toneColor: Record<Tone, string> = {
     default: colors.text,
     muted: colors.textMuted,
-    accent: colors.accent,
+    // Il rosso pieno del marchio, come TESTO su fondo scuro, sta a 3,01 di
+    // contrasto: sotto la soglia di 4,5. Qui si usa la variante schiarita —
+    // stesso rosso di carte, ma leggibile. Il pieno resta sui riempimenti.
+    accent: colors.accentText,
     gold: colors.gold,
     success: colors.success,
     error: colors.error,

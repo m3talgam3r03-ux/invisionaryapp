@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Button, Card, Screen, TextField, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, TextField, ThemedText, Sezione } from '@/components/ui';
 import { t } from '@/i18n/it';
 import { CANALI, linkPubblico, slugDaTitolo, slugValido, type Canale } from '@/lib/funnel';
 import { useAttivaFunnel, useCreaFunnel, useFunnels, useLead } from '@/lib/funnel-data';
@@ -158,9 +158,7 @@ export default function Funnel() {
 
           {/* Una spunta per canale: è il punto per cui esiste la 0018 */}
           <View style={{ gap: spacing.sm }}>
-            <ThemedText variant="label" tone="muted">
-              {t.funnel.canali}
-            </ThemedText>
+            <Sezione titolo={t.funnel.canali} />
             <View style={styles.chips}>
               {CANALI.map((c) => (
                 <Chip

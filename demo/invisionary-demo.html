@@ -13,8 +13,15 @@
 <body>
 <style>
   :root{
-    --bg:#0E0E10; --surface:#1A1A1D; --surface2:#232327; --border:#2E2E33;
-    --text:#F5F3EF; --muted:#8A8A90; --accent:#C8102E; --gold:#C9A227;
+    /* Gli scuri hanno una punta di rosso: accanto all'oro del marchio un grigio
+       freddo lo spegne, e l'oro sembra ottone. E i livelli sono più distanti
+       fra loro, così una scheda si vede che è una scheda invece di sciogliersi
+       nello sfondo. Stessi valori del tema dell'app. */
+    --bg:#0B0A0A; --surface:#1A1817; --surface2:#262321; --border:#38342F;
+    --text:#F5F3EF; --muted:#918B84; --accent:#C8102E; --gold:#C9A227;
+    /* Il rosso quando fa da TESTO: quello pieno sta a 3,01 di contrasto,
+       sotto la soglia di 4,5. Questo sta a 4,82 ed è lo stesso rosso carte. */
+    --accent-text:#EC4A62;
     --success:#2E8B57; --error:#D21F3C;
     --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:22px;
     --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -91,14 +98,14 @@
   @media (prefers-reduced-motion: reduce){.view,.navmenu,.sheet,.iv-root *{animation:none!important}}
 
   /* Components */
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.35);
     display:flex;flex-direction:column;gap:8px}
   .heading{font-size:17px;font-weight:700;margin:0}
   .title{font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin:0}
   .display{font-size:34px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin:0}
   .label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
   .cap{font-size:12.5px;color:var(--muted);margin:0}
-  .muted{color:var(--muted)} .gold{color:var(--gold)} .accent{color:var(--accent)}
+  .muted{color:var(--muted)} .gold{color:var(--gold)} .accent{color:var(--accent-text)}
   .success{color:var(--success)} .error{color:var(--error)}
   .btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:#fff;
     height:48px;border-radius:var(--r-md);font-weight:700;text-transform:uppercase;letter-spacing:.1em;

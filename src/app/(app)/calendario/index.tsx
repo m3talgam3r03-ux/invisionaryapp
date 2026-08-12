@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { Button, Card, EmptyState, Screen, ThemedText } from '@/components/ui';
+import { Button, Card, EmptyState, Screen, ThemedText, Sezione } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { classificaErrore, fusoDaSegnalare, raggruppaSlot, type Slot } from '@/lib/booking';
@@ -115,9 +115,7 @@ export default function Calendario() {
 
       {/* I propri appuntamenti, prima di tutto */}
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.calendario.mieiAppuntamenti}
-        </ThemedText>
+        <Sezione titolo={t.calendario.mieiAppuntamenti} />
         {attive.length === 0 ? (
           <ThemedText tone="muted" variant="caption">
             {t.calendario.nessunAppuntamento}
@@ -162,9 +160,7 @@ export default function Calendario() {
 
       {/* Prenotare */}
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.calendario.conChi}
-        </ThemedText>
+        <Sezione titolo={t.calendario.conChi} />
         {caricamentoHost ? (
           <ThemedText tone="muted" variant="caption">
             {t.comune.caricamento}
@@ -202,9 +198,7 @@ export default function Calendario() {
 
       {scelto && (
         <View style={{ gap: spacing.md }}>
-          <ThemedText variant="label" tone="muted">
-            {t.calendario.quando}
-          </ThemedText>
+          <Sezione titolo={t.calendario.quando} />
           {caricamentoSlot ? (
             <ThemedText tone="muted" variant="caption">
               {t.calendario.caricamentoSlot}

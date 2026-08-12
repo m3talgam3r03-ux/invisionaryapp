@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { Button, Card, Screen, TextField, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, TextField, ThemedText, Sezione } from '@/components/ui';
 import { t } from '@/i18n/it';
 import { useImportClients } from '@/lib/clients';
 import {
@@ -174,9 +174,7 @@ export default function ImportClients() {
       {/* Dichiarazione: non è burocrazia, è la sola risposta possibile a
           «perché avete questi dati». Senza, l'importazione non parte. */}
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.crm.importaSchermata.dichiarazione}
-        </ThemedText>
+        <Sezione titolo={t.crm.importaSchermata.dichiarazione} />
         <ThemedText tone="muted" variant="caption">
           {t.crm.importaSchermata.dichiarazioneSpiega}
         </ThemedText>

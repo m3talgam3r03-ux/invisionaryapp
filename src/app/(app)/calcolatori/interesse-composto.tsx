@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Line, Polygon, Polyline } from 'react-native-svg';
 
-import { Card, Screen, TextField, ThemedText } from '@/components/ui';
+import { Card, Screen, TextField, ThemedText, Sezione } from '@/components/ui';
 import { t } from '@/i18n/it';
 import {
   computeCompoundInterest,
@@ -76,9 +76,7 @@ export default function InteresseComposto() {
           farebbe sembrare che tutta la crescita venga dagli interessi. */}
       {serie && (
         <View style={{ gap: spacing.sm }}>
-          <ThemedText variant="label" tone="muted">
-            {t.composto.andamento}
-          </ThemedText>
+          <Sezione titolo={t.composto.andamento} />
           <Card style={{ gap: spacing.md }}>
             <GraficoAree punti={serie.punti} />
             {/* Neutro per i soldi che hai messo, oro per quelli che ha fatto
@@ -147,9 +145,7 @@ export default function InteresseComposto() {
       {/* Anno per anno: il grafico dà la forma, la tabella i numeri */}
       {result && result.perYear.length > 0 && (
         <View style={{ gap: spacing.sm }}>
-          <ThemedText variant="label" tone="muted">
-            {t.composto.annoPerAnno}
-          </ThemedText>
+          <Sezione titolo={t.composto.annoPerAnno} />
           <Card style={{ gap: 0, paddingVertical: spacing.sm }}>
             <View style={[styles.riga, { borderBottomColor: colors.border }]}>
               <ThemedText variant="caption" tone="muted" style={styles.colAnno}>

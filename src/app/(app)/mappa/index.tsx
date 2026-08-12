@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { MappaItalia } from '@/components/MappaItalia';
-import { Card, Screen, ThemedText } from '@/components/ui';
+import { Card, Screen, ThemedText, Sezione } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { NOMI_REGIONI, costruisciMappa, regionePiuAffollata, testoRiepilogo } from '@/lib/mappa';
@@ -55,9 +55,7 @@ export default function Mappa() {
 
       {/* La propria regione: si vede la mappa e ci si aggiunge da lì */}
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.mappa.tuaRegione}
-        </ThemedText>
+        <Sezione titolo={t.mappa.tuaRegione} />
         <Pressable onPress={() => setApriScelta((v) => !v)} accessibilityRole="button">
           <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
             <ThemedText style={{ flex: 1 }} tone={mia ? 'default' : 'muted'}>

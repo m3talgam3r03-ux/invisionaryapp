@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Button, Card, Screen, ThemedText } from '@/components/ui';
+import { Button, Card, Screen, ThemedText, Sezione } from '@/components/ui';
 import { t } from '@/i18n/it';
 import { domandeRimaste, statoBudget } from '@/lib/agente';
 import { useBudgetAgente, useDimentica, useDimenticaTutto, useMemorie } from '@/lib/agente-data';
@@ -52,9 +52,7 @@ export default function MemoriaAgente() {
       )}
 
       <View style={{ gap: spacing.sm }}>
-        <ThemedText variant="label" tone="muted">
-          {t.agente.memoriaTitolo}
-        </ThemedText>
+        <Sezione titolo={t.agente.memoriaTitolo} />
         <ThemedText tone="muted" variant="caption">
           {t.agente.memoriaPrivata}
         </ThemedText>
