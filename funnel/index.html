@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Invisionary</title>
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark">
+
+<!--
+  ============================================================================
+  Pagina pubblica dei funnel Invisionary.
+
+  UN FILE SOLO, e non è pigrizia: una pagina di atterraggio che ci mette tre
+  secondi a comparire perde contatti. Niente framework, niente caratteri da
+  scaricare, niente librerie — si apre e c'è.
+
+  UNA PAGINA PER TUTTI I FUNNEL. Quale mostrare lo dice `?f=slug`; titolo,
+  sottotitolo, canali e testo del consenso arrivano dall'endpoint. Aggiungere
+  un funnel non richiede di ripubblicare niente.
+
+  NESSUNA CHIAVE QUI DENTRO. L'unica cosa da configurare è l'indirizzo della
+  Edge Function, qui sotto.
+  ============================================================================
+-->
+<script>
+  /* ⚠️ DA CONFIGURARE: l'indirizzo della function `funnel-submit`. */
+  const ENDPOINT = 'https://YOUR-PROJECT-ref.functions.supabase.co/funnel-submit';
+</script>
+
+<style>
+  :root{
+    --bg:#0E0E10; --surface:#1A1A1D; --surface-2:#232327; --border:#2E2E33;
+    --text:#F5F3EF; --muted:#8A8A90; --accent:#C8102E; --gold:#C9A227;
+    --ok:#2E8B57; --err:#D21F3C;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text); min-height:100vh;
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:32px 20px 56px;
+  }
+  main{width:100%;max-width:520px}
+
+  .marchio{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:28px}
+  .semi{font-size:22px;letter-spacing:6px}
+  .semi .r{color:var(--accent)}
+  .nome{font-size:12px;letter-spacing:5px;font-weight:700;color:var(--muted)}
+
+  h1{font-size:27px;line-height:1.2;margin:0 0 8px;letter-spacing:-.01em}
+  .sotto{color:var(--muted);margin:0 0 26px;font-size:15px}
+
+  form{display:flex;flex-direction:column;gap:16px}
+  label{display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--muted)}
+  input[type=text],input[type=email],input[type=tel]{
+    font:inherit; color:var(--text); background:var(--surface);
+    border:1px solid var(--border); border-radius:12px; padding:13px 14px;
+    width:100%; transition:border-color .15s;
+  }
+  input:focus{outline:none;border-color:var(--accent)}
+  input::placeholder{color:#55555c}
+
+  /* Il campo civetta: invisibile a chi legge, irresistibile per un robot.
+     `display:none` no — molti robot lo saltano. Fuori dallo schermo sì. */
+  .civetta{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+  fieldset{border:1px solid var(--border);border-radius:12px;padding:14px;margin:0}
+  legend{font-size:13px;color:var(--muted);padding:0 6px}
+  /* `flex-direction:row` va ripetuto: la regola generica su `label` mette in
+     colonna, e senza questo la casella finisce SOPRA la sua etichetta. */
+  .canale{display:flex;flex-direction:row;align-items:center;gap:11px;padding:8px 0;cursor:pointer;font-size:15px;color:var(--text)}
+  .canale input{width:20px;height:20px;margin:0;accent-color:var(--accent);flex:0 0 auto}
+
+  .informativa{font-size:12.5px;line-height:1.5;color:var(--muted);margin:2px 0 0}
+
+  button{
+    font:inherit;font-weight:700;color:#fff;background:var(--accent);
+    border:0;border-radius:12px;padding:15px;cursor:pointer;width:100%;
+    transition:opacity .15s;
+  }
+  button:hover:not(:disabled){opacity:.9}
+  button:disabled{opacity:.5;cursor:default}
+
+  .esito{font-size:14px;margin:0;min-height:1.4em}
+  .esito.ok{color:var(--ok)}
+  .esito.no{color:var(--err)}
+
+  .fatto{text-align:center;padding:26px 0}
+  .fatto .spunta{font-size:44px;color:var(--gold);line-height:1}
+  .fatto h2{font-size:21px;margin:12px 0 6px}
+  .fatto p{color:var(--muted);margin:0;font-size:15px}
+
+  .piede{margin-top:30px;font-size:11.5px;color:#5a5a61;text-align:center;line-height:1.6}
+  .caricamento{color:var(--muted);text-align:center;padding:40px 0}
+</style>
+</head>
+<body>
+<main>
+  <div class="marchio">
+    <span class="semi"><span class="r">♥</span>♠<span class="r">♦</span>♣</span>
+    <span class="nome">INVISIONARY</span>
+  </div>
+
+  <div id="corpo"><p class="caricamento">Un momento…</p></div>
+
+  <p class="piede">
+    I dati inseriti sono trattati secondo l'informativa privacy e conservati
+    nell'Unione Europea. Puoi revocare il consenso in qualsiasi momento.
+  </p>
+</main>
+
+<script>
+(function(){
+  'use strict';
+
+  /* Tre secondi: pochi per una persona, un'eternità per un robot che compila
+     e invia nello stesso istante. Deve combaciare col controllo lato server:
+     se qui fosse più permissivo, il server rifiuterebbe in silenzio. */
+  var TEMPO_MINIMO_MS = 3000;
+
+  var apertaIl = Date.now();
+  var slug = new URLSearchParams(location.search).get('f') || '';
+  var corpo = document.getElementById('corpo');
+
+  var NOMI = {email:'Email', sms:'SMS', whatsapp:'WhatsApp', telefono:'Telefono'};
+  var SPIEGA = {
+    email:    'Scrivermi via email',
+    sms:      'Mandarmi un SMS',
+    whatsapp: 'Scrivermi su WhatsApp',
+    telefono: 'Chiamarmi al telefono'
+  };
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  if (!slug) { erroreFatale('Pagina non disponibile.'); return; }
+
+  fetch(ENDPOINT + '?slug=' + encodeURIComponent(slug))
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+    .then(function(res){
+      if (!res.ok) { erroreFatale(res.j && res.j.error ? res.j.error : 'Pagina non disponibile.'); return; }
+      disegna(res.j);
+    })
+    .catch(function(){ erroreFatale('Non è stato possibile caricare la pagina.'); });
+
+  function erroreFatale(msg){
+    corpo.innerHTML = '<h1>' + esc(msg) + '</h1>' +
+      '<p class="sotto">Controlla il link che hai ricevuto.</p>';
+  }
+
+  function disegna(f){
+    var canali = Array.isArray(f.canali) ? f.canali : [];
+
+    corpo.innerHTML =
+      '<h1>' + esc(f.titolo) + '</h1>' +
+      (f.sottotitolo ? '<p class="sotto">' + esc(f.sottotitolo) + '</p>' : '') +
+      '<form id="modulo" novalidate>' +
+        '<label>Nome<input type="text" id="nome" autocomplete="name" placeholder="Come ti chiami"></label>' +
+        '<label>Email<input type="email" id="email" autocomplete="email" inputmode="email" placeholder="nome@esempio.it"></label>' +
+        '<label>Telefono<input type="tel" id="telefono" autocomplete="tel" inputmode="tel" placeholder="Facoltativo"></label>' +
+
+        '<div class="civetta" aria-hidden="true">' +
+          '<label>Non compilare<input type="text" id="civetta" tabindex="-1" autocomplete="off"></label>' +
+        '</div>' +
+
+        // Una spunta per canale, mai una sola per tutti: chi acconsente
+        // all'email non ha acconsentito a WhatsApp.
+        '<fieldset>' +
+          '<legend>Cosa ci autorizzi a fare</legend>' +
+          canali.map(function(c){
+            return '<label class="canale"><input type="checkbox" value="' + esc(c) + '">' +
+              '<span>' + esc(SPIEGA[c] || NOMI[c] || c) + '</span></label>';
+          }).join('') +
+          '<p class="informativa">' + esc(f.testoConsenso) + '</p>' +
+        '</fieldset>' +
+
+        '<button type="submit" id="invia">Invia</button>' +
+        '<p class="esito" id="esito" role="status" aria-live="polite"></p>' +
+      '</form>';
+
+    document.getElementById('modulo').addEventListener('submit', invia);
+  }
+
+  function invia(e){
+    e.preventDefault();
+    var esito = document.getElementById('esito');
+    var bottone = document.getElementById('invia');
+
+    var email = document.getElementById('email').value.trim();
+    var telefono = document.getElementById('telefono').value.trim();
+    var canali = [].slice.call(document.querySelectorAll('fieldset input:checked'))
+      .map(function(i){ return i.value; });
+
+    // Questi controlli sono cortesia, non sicurezza: il server li rifà tutti.
+    // Servono a dire alla persona cosa manca, invece di farla aspettare.
+    if (!email && !telefono) return dillo(esito, 'Serve un\'email o un numero di telefono.', false);
+    if (email && !/^[^@\s]+@[^@.\s]+(\.[^@.\s]+)+$/.test(email))
+      return dillo(esito, 'Controlla l\'indirizzo email.', false);
+    if (!canali.length)
+      return dillo(esito, 'Spunta almeno una casella: senza il tuo consenso non possiamo ricontattarti.', false);
+
+    bottone.disabled = true;
+    dillo(esito, 'Invio…', true);
+
+    fetch(ENDPOINT, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        slug: slug,
+        nome: document.getElementById('nome').value.trim(),
+        email: email,
+        telefono: telefono,
+        canali: canali,
+        civetta: document.getElementById('civetta').value,
+        tempoCompilazione: Date.now() - apertaIl
+      })
+    })
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(res){
+        if (res.ok) { grazie(); return; }
+        bottone.disabled = false;
+        dillo(esito, (res.j && res.j.error) || 'Non è stato possibile inviare la richiesta.', false);
+      })
+      .catch(function(){
+        bottone.disabled = false;
+        dillo(esito, 'Connessione assente. Riprova.', false);
+      });
+  }
+
+  function dillo(el, testo, positivo){
+    el.textContent = testo;
+    el.className = 'esito ' + (positivo ? 'ok' : 'no');
+  }
+
+  function grazie(){
+    corpo.innerHTML =
+      '<div class="fatto">' +
+        '<div class="spunta">✓</div>' +
+        '<h2>Ci siamo</h2>' +
+        '<p>Abbiamo ricevuto la tua richiesta: ti ricontattiamo presto.</p>' +
+      '</div>';
+  }
+})();
+</script>
+</body>
+</html>

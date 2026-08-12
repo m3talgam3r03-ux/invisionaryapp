@@ -537,6 +537,8 @@ export const t = {
     campoSottotitolo: 'Sottotitolo (facoltativo)',
     campoSlug: 'Indirizzo',
     slugAiuto: 'Solo minuscole, numeri e trattini. È la parte finale del link pubblico.',
+    baseMancante:
+      'Il link completo compare quando pubblichi la pagina e imposti EXPO_PUBLIC_FUNNEL_BASE_URL nel file .env.',
     slugNonValido: 'Indirizzo non valido: solo minuscole, numeri e trattini.',
     campoConsenso: 'Testo dell’informativa',
     consensoAiuto:

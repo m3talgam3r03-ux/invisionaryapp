@@ -606,6 +606,15 @@ npx supabase functions deploy funnel-submit --no-verify-jwt
 npx supabase secrets set FUNNEL_IP_SALT="$(openssl rand -hex 32)"
 ```
 
+La function risponde a due verbi: **GET** restituisce cosa mostrare sulla pagina
+(titolo, sottotitolo, canali, testo del consenso — mai chi riceve i contatti),
+**POST** registra il contatto. Il GET sta qui e non su PostgREST perché così la
+pagina pubblica non deve portarsi dietro nessuna chiave: un indirizzo da
+configurare è meglio di un indirizzo e una chiave.
+
+La pagina è [`funnel/index.html`](../funnel/index.html) — un file solo, senza
+dipendenze. Vedi [`funnel/README.md`](../funnel/README.md) per pubblicarla.
+
 ### Cosa NON si accetta dal client
 
 | Dato | Perché no |

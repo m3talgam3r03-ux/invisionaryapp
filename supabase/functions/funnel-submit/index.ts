@@ -29,11 +29,53 @@ const CORS = {
   // La pagina del funnel può stare su un dominio diverso dall'app.
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+
+  /*
+   * GET: cosa mostrare sulla pagina.
+   *
+   * Sta qui e non su PostgREST perché così la pagina pubblica non deve
+   * portarsi dietro NESSUNA chiave. La anon key sarebbe pubblica per
+   * definizione e protetta dalla RLS, ma un file HTML che gira per host
+   * diversi con una chiave dentro è una cosa in più da ricordare, ruotare e
+   * spiegare. Un solo indirizzo da configurare è meglio di un indirizzo e una
+   * chiave.
+   */
+  if (req.method === 'GET') {
+    try {
+      const slug = new URL(req.url).searchParams.get('slug')?.trim().toLowerCase() ?? '';
+      if (slug === '') return json({ error: 'Funnel non indicato.' }, 400);
+
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      const { data, error } = await supabase.rpc('funnel_pubblico', { p_slug: slug });
+      if (error) throw error;
+
+      const f = (data ?? [])[0];
+      // Un funnel spento o inesistente si racconta allo stesso modo: dire
+      // «questo slug non esiste» permetterebbe di scoprirli per tentativi.
+      if (!f) return json({ error: 'Funnel non disponibile.' }, 404);
+
+      // Esce SOLO ciò che serve a disegnare il modulo: mai chi riceve i
+      // contatti, mai i limiti configurati.
+      return json({
+        titolo: f.titolo,
+        sottotitolo: f.sottotitolo,
+        testoConsenso: f.testo_consenso,
+        canali: f.canali,
+      });
+    } catch (e) {
+      console.error('funnel-submit GET:', e instanceof Error ? e.message : e);
+      return json({ error: 'Non è stato possibile caricare la pagina.' }, 500);
+    }
+  }
+
   if (req.method !== 'POST') return json({ error: 'Metodo non ammesso.' }, 405);
 
   try {

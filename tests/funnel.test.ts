@@ -18,6 +18,7 @@ import {
   classificaErroreLead,
   emailPlausibile,
   leadRimanenti,
+  linkPubblico,
   slugDaTitolo,
   slugValido,
   verificaInvio,
@@ -168,6 +169,28 @@ describe('slug', () => {
     expect(slugDaTitolo('')).toBe('');
     expect(slugDaTitolo('!!!')).toBe('');
     expect(slugDaTitolo('a')).toBe('');
+  });
+});
+
+describe('link pubblico', () => {
+  it('lo compone dalla base configurata', () => {
+    expect(linkPubblico('https://vai.invisionary.it', 'corso-base')).toBe(
+      'https://vai.invisionary.it/?f=corso-base',
+    );
+    expect(linkPubblico('https://vai.invisionary.it/', 'corso-base')).toBe(
+      'https://vai.invisionary.it/?f=corso-base',
+    );
+  });
+
+  it('senza base non inventa un indirizzo', () => {
+    // Un link inventato qualcuno lo copia e lo manda a un cliente.
+    expect(linkPubblico(undefined, 'corso-base')).toBeNull();
+    expect(linkPubblico('', 'corso-base')).toBeNull();
+    expect(linkPubblico('   ', 'corso-base')).toBeNull();
+  });
+
+  it('con uno slug non valido non produce un link', () => {
+    expect(linkPubblico('https://vai.invisionary.it', 'Non Valido')).toBeNull();
   });
 });
 

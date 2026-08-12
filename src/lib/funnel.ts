@@ -112,6 +112,20 @@ export function slugDaTitolo(titolo: string): string {
 /** I segni che `normalize('NFD')` stacca dalle lettere accentate. */
 const SEGNI_DIACRITICI = new RegExp('[\\u0300-\\u036f]', 'g');
 
+/**
+ * Il link pubblico da dare in giro.
+ *
+ * La base arriva da `EXPO_PUBLIC_FUNNEL_BASE_URL`, cioè da dove è ospitata la
+ * pagina: l'app non può indovinarla. Se manca si restituisce `null` e
+ * l'interfaccia mostra solo lo slug, invece di un indirizzo inventato che
+ * qualcuno copierebbe e manderebbe a un cliente.
+ */
+export function linkPubblico(base: string | undefined, slug: string): string | null {
+  const b = (base ?? '').trim();
+  if (b === '' || !slugValido(slug)) return null;
+  return `${b.replace(/\/+$/, '')}/?f=${slug}`;
+}
+
 /** Quanti contatti si possono ancora accettare in questa finestra. */
 export function leadRimanenti(arrivatiUltimaOra: number, massimo: number): number {
   if (!Number.isFinite(massimo) || massimo <= 0) return 0;

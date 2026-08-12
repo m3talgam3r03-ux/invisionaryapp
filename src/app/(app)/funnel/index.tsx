@@ -3,9 +3,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button, Card, Screen, TextField, ThemedText } from '@/components/ui';
 import { t } from '@/i18n/it';
-import { CANALI, slugDaTitolo, slugValido, type Canale } from '@/lib/funnel';
+import { CANALI, linkPubblico, slugDaTitolo, slugValido, type Canale } from '@/lib/funnel';
 import { useAttivaFunnel, useCreaFunnel, useFunnels, useLead } from '@/lib/funnel-data';
 import { radius, spacing, useTheme } from '@/theme';
+
+/** Dove è ospitata la pagina pubblica. L'app non può indovinarlo. */
+const BASE_FUNNEL = process.env.EXPO_PUBLIC_FUNNEL_BASE_URL;
 
 const CONSENSO_PREDEFINITO =
   'Acconsento a essere ricontattato per ricevere informazioni sul percorso. ' +
@@ -64,9 +67,16 @@ export default function Funnel() {
                 {f.attivo ? t.funnel.attivo : t.funnel.spento}
               </ThemedText>
             </View>
-            <ThemedText tone="muted" variant="caption">
-              /{f.slug}
+            {/* Il link da dare in giro. Senza la base configurata si mostra
+                solo lo slug: un indirizzo inventato qualcuno lo copierebbe. */}
+            <ThemedText tone={linkPubblico(BASE_FUNNEL, f.slug) ? 'accent' : 'muted'} variant="caption">
+              {linkPubblico(BASE_FUNNEL, f.slug) ?? `/${f.slug}`}
             </ThemedText>
+            {!BASE_FUNNEL && (
+              <ThemedText tone="muted" variant="caption">
+                {t.funnel.baseMancante}
+              </ThemedText>
+            )}
             <ThemedText tone="muted" variant="caption">
               {f.canali.map((c) => t.funnel.canaleNome[c] ?? c).join(' · ')}
             </ThemedText>
