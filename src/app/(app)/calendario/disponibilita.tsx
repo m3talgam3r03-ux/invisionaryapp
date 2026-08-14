@@ -7,6 +7,7 @@ import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { verificaRegola } from '@/lib/booking';
 import { useDisponibilita, useEliminaRegola, useSalvaRegola } from '@/lib/calendario';
+import { messaggioErrore } from '@/lib/errori';
 import { can } from '@/lib/permissions';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -144,7 +145,7 @@ export default function Disponibilita() {
         />
         {salva.isError && (
           <ThemedText tone="error" variant="caption">
-            {salva.error instanceof Error ? salva.error.message : t.comune.errore}
+            {messaggioErrore(salva.error, t.comune.errore)}
           </ThemedText>
         )}
       </View>

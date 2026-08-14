@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Card, Screen, TextField, ThemedText, Sezione } from '@/components/ui';
 import { t } from '@/i18n/it';
 import { useImportClients } from '@/lib/clients';
+import { messaggioErrore } from '@/lib/errori';
 import {
   buildClientRows,
   CLIENT_FIELDS,
@@ -42,7 +43,7 @@ export default function ImportClients() {
         setMapping(guessMapping(parsed.headers));
       }
     } catch (e) {
-      setPickError(e instanceof Error ? e.message : 'Lettura del file non riuscita.');
+      setPickError(messaggioErrore(e, 'Lettura del file non riuscita.'));
     } finally {
       setPicking(false);
     }
@@ -218,7 +219,7 @@ export default function ImportClients() {
 
       {importer.isError && (
         <ThemedText tone="error" variant="caption">
-          {importer.error instanceof Error ? importer.error.message : 'Import non riuscito.'}
+          {messaggioErrore(importer.error, 'Import non riuscito.')}
         </ThemedText>
       )}
 

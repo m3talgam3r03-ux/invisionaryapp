@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { RenewalForm } from '@/components/RenewalForm';
 import { Screen, ThemedText } from '@/components/ui';
+import { messaggioErrore } from '@/lib/errori';
 import { useCreateRenewal } from '@/lib/renewals';
 
 export default function NewRenewal() {
@@ -20,7 +21,7 @@ export default function NewRenewal() {
       />
       {create.isError && (
         <ThemedText tone="error" variant="caption">
-          {create.error instanceof Error ? create.error.message : 'Creazione non riuscita.'}
+          {messaggioErrore(create.error, 'Creazione non riuscita.')}
         </ThemedText>
       )}
     </Screen>

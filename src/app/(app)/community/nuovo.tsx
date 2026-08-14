@@ -5,6 +5,7 @@ import { Pressable, View } from 'react-native';
 
 import { Button, Screen, TextField, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
+import { messaggioErrore } from '@/lib/errori';
 import { pickImage, useCreateFeedbackPost, type PickedImage } from '@/lib/feedback';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -25,7 +26,7 @@ export default function NuovoFeedback() {
       if (img) setPhoto(img);
       else setError('Permesso negato o nessuna immagine selezionata.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Selezione immagine non riuscita.');
+      setError(messaggioErrore(e, 'Selezione immagine non riuscita.'));
     }
   }
 
@@ -77,7 +78,7 @@ export default function NuovoFeedback() {
       )}
       {create.isError && (
         <ThemedText tone="error" variant="caption">
-          {create.error instanceof Error ? create.error.message : 'Pubblicazione non riuscita.'}
+          {messaggioErrore(create.error, 'Pubblicazione non riuscita.')}
         </ThemedText>
       )}
 

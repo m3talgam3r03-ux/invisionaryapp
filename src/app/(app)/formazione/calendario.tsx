@@ -1,4 +1,5 @@
 import { Card, Screen, ThemedText } from '@/components/ui';
+import { messaggioErrore } from '@/lib/errori';
 import { useEvents } from '@/lib/events';
 import { spacing } from '@/theme';
 
@@ -22,7 +23,7 @@ export default function Calendario() {
       {isLoading && <ThemedText tone="muted">Caricamento eventi…</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
-          {error instanceof Error ? error.message : 'Errore nel caricamento del calendario.'}
+          {messaggioErrore(error, 'Errore nel caricamento del calendario.')}
         </ThemedText>
       )}
       {events?.length === 0 && <ThemedText tone="muted">Nessun evento in programma.</ThemedText>}

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button, Card, Screen, TextField, ThemedText, Sezione } from '@/components/ui';
 import { t } from '@/i18n/it';
+import { messaggioErrore } from '@/lib/errori';
 import { CANALI, linkPubblico, slugDaTitolo, slugValido, type Canale } from '@/lib/funnel';
 import { useAttivaFunnel, useCreaFunnel, useFunnels, useLead } from '@/lib/funnel-data';
 import { radius, spacing, useTheme } from '@/theme';
@@ -224,7 +225,7 @@ export default function Funnel() {
           />
           {crea.isError && (
             <ThemedText tone="error" variant="caption">
-              {crea.error instanceof Error ? crea.error.message : t.comune.errore}
+              {messaggioErrore(crea.error, t.comune.errore)}
             </ThemedText>
           )}
         </Card>

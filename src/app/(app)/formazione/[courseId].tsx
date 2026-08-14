@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native';
 
 import { Card, Screen, ThemedText } from '@/components/ui';
 import { useCourse, useLessons } from '@/lib/courses';
+import { messaggioErrore } from '@/lib/errori';
 import { useLessonProgress } from '@/lib/progress';
 import { spacing } from '@/theme';
 
@@ -32,7 +33,7 @@ export default function CourseDetail() {
       {isLoading && <ThemedText tone="muted">Caricamento lezioni…</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
-          {error instanceof Error ? error.message : 'Errore nel caricamento delle lezioni.'}
+          {messaggioErrore(error, 'Errore nel caricamento delle lezioni.')}
         </ThemedText>
       )}
       {lessons?.length === 0 && <ThemedText tone="muted">Nessuna lezione in questo corso.</ThemedText>}

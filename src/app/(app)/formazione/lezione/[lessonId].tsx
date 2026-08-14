@@ -3,6 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Button, Screen, ThemedText } from '@/components/ui';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { useLesson } from '@/lib/courses';
+import { messaggioErrore } from '@/lib/errori';
 import { useLessonProgress, useToggleLesson } from '@/lib/progress';
 import { spacing } from '@/theme';
 
@@ -43,7 +44,7 @@ export default function LessonScreen() {
 
       {toggle.isError && (
         <ThemedText tone="error" variant="caption">
-          {toggle.error instanceof Error ? toggle.error.message : 'Operazione non riuscita.'}
+          {messaggioErrore(toggle.error, 'Operazione non riuscita.')}
         </ThemedText>
       )}
 

@@ -7,6 +7,7 @@ import { Avatar, Button, EmptyState, Screen, SearchField, ThemedText } from '@/c
 import { t } from '@/i18n/it';
 import { useClients, useImportClients } from '@/lib/clients';
 import { leggiRubrica, type VoceRubrica } from '@/lib/device-contacts';
+import { messaggioErrore } from '@/lib/errori';
 import { chiaveDeduplica } from '@/lib/normalize';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -210,7 +211,7 @@ export default function Rubrica() {
       <View style={styles.footer}>
         {importer.isError && (
           <ThemedText tone="error" variant="caption">
-            {importer.error instanceof Error ? importer.error.message : t.comune.errore}
+            {messaggioErrore(importer.error, t.comune.errore)}
           </ThemedText>
         )}
         <Button

@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { formatDateIT } from '@/lib/date';
 import { useProfileById } from '@/lib/admin';
+import { messaggioErrore } from '@/lib/errori';
 import { can } from '@/lib/permissions';
 import { opzioniRinnovo } from '@/lib/renewal-rules';
 import {
@@ -102,7 +103,7 @@ export default function RenewalDetail() {
 
       {update.isError && (
         <ThemedText tone="error" variant="caption">
-          {update.error instanceof Error ? update.error.message : t.rinnovi.form.salvataggioFallito}
+          {messaggioErrore(update.error, t.rinnovi.form.salvataggioFallito)}
         </ThemedText>
       )}
 
@@ -160,7 +161,7 @@ function BloccoApprovazione({ renewal }: { renewal: Renewal }) {
 
       {approve.isError && (
         <ThemedText tone="error" variant="caption">
-          {approve.error instanceof Error ? approve.error.message : t.rinnovi.form.salvataggioFallito}
+          {messaggioErrore(approve.error, t.rinnovi.form.salvataggioFallito)}
         </ThemedText>
       )}
 

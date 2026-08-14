@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button, Screen, TextField, ThemedText } from '@/components/ui';
+import { messaggioErrore } from '@/lib/errori';
 import { useConnectAccount } from '@/lib/trading';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -78,7 +79,7 @@ export default function ConnettiMt5() {
       )}
       {connect.isError && (
         <ThemedText tone="error" variant="caption">
-          {connect.error instanceof Error ? connect.error.message : 'Collegamento non riuscito.'}
+          {messaggioErrore(connect.error, 'Collegamento non riuscito.')}
         </ThemedText>
       )}
 

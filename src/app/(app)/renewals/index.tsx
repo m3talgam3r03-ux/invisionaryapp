@@ -7,6 +7,7 @@ import { Button, EmptyState, ThemedText, Colonna } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { daysUntil } from '@/lib/date';
+import { messaggioErrore } from '@/lib/errori';
 import { useSquadra } from '@/lib/network';
 import { can } from '@/lib/permissions';
 import { useRenewals } from '@/lib/renewals';
@@ -87,7 +88,7 @@ export default function RenewalsList() {
             <EmptyState
               tone="error"
               title={t.rinnovi.erroreElenco}
-              hint={error instanceof Error ? error.message : t.comune.errore}
+              hint={messaggioErrore(error, t.comune.errore)}
             />
           )}
   

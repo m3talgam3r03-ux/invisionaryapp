@@ -6,6 +6,7 @@ import { Button, Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { ROLE_LABEL, t } from '@/i18n/it';
 import { useAllProfiles, useProfileById, useUpdateProfile } from '@/lib/admin';
+import { messaggioErrore } from '@/lib/errori';
 import { can, canBeAssignedAsLeader, expectsLeader } from '@/lib/permissions';
 import { ROLES, radius, spacing, useTheme, type Role } from '@/theme';
 
@@ -107,7 +108,7 @@ export default function AdminUserDetail() {
 
       {update.isError && (
         <ThemedText tone="error" variant="caption">
-          {update.error instanceof Error ? update.error.message : t.admin.salvataggioFallito}
+          {messaggioErrore(update.error, t.admin.salvataggioFallito)}
         </ThemedText>
       )}
 

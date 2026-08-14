@@ -5,6 +5,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { ROLE_LABEL, t } from '@/i18n/it';
+import { messaggioErrore } from '@/lib/errori';
 import { useNetworkProgress } from '@/lib/network';
 import { can } from '@/lib/permissions';
 import { spacing } from '@/theme';
@@ -35,7 +36,7 @@ export default function Rete() {
       {isLoading && <ThemedText tone="muted">{t.comune.caricamento}</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
-          {error instanceof Error ? error.message : t.comune.errore}
+          {messaggioErrore(error, t.comune.errore)}
         </ThemedText>
       )}
       {data?.members.length === 0 && (

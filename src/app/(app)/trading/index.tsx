@@ -4,6 +4,7 @@ import { Pressable, View } from 'react-native';
 import { Button, Card, EmptyState, Screen, ThemedText } from '@/components/ui';
 import { formatNumber } from '@/lib/format';
 import { useSyncAccounts, useTradingAccounts } from '@/lib/trading';
+import { messaggioErrore } from '@/lib/errori';
 import { spacing } from '@/theme';
 
 export default function Trading() {
@@ -33,14 +34,17 @@ export default function Trading() {
       )}
       {sync.isError && (
         <ThemedText tone="error" variant="caption">
-          {sync.error instanceof Error ? sync.error.message : 'Sincronizzazione non riuscita.'}
+          {messaggioErrore(sync.error, 'Sincronizzazione non riuscita.')}
         </ThemedText>
       )}
 
       {isLoading && <ThemedText tone="muted">Caricamento account…</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
-          {error instanceof Error ? error.message : 'Errore'} — verifica .env e la migrazione 0008.
+          {/* Qui c'era «verifica .env e la migrazione 0008», e compariva a
+              QUALUNQUE errore: anche un timeout di rete. Chi usa l'app non ha
+              un file .env e non sa cosa sia una migrazione. */}
+          {messaggioErrore(error, 'Impossibile caricare gli account collegati.')}
         </ThemedText>
       )}
       {accounts?.length === 0 && (
@@ -52,7 +56,7 @@ export default function Trading() {
 
       {accounts?.map((a) => (
         <Pressable
-        accessibilityRole="button"
+          accessibilityRole="button"
           key={a.id}
           onPress={() => router.push({ pathname: '/trading/[id]', params: { id: a.id } })}
           style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}

@@ -2,6 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 
 import { Button, Card, Screen, ThemedText } from '@/components/ui';
+import { messaggioErrore } from '@/lib/errori';
 import { formatNumber } from '@/lib/format';
 import { netProfit, returnPct, useSyncAccounts, useTradingAccount, useTrades } from '@/lib/trading';
 import { spacing } from '@/theme';
@@ -63,7 +64,7 @@ export default function TradingAccountDetail() {
       />
       {sync.isError && (
         <ThemedText tone="error" variant="caption">
-          {sync.error instanceof Error ? sync.error.message : 'Sincronizzazione non riuscita.'}
+          {messaggioErrore(sync.error, 'Sincronizzazione non riuscita.')}
         </ThemedText>
       )}
 

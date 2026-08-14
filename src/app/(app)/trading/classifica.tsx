@@ -6,6 +6,7 @@ import { Podio } from '@/components/Podio';
 import { Button, Card, Screen, ThemedText, Sezione } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
+import { messaggioErrore } from '@/lib/errori';
 import { formatNumber } from '@/lib/format';
 import { etichettaMese, mesePrecedente, posizioniPremiate, puntiPerPosizione } from '@/lib/podio';
 import { usePodio, useRegolePunti, useSaldoPunti } from '@/lib/premi-data';
@@ -84,7 +85,7 @@ export default function ClassificaTrader() {
       {isLoading && <ThemedText tone="muted">{t.trading.classifica.caricamento}</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
-          {error instanceof Error ? error.message : t.comune.errore}
+          {messaggioErrore(error, t.comune.errore)}
         </ThemedText>
       )}
       {data?.length === 0 && (

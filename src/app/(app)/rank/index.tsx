@@ -9,6 +9,7 @@ import { useAuth } from '@/context/auth';
 import { ROLE_LABEL, t } from '@/i18n/it';
 import { costruisciCard, verificaTesto } from '@/lib/condivisione';
 import { condividiCard, condivisioneCardDisponibile } from '@/lib/condivisione-share';
+import { messaggioErrore } from '@/lib/errori';
 import { useLeaderboard, useMyStats, type LeaderboardEntry } from '@/lib/leaderboard';
 import { useRankRules } from '@/lib/rank-rules';
 import { progressoVersoProssimo, rankLabel } from '@/lib/rank';
@@ -37,7 +38,7 @@ export default function RankScreen() {
           <ThemedText tone="muted">{t.rank.calcolo}</ThemedText>
         ) : stats.isError ? (
           <ThemedText tone="error" variant="caption">
-            {stats.error instanceof Error ? stats.error.message : t.comune.errore}
+            {messaggioErrore(stats.error, t.comune.errore)}
           </ThemedText>
         ) : me ? (
           <>
@@ -87,7 +88,7 @@ export default function RankScreen() {
       {board.isLoading && <ThemedText tone="muted">{t.rank.caricamentoClassifica}</ThemedText>}
       {board.isError && (
         <ThemedText tone="error" variant="caption">
-          {board.error instanceof Error ? board.error.message : t.comune.errore}
+          {messaggioErrore(board.error, t.comune.errore)}
         </ThemedText>
       )}
 

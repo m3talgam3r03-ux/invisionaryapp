@@ -17,6 +17,7 @@ import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { useClients, useClientsPerStato } from '@/lib/clients';
 import { byName, matchesQuery, parseContact } from '@/lib/contact';
+import { messaggioErrore } from '@/lib/errori';
 import { useSquadra } from '@/lib/network';
 import { can } from '@/lib/permissions';
 import { radius, spacing, useTheme } from '@/theme';
@@ -155,7 +156,7 @@ export default function ClientsList() {
               <EmptyState
                 tone="error"
                 title="Impossibile caricare i clienti"
-                hint={error instanceof Error ? error.message : 'Errore sconosciuto.'}
+                hint={messaggioErrore(error, 'Errore sconosciuto.')}
               />
             ) : query ? (
               <EmptyState

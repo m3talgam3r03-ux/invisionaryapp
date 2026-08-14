@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, EmptyState, ThemedText, Colonna } from '@/components/ui';
 import { useFeedbackPosts } from '@/lib/feedback';
+import { messaggioErrore } from '@/lib/errori';
 import { radius, spacing, useTheme } from '@/theme';
 import type { FeedbackPost } from '@/types/models';
 
@@ -41,7 +42,7 @@ export default function Community() {
               <EmptyState
                 tone="error"
                 title="Impossibile caricare la community"
-                hint={error instanceof Error ? error.message : 'Errore sconosciuto.'}
+                hint={messaggioErrore(error, 'Errore sconosciuto.')}
               />
             ) : (
               <EmptyState

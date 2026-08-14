@@ -10,6 +10,7 @@ import { t } from '@/i18n/it';
 import { useClient, useClientHistory, useDeleteClient, useUpdateClient } from '@/lib/clients';
 import { parseContact } from '@/lib/contact';
 import { formatDateIT } from '@/lib/date';
+import { messaggioErrore } from '@/lib/errori';
 import { radius, spacing, useTheme } from '@/theme';
 import type { ContactStatusHistoryEntry } from '@/types/models';
 
@@ -73,7 +74,7 @@ export default function ClientDetail() {
         />
         {update.isError && (
           <ThemedText tone="error" variant="caption">
-            {update.error instanceof Error ? update.error.message : 'Salvataggio non riuscito.'}
+            {messaggioErrore(update.error, 'Salvataggio non riuscito.')}
           </ThemedText>
         )}
         <Button title="Annulla" variant="secondary" onPress={() => setEditing(false)} />

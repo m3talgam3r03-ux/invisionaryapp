@@ -6,6 +6,7 @@ import { Card, ThemedText, Colonna } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { ROLE_LABEL, t } from '@/i18n/it';
 import { useAllProfiles } from '@/lib/admin';
+import { messaggioErrore } from '@/lib/errori';
 import { can, expectsLeader } from '@/lib/permissions';
 import { spacing, useTheme } from '@/theme';
 import type { Profile } from '@/types/models';
@@ -46,7 +47,7 @@ export default function AdminUsers() {
               <ThemedText tone="muted">{t.admin.caricamentoUtenti}</ThemedText>
             ) : isError ? (
               <ThemedText tone="error" variant="caption">
-                {error instanceof Error ? error.message : t.comune.errore}
+                {messaggioErrore(error, t.comune.errore)}
               </ThemedText>
             ) : (
               <ThemedText tone="muted">{t.admin.nessunUtente}</ThemedText>

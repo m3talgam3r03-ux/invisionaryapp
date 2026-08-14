@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { ClientForm } from '@/components/ClientForm';
 import { Screen, ThemedText } from '@/components/ui';
 import { useCreateClient } from '@/lib/clients';
+import { messaggioErrore } from '@/lib/errori';
 
 export default function NewClient() {
   const create = useCreateClient();
@@ -21,7 +22,7 @@ export default function NewClient() {
       />
       {create.isError && (
         <ThemedText tone="error" variant="caption">
-          {create.error instanceof Error ? create.error.message : 'Creazione non riuscita.'}
+          {messaggioErrore(create.error, 'Creazione non riuscita.')}
         </ThemedText>
       )}
     </Screen>

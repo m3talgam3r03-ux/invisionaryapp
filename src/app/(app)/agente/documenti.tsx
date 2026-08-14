@@ -14,6 +14,7 @@ import {
 } from '@/lib/documents';
 import { DOMAIN_IDS, domainLabel, type DomainId } from '@/lib/domains';
 import { can } from '@/lib/permissions';
+import { messaggioErrore } from '@/lib/errori';
 import { radius, spacing, useTheme } from '@/theme';
 
 export default function Documenti() {
@@ -105,7 +106,7 @@ export default function Documenti() {
         )}
         {seed.isError && (
           <ThemedText tone="error" variant="caption">
-            {seed.error instanceof Error ? seed.error.message : 'Caricamento non riuscito.'}
+            {messaggioErrore(seed.error, 'Caricamento non riuscito.')}
           </ThemedText>
         )}
         {seed.isSuccess && !seeding && (
@@ -180,7 +181,7 @@ export default function Documenti() {
       />
       {ingest.isError && (
         <ThemedText tone="error" variant="caption">
-          {ingest.error instanceof Error ? ingest.error.message : 'Ingestione non riuscita.'}
+          {messaggioErrore(ingest.error, 'Ingestione non riuscita.')}
         </ThemedText>
       )}
       {result && (
@@ -196,7 +197,7 @@ export default function Documenti() {
       {isLoading && <ThemedText tone="muted">Caricamento…</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
-          {error instanceof Error ? error.message : 'Errore nel caricamento.'}
+          {messaggioErrore(error, 'Errore nel caricamento.')}
         </ThemedText>
       )}
       {docs?.length === 0 && (

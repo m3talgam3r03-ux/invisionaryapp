@@ -8,6 +8,7 @@ import { t } from '@/i18n/it';
 import { useCourses } from '@/lib/courses';
 import { can } from '@/lib/permissions';
 import { useAvanzamentoCorsi, useAvanzamentoGlobale } from '@/lib/progress';
+import { messaggioErrore } from '@/lib/errori';
 import { spacing } from '@/theme';
 
 export default function FormazioneIndex() {
@@ -44,7 +45,7 @@ export default function FormazioneIndex() {
           <ThemedText tone="error">{t.formazione.erroreCorsi}</ThemedText>
           <ThemedText tone="muted" variant="caption">
             {t.formazione.erroreCorsiDettaglio(
-              error instanceof Error ? error.message : t.formazione.erroreSconosciuto,
+              messaggioErrore(error, t.formazione.erroreSconosciuto),
             )}
           </ThemedText>
         </View>
@@ -77,7 +78,7 @@ export default function FormazioneIndex() {
         const completo = av ? av.percentuale >= 100 : false;
         return (
           <Pressable
-        accessibilityRole="button"
+            accessibilityRole="button"
             key={c.id}
             onPress={() =>
               router.push({ pathname: '/formazione/[courseId]', params: { courseId: c.id } })
