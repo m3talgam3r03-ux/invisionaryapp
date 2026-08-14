@@ -736,7 +736,7 @@
 
       <!-- RENEWALS -->
       <section class="view" data-view="renewals">
-        <div class="phead"><h2>Scadenzario</h2><p>Ogni rinnovo presidiato, con avviso push prima della scadenza.</p></div>
+        <div class="phead" id="renHead"></div>
         <div class="kpis" id="renKpis"></div>
         <button class="btn sm" onclick="toast('Modulo «Nuovo rinnovo» (demo)')">+ Nuovo rinnovo</button>
         <div id="renList"></div>
@@ -1304,12 +1304,17 @@
    * - il pannello admin è solo dell'admin.
    */
   function canSee(v){
-    if(v==='renewals') return role!=='collaborator';
-    // Un funnel raccoglie contatti per la rete: lo gestisce chi la guida.
-    if(v==='funnel')   return role!=='collaborator';
-    if(v==='admin')    return role==='admin';
+    // Lo scadenzario lo vedono tutti: al collaboratore mostra i PROPRI rinnovi
+    // («I miei rinnovi»), a chi guida la rete quelli di tutti. Nasconderglielo
+    // era un errore di questa demo — l'app non l'ha mai fatto.
+    // Il funnel idem: nel database ciascuno possiede i propri funnel e i
+    // propri contatti, e un collaboratore è proprio chi ne ha bisogno.
+    if(v==='admin') return role==='admin';
     return true;
   }
+
+  /** Vero per chi vede oltre sé stesso: serve a decidere cosa distinguere. */
+  function vedeLaRete(){ return role!=='collaborator'; }
 
   /**
    * Le schede in basso: Home più i quattro pilastri, che sono gli stessi
@@ -1531,6 +1536,12 @@
 
   /* ===== Scadenzario: i rinnovi dei clienti, raggruppati per urgenza ===== */
   function renderRenewals(){
+    // Il titolo dice di chi sono i rinnovi. «Scadenzario della rete» a un
+    // collaboratore prometteva una rete che non c'è: lui vede i propri.
+    document.getElementById('renHead').innerHTML = vedeLaRete()
+      ? '<h2>Scadenzario della rete</h2><p>Le scadenze della rete, con le richieste da approvare in cima.</p>'
+      : '<h2>I miei rinnovi</h2><p>Le tue scadenze e un avviso prima che arrivino.</p>';
+
     const items=visibleContacts().filter(c=>c.renewalIn!=null).sort((a,b)=>a.renewalIn-b.renewalIn);
     const scaduti=items.filter(c=>c.renewalIn<0).length;
     const entro30=items.filter(c=>c.renewalIn>=0&&c.renewalIn<=30).length;
@@ -1556,9 +1567,13 @@
         const quick = c.renewalIn<=7
           ? '<button class="rbtn" style="color:'+w.color+'" onclick="event.stopPropagation();renew('+c.id+',30)">✓ Rinnova</button>'
           : '<span class="badge" style="color:'+w.color+';font-size:9.5px;padding:3px 8px">'+w.txt+'</span>';
+        // Di chi è il rinnovo. Su «da approvare» è l'informazione che manca:
+        // «3 richieste» senza i nomi si risolve aprendole una per una.
+        const own=(vedeLaRete() && c.owner!==meKey())
+          ? ' · <span style="color:var(--gold)">di '+esc(OWNER[c.owner].label)+'</span>' : '';
         return '<div class="urow" onclick="openRenew('+c.id+')">'+
           '<span class="when" style="color:'+w.color+'"><b>'+w.n+'</b><span>'+w.u+'</span></span>'+
-          '<span class="mid"><b>'+esc(c.name)+'</b><span>'+renewalDate(c)+' · '+esc(c.product)+'</span></span>'+
+          '<span class="mid"><b>'+esc(c.name)+'</b><span>'+renewalDate(c)+' · '+esc(c.product)+own+'</span></span>'+
           quick+'</div>';
       }).join('');
     });
@@ -2079,16 +2094,26 @@
   ];
   const OWNER=Object.fromEntries(OWNERS.map(o=>[o.k,o]));
   const TEAM_OF_LEADER=['leader','collab','marco'];
-  let crmOwner='tutti';                       // usato solo dall'admin
+  let crmOwner='tutti';                       // usato da chi vede la rete
 
   /** Chi sono io, in base al ruolo selezionato in alto. */
   function meKey(){ return role==='admin'?'me':(role==='leader'?'leader':'collab'); }
 
-  /** I contatti che il ruolo corrente ha il diritto di vedere. */
+  /**
+   * I contatti che il ruolo corrente ha il diritto di vedere, poi ristretti
+   * al titolare scelto. Il filtro per titolare non era del leader: vedeva
+   * la propria squadra tutta mescolata, senza modo di isolare qualcuno.
+   */
   function visibleContacts(){
-    if(role==='admin') return crmOwner==='tutti' ? CONTACTS : CONTACTS.filter(c=>c.owner===crmOwner);
-    if(role==='leader') return CONTACTS.filter(c=>TEAM_OF_LEADER.includes(c.owner));
-    return CONTACTS.filter(c=>c.owner===meKey());
+    if(role==='collaborator') return CONTACTS.filter(c=>c.owner===meKey());
+    const perimetro = role==='admin' ? CONTACTS : CONTACTS.filter(c=>TEAM_OF_LEADER.includes(c.owner));
+    return crmOwner==='tutti' ? perimetro : perimetro.filter(c=>c.owner===crmOwner);
+  }
+
+  /** I titolari che questo ruolo può isolare col filtro. */
+  function titolariVisibili(){
+    if(role==='admin') return OWNERS;
+    return OWNERS.filter(o=>TEAM_OF_LEADER.includes(o.k));
   }
 
   function initials(n){ const p=n.split(' '); return ((p[0]||'')[0]||'')+((p[1]||'')[0]||''); }
@@ -2125,16 +2150,22 @@
     // Perimetro visibile a questo ruolo: tutti i conteggi si basano su questo.
     const scope=visibleContacts();
 
-    // Selettore del titolare: solo l'admin, che vede i CRM di tutta la rete.
+    // Selettore del titolare: lo vede chiunque guardi oltre sé stesso, quindi
+    // anche il leader. Prima era dell'admin soltanto, e un leader con sei
+    // collaboratori si trovava i contatti di tutti in un elenco solo.
     const ownBox=document.getElementById('crmOwnerBox');
-    if(role==='admin'){
+    const titolari=titolariVisibili();
+    if(vedeLaRete() && titolari.length>1){
+      const perimetro = role==='admin' ? CONTACTS : CONTACTS.filter(c=>TEAM_OF_LEADER.includes(c.owner));
       ownBox.style.display='';
       ownBox.innerHTML='<select class="sortsel" style="height:34px;width:100%;padding-right:28px" '+
         'onchange="setCrmOwner(this.value)" aria-label="CRM di">'+
-        '<option value="tutti"'+(crmOwner==='tutti'?' selected':'')+'>👁 Tutta la rete · '+CONTACTS.length+' contatti</option>'+
-        OWNERS.map(o=>{
-          const n=CONTACTS.filter(c=>c.owner===o.k).length;
-          return '<option value="'+o.k+'"'+(crmOwner===o.k?' selected':'')+'>'+o.label+' ('+o.role+') · '+n+'</option>';
+        '<option value="tutti"'+(crmOwner==='tutti'?' selected':'')+'>👁 '+
+          (role==='admin'?'Tutta la rete':'Tutta la squadra')+' · '+perimetro.length+' contatti</option>'+
+        titolari.map(o=>{
+          const n=perimetro.filter(c=>c.owner===o.k).length;
+          const etichetta = o.k===meKey() ? 'I miei' : o.label+' ('+o.role+')';
+          return '<option value="'+o.k+'"'+(crmOwner===o.k?' selected':'')+'>'+etichetta+' · '+n+'</option>';
         }).join('')+'</select>';
     } else {
       ownBox.style.display='none';
@@ -2180,15 +2211,20 @@
         if(l!==letter){ letter=l; html+='<div class="alpha">'+l+'</div>'; }
       }
       const s=STAGE[c.stage];
-      // Se l'admin sta guardando tutta la rete, serve sapere di chi è il contatto.
-      const own=(role==='admin'&&crmOwner==='tutti')
-        ? ' · <span style="color:var(--gold)">'+esc(OWNER[c.owner].label)+'</span>' : '';
+      // Di chi è il contatto: solo se guardo oltre me stesso e la riga non è
+      // mia. «di me stesso» su ogni riga del proprio elenco è rumore.
+      // Accanto al NOME, non in coda al sottotitolo: là finiva troncato a
+      // «di C…» proprio dove serviva a distinguere.
+      const own=(vedeLaRete() && c.owner!==meKey())
+        ? '<span style="color:var(--gold);font-size:11px;font-weight:600;white-space:nowrap">di '+
+            esc(OWNER[c.owner].label.split(' ')[0])+'</span>' : '';
       html+='<div class="crow" onclick="openDetail('+c.id+')">'+
         '<span class="av" style="color:'+s.color+'">'+esc(initials(c.name))+'</span>'+
         '<span class="mid">'+
-          '<span class="nm">'+mark(c.name,q)+'</span>'+
+          '<span class="nm" style="display:flex;align-items:baseline;gap:6px">'+
+            '<span style="overflow:hidden;text-overflow:ellipsis">'+mark(c.name,q)+'</span>'+own+'</span>'+
           '<span class="sub"><span class="dot" style="background:'+s.color+';margin-right:6px"></span>'+
-            s.label+' · '+esc(c.product)+own+'</span>'+
+            s.label+' · '+esc(c.product)+'</span>'+
         '</span>'+
         '<span class="chev">›</span></div>';
     });
@@ -3658,7 +3694,10 @@
     ['agenda',    '◴', 'Appuntamenti',   null,            () => true],
     ['premi',     '★', 'Punti e premi',  'var(--gold)',   () => true],
     ['mappa',     '⬢', 'La rete',        'var(--accent)', () => true],
-    ['funnel',    '⌾', 'Funnel',         'var(--accent)', () => role !== 'collaborator'],
+    // Il funnel non è uno strumento da leader: nel database ciascuno possiede
+    // i propri funnel e i contatti che raccoglie, e un collaboratore che fa
+    // network marketing è esattamente chi ne ha bisogno.
+    ['funnel',    '⌾', 'Funnel',         'var(--accent)', () => true],
     ['admin',     '⚙', 'Admin',          null,            () => role === 'admin']
   ];
 
