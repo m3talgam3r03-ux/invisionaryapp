@@ -42,29 +42,13 @@ export const t = {
     esci: 'Esci',
     salva: 'Salva',
     annulla: 'Annulla',
+    /** «di Mario Rossi»: di chi è questa riga, quando non è mia. */
+    di: (nome: string) => `di ${nome}`,
   },
 
   dashboard: {
     saluto: (nome: string) => `Ciao, ${nome}`,
     benvenuto: 'Benvenuto',
-    /** Il riquadro che cambia in base al ruolo di chi guarda. */
-    perRuolo: {
-      admin: {
-        titolo: 'Pannello amministratore',
-        testo: 'Gestione utenti, ruoli e autorizzazioni della rete.',
-        azione: 'Apri pannello admin',
-      },
-      leader: {
-        titolo: 'La mia rete',
-        testo: 'Qui vedrai i tuoi collaboratori, i loro rinnovi e l’avanzamento formazione.',
-        azione: null,
-      },
-      collaboratore: {
-        titolo: 'Il mio spazio',
-        testo: 'Clienti, rinnovi e formazione: tutto in un unico posto.',
-        azione: null,
-      },
-    } satisfies Record<Role, { titolo: string; testo: string; azione: string | null }>,
     agente: {
       titolo: 'Agente AI',
       testo: 'Chiedi all’assistente: risposte basate sui contenuti della piattaforma.',
@@ -111,6 +95,28 @@ export const t = {
       testo: 'Il tuo avanzamento nella rete: diventa un Asso.',
       azione: 'Vedi il tuo rank',
     },
+    /**
+     * «Da fare adesso»: cosa richiede attenzione, non cosa contiene l'app.
+     * Il riquadro che c'era prima cambiava col ruolo ma diceva sempre la stessa
+     * cosa — dove trovare le sezioni — cioè quello che i pilastri qui sopra
+     * mostrano già disegnati.
+     */
+    oggi: {
+      titolo: 'Da fare adesso',
+      tuttoOk: 'Niente in sospeso. Buon lavoro.',
+      scaduti: (n: number) =>
+        n === 1 ? '1 rinnovo è già scaduto' : `${n} rinnovi sono già scaduti`,
+      daApprovare: (n: number) =>
+        n === 1 ? '1 richiesta aspetta il tuo sì' : `${n} richieste aspettano il tuo sì`,
+      inScadenza: (n: number, giorni: number) =>
+        n === 1
+          ? `1 rinnovo scade entro ${giorni} giorni`
+          : `${n} rinnovi scadono entro ${giorni} giorni`,
+      appuntamentoCon: (quando: string, chi: string) => `${quando} con ${chi}`,
+      appuntamento: (quando: string) => `Appuntamento ${quando}`,
+      apriScadenzario: 'Vai allo scadenzario',
+      apriCalendario: 'Vai al calendario',
+    },
     pilastroApri: 'Apri →',
     pilastroInArrivo: 'In arrivo',
     /** Le scorciatoie: nomi corti, perché stanno sotto un'icona. */
@@ -153,6 +159,9 @@ export const t = {
     nuovo: '+ Nuovo contatto',
     importa: 'Importa',
     cerca: 'Cerca nome, contatto o prodotto',
+    /** Filtro per proprietario: lo vede solo chi guarda oltre sé stesso. */
+    diTutti: 'Di tutti',
+    miei: 'I miei',
     caricamento: 'Caricamento contatti…',
     nessuno: 'Nessun contatto',
     nessunoSuggerimento: 'Aggiungi il primo contatto o importa una lista.',

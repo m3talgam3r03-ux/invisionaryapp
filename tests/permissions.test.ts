@@ -115,6 +115,23 @@ describe('can() — approvazione dei rinnovi', () => {
   });
 });
 
+describe('can() — «approvo mai qualcosa?»', () => {
+  // Serve alla dashboard, che deve decidere se mostrare «richieste da
+  // approvare» prima ancora di aver guardato le righe.
+  it('admin e leader sì, il collaboratore no', () => {
+    expect(can(admin, 'renewals.approveAny')).toBe(true);
+    expect(can(leader, 'renewals.approveAny')).toBe(true);
+    expect(can(collaboratore, 'renewals.approveAny')).toBe(false);
+  });
+
+  it('non sostituisce il controllo sulla singola riga', () => {
+    // Il leader «approva in generale», ma non il rinnovo di un estraneo:
+    // se la dashboard bastasse a decidere, questo passerebbe.
+    expect(can(leader, 'renewals.approveAny')).toBe(true);
+    expect(can(leader, 'renewals.approve', { ownerId: 'x', leaderId: 'leader-altro' })).toBe(false);
+  });
+});
+
 describe('can() — pubblicare la propria disponibilità', () => {
   it('la pubblicano admin e leader; il collaboratore prenota e basta', () => {
     expect(can(admin, 'calendar.host')).toBe(true);

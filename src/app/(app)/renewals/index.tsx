@@ -7,6 +7,7 @@ import { Button, EmptyState, ThemedText, Colonna } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { daysUntil } from '@/lib/date';
+import { useSquadra } from '@/lib/network';
 import { can } from '@/lib/permissions';
 import { useRenewals } from '@/lib/renewals';
 import { spacing, useTheme } from '@/theme';
@@ -23,6 +24,20 @@ export default function RenewalsList() {
   const { colors } = useTheme();
 
   const vedeLaRete = can(profile, 'renewals.network');
+  const { data: squadra } = useSquadra();
+
+  /**
+   * Di chi è ogni rinnovo, per le sole righe altrui.
+   *
+   * Il proprio nome non ci va: su uno scadenzario personale comparirebbe su
+   * ogni riga, e non distinguerebbe niente da niente.
+   */
+  const nomiAltrui = useMemo(() => {
+    if (!vedeLaRete) return new Map<string, string>();
+    return new Map(
+      (squadra ?? []).filter((p) => p.id !== profile?.id).map((p) => [p.id, p.nome] as const),
+    );
+  }, [squadra, vedeLaRete, profile?.id]);
 
   // Tre gruppi: prima ciò che aspetta una decisione, poi ciò che scade presto.
   const gruppi = useMemo(() => {
@@ -78,9 +93,14 @@ export default function RenewalsList() {
   
           {vuoto && <EmptyState title={t.rinnovi.nessuno} hint={t.rinnovi.nessunoSuggerimento} />}
   
-          <Sezione titolo={t.rinnovi.daApprovare} righe={gruppi.daApprovare} evidenza />
-          <Sezione titolo={t.rinnovi.inScadenza} righe={gruppi.inScadenza} />
-          <Sezione titolo={t.rinnovi.resto} righe={gruppi.resto} />
+          <Sezione
+            titolo={t.rinnovi.daApprovare}
+            righe={gruppi.daApprovare}
+            evidenza
+            nomi={nomiAltrui}
+          />
+          <Sezione titolo={t.rinnovi.inScadenza} righe={gruppi.inScadenza} nomi={nomiAltrui} />
+          <Sezione titolo={t.rinnovi.resto} righe={gruppi.resto} nomi={nomiAltrui} />
         </ScrollView>
       </Colonna>
     </SafeAreaView>
@@ -91,10 +111,13 @@ function Sezione({
   titolo,
   righe,
   evidenza,
+  nomi,
 }: {
   titolo: string;
   righe: RenewalWithClient[];
   evidenza?: boolean;
+  /** Nomi dei proprietari diversi da me. Vuota per chi vede solo i propri. */
+  nomi: Map<string, string>;
 }) {
   const router = useRouter();
   const { colors } = useTheme();
@@ -117,6 +140,7 @@ function Sezione({
           key={r.id}
           renewal={r}
           giorniPreavviso={GIORNI_PREAVVISO}
+          proprietario={nomi.get(r.owner_id) ?? null}
           onPress={() => router.push({ pathname: '/renewals/[id]', params: { id: r.id } })}
         />
       ))}

@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Crest } from '@/components/Crest';
+import { DaFareAdesso } from '@/components/DaFareAdesso';
 import { Scorciatoia } from '@/components/Scorciatoia';
 import { ProgressBar } from '@/components/ProgressBar';
 import { RankBadge } from '@/components/RankBadge';
@@ -85,18 +86,13 @@ export default function Dashboard() {
         })}
       </View>
 
-      {/* Riquadro che cambia con il ruolo: il testo arriva da i18n, l'azione dai permessi */}
-      {profile && (
-        <Card style={{ gap: spacing.md }}>
-          <ThemedText variant="heading">{t.dashboard.perRuolo[profile.role].titolo}</ThemedText>
-          <ThemedText tone="muted" variant="caption">
-            {t.dashboard.perRuolo[profile.role].testo}
-          </ThemedText>
-          {can(profile, 'admin.panel') && (
-            <Button title={t.dashboard.perRuolo.admin.azione} onPress={() => router.push('/admin')} />
-          )}
-        </Card>
-      )}
+      {/* Cosa richiede attenzione adesso.
+          Qui c'era un riquadro che cambiava col ruolo e diceva, al leader,
+          «qui vedrai i tuoi collaboratori, i loro rinnovi e l'avanzamento
+          formazione»: una promessa, non un'informazione. Al collaboratore
+          elencava i quattro pilastri disegnati due centimetri più su.
+          Il pannello admin non si perde: sta nelle scorciatoie qui sotto. */}
+      <DaFareAdesso />
 
       {/* Tutto il resto, in una griglia invece che in sette schede impilate.
           Ogni destinazione resta raggiungibile: cambia che ci stanno tutte
@@ -139,15 +135,18 @@ export default function Dashboard() {
             colore={colors.accent}
             onPress={() => router.push('/mappa')}
           />
-          {/* Il funnel raccoglie contatti per la rete: lo gestisce chi la guida */}
-          {can(profile, 'clients.network') && (
-            <Scorciatoia
-              glifo="⌾"
-              etichetta={t.dashboard.breve.funnel}
-              colore={colors.accent}
-              onPress={() => router.push('/funnel')}
-            />
-          )}
+          {/* Il funnel era riservato a chi guida la rete. Il database non l'ha
+              mai detto: `funnels_select` dà a ciascuno i PROPRI funnel, e
+              `funnel_leads_select` dà a ciascuno i contatti che ha raccolto.
+              Un collaboratore che fa network marketing è esattamente chi ha
+              bisogno di una pagina che raccolga i suoi contatti: nasconderla
+              rendeva il funnel uno strumento da leader, che non è. */}
+          <Scorciatoia
+            glifo="⌾"
+            etichetta={t.dashboard.breve.funnel}
+            colore={colors.accent}
+            onPress={() => router.push('/funnel')}
+          />
           {can(profile, 'admin.panel') && (
             <Scorciatoia
               glifo="⚙"

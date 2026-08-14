@@ -13,21 +13,40 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { StatoBadge } from '@/components/StatoBadge';
 import { Avatar, EmptyState, SearchField, ThemedText, Colonna } from '@/components/ui';
+import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { useClients, useClientsPerStato } from '@/lib/clients';
 import { byName, matchesQuery, parseContact } from '@/lib/contact';
+import { useSquadra } from '@/lib/network';
+import { can } from '@/lib/permissions';
 import { radius, spacing, useTheme } from '@/theme';
 import { CONTACT_STATI, type Client, type ContactStato } from '@/types/models';
 
 export default function ClientsList() {
+  const { profile } = useAuth();
   const [stato, setStato] = useState<ContactStato | null>(null);
-  const { data, isLoading, isError, error, refetch, isRefetching } = useClients(
-    stato ? { stati: [stato] } : {},
-  );
+  // Chi vede la rete vede i clienti dei collaboratori mescolati ai propri.
+  // Il filtro per proprietario esisteva già in `ClientFilters` ma nessuna
+  // schermata lo passava: c'era il motore e mancava il volante.
+  const [proprietario, setProprietario] = useState<string | null>(null);
+  const vedeLaRete = can(profile, 'clients.network');
+  const { data: squadra } = useSquadra();
+
+  const { data, isLoading, isError, error, refetch, isRefetching } = useClients({
+    ...(stato ? { stati: [stato] } : {}),
+    ...(proprietario ? { ownerId: proprietario } : {}),
+  });
   const { data: conteggi } = useClientsPerStato();
   const router = useRouter();
   const { colors } = useTheme();
   const [query, setQuery] = useState('');
+
+  // Il nome del proprietario si mostra solo a chi vede più di sé stesso, e
+  // solo sulle righe altrui: «di Mario Rossi» sul proprio cliente è rumore.
+  const nomiSquadra = useMemo(
+    () => new Map((squadra ?? []).map((p) => [p.id, p.nome] as const)),
+    [squadra],
+  );
 
   // Alfabetico: in un CRM si cerca una persona a occhio, e l'ordine di
   // inserimento non aiuta nessuno a trovarla.
@@ -65,7 +84,31 @@ export default function ClientsList() {
               />
             ))}
           </ScrollView>
-  
+
+          {/* Di chi è il contatto. Compare solo a chi vede più di sé stesso, e
+              solo se c'è davvero qualcun altro da distinguere. */}
+          {vedeLaRete && (squadra ?? []).length > 1 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chips}
+            >
+              <FiltroChip
+                label={t.crm.diTutti}
+                attivo={proprietario === null}
+                onPress={() => setProprietario(null)}
+              />
+              {(squadra ?? []).map((p) => (
+                <FiltroChip
+                  key={p.id}
+                  label={p.id === profile?.id ? t.crm.miei : p.nome}
+                  attivo={proprietario === p.id}
+                  onPress={() => setProprietario(proprietario === p.id ? null : p.id)}
+                />
+              ))}
+            </ScrollView>
+          )}
+
           <View style={styles.metaRow}>
             <ThemedText tone="muted" variant="caption">
               {query
@@ -133,6 +176,13 @@ export default function ClientsList() {
           renderItem={({ item }) => (
             <ClientRow
               client={item}
+              // Solo sulle righe altrui: «di Mario Rossi» sul proprio contatto
+              // sarebbe rumore su ogni riga dell'elenco.
+              proprietario={
+                vedeLaRete && item.owner_id !== profile?.id
+                  ? (nomiSquadra.get(item.owner_id) ?? null)
+                  : null
+              }
               onPress={() => router.push({ pathname: '/clients/[id]', params: { id: item.id } })}
             />
           )}
@@ -190,7 +240,16 @@ function FiltroChip({
   );
 }
 
-function ClientRow({ client, onPress }: { client: Client; onPress: () => void }) {
+function ClientRow({
+  client,
+  onPress,
+  proprietario,
+}: {
+  client: Client;
+  onPress: () => void;
+  /** Nome di chi possiede il contatto, quando non sono io. Altrimenti `null`. */
+  proprietario?: string | null;
+}) {
   const { colors } = useTheme();
   const contact = parseContact(client.contatto);
 
@@ -206,13 +265,23 @@ function ClientRow({ client, onPress }: { client: Client; onPress: () => void })
 
   return (
     <Pressable
-        accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+    >
       <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Avatar name={client.nome} />
         <View style={{ flex: 1, gap: 3 }}>
-          <ThemedText variant="heading" numberOfLines={1}>
-            {client.nome}
-          </ThemedText>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm }}>
+            <ThemedText variant="heading" numberOfLines={1} style={{ flexShrink: 1 }}>
+              {client.nome}
+            </ThemedText>
+            {proprietario ? (
+              <ThemedText tone="gold" variant="caption" numberOfLines={1}>
+                {t.comune.di(proprietario)}
+              </ThemedText>
+            ) : null}
+          </View>
           {subtitle ? (
             <ThemedText tone="muted" variant="caption" numberOfLines={1}>
               {subtitle}

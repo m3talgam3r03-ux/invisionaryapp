@@ -10,11 +10,18 @@ type Props = {
   renewal: RenewalWithClient;
   /** Entro quanti giorni la scadenza si evidenzia in oro. */
   giorniPreavviso: number;
+  /**
+   * Nome di chi possiede il rinnovo, quando non sono io.
+   *
+   * Serve soprattutto sopra «da approvare»: un leader che legge «3 richieste»
+   * senza i nomi deve aprirle una per una solo per sapere chi sta chiedendo.
+   */
+  proprietario?: string | null;
   onPress: () => void;
 };
 
 /** Una riga dello scadenzario: titolo, urgenza a colori, data e stato. */
-export function RenewalRow({ renewal, giorniPreavviso, onPress }: Props) {
+export function RenewalRow({ renewal, giorniPreavviso, proprietario, onPress }: Props) {
   const giorni = daysUntil(renewal.current_due_date);
   const attivo = renewal.status === 'attivo';
   const inAttesa = renewal.status === 'in_attesa_approvazione';
@@ -39,7 +46,10 @@ export function RenewalRow({ renewal, giorniPreavviso, onPress }: Props) {
 
   return (
     <Pressable
-        accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+    >
       <Card style={{ gap: spacing.xs }}>
         <View style={styles.header}>
           <ThemedText variant="heading" style={{ flex: 1 }}>
@@ -50,10 +60,17 @@ export function RenewalRow({ renewal, giorniPreavviso, onPress }: Props) {
           </ThemedText>
         </View>
 
-        <ThemedText tone="muted" variant="caption">
-          {formatDateIT(renewal.current_due_date)}
-          {renewal.prodotto && renewal.client?.nome ? ` · ${renewal.prodotto}` : ''}
-        </ThemedText>
+        <View style={styles.header}>
+          <ThemedText tone="muted" variant="caption" style={{ flex: 1 }}>
+            {formatDateIT(renewal.current_due_date)}
+            {renewal.prodotto && renewal.client?.nome ? ` · ${renewal.prodotto}` : ''}
+          </ThemedText>
+          {proprietario ? (
+            <ThemedText tone="gold" variant="caption" numberOfLines={1}>
+              {t.comune.di(proprietario)}
+            </ThemedText>
+          ) : null}
+        </View>
 
         {mostraStato && (
           <ThemedText tone={inAttesa ? 'accent' : 'muted'} variant="caption">

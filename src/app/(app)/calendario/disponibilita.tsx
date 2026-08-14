@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -6,10 +7,11 @@ import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { verificaRegola } from '@/lib/booking';
 import { useDisponibilita, useEliminaRegola, useSalvaRegola } from '@/lib/calendario';
+import { can } from '@/lib/permissions';
 import { radius, spacing, useTheme } from '@/theme';
 
 export default function Disponibilita() {
-  const { profile } = useAuth();
+  const { profile, isProfileLoading } = useAuth();
   const { data: regole, isLoading } = useDisponibilita(profile?.id);
   const salva = useSalvaRegola();
   const elimina = useEliminaRegola();
@@ -23,6 +25,22 @@ export default function Disponibilita() {
     () => verificaRegola(inizio, fine, Number(durata)),
     [inizio, fine, durata],
   );
+
+  if (isProfileLoading && !profile) {
+    return (
+      <Screen>
+        <ThemedText tone="muted">{t.comune.caricamento}</ThemedText>
+      </Screen>
+    );
+  }
+
+  // Il pulsante che porta qui è già nascosto a chi non ospita, ma sul web
+  // l'indirizzo si può digitare — e le altre schermate riservate la guardia
+  // ce l'hanno. Senza, un collaboratore pubblicherebbe orari che nell'app
+  // nessuno può prenotare: `useHostPrenotabili()` elenca solo leader e admin.
+  if (!can(profile, 'calendar.host')) {
+    return <Redirect href="/calendario" />;
+  }
 
   const anteprima = esito.valida
     ? t.calendario.anteprimaSlot(esito.slotGenerati) +

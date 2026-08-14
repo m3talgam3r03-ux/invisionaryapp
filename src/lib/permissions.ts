@@ -27,6 +27,13 @@ export type Action =
   | 'clients.network'
   /** Approvare il rinnovo di qualcuno (richiede `resource`). */
   | 'renewals.approve'
+  /**
+   * Approvare rinnovi *in generale*: serve a decidere se mostrare la voce
+   * «richieste da approvare», prima di sapere di quali righe si tratti.
+   * Non sostituisce `renewals.approve`, che resta il controllo sulla singola
+   * riga — e il sì definitivo lo dà comunque la RLS.
+   */
+  | 'renewals.approveAny'
   /** Leggere i dati di un membro della rete (richiede `resource`). */
   | 'member.read'
   /** Pubblicare la propria disponibilità: si ospita, non si prenota soltanto. */
@@ -70,6 +77,10 @@ export function can(user: Profile | null | undefined, action: Action, resource?:
     // non c'è nessuno, e negarglielo li bloccherebbe per sempre.
     // Tutti gli altri approvano solo rinnovi altrui, e solo dei propri
     // collaboratori diretti.
+    // Un collaboratore non approva mai niente: non ha nessuno sotto di sé.
+    case 'renewals.approveAny':
+      return user.role === 'admin' || user.role === 'leader';
+
     case 'renewals.approve': {
       if (!resource) return false;
       if (user.role === 'admin') return true;

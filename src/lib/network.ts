@@ -64,3 +64,35 @@ export function useNetworkProgress() {
     },
   });
 }
+
+/** Una persona della propria rete, per i filtri «di chi è questo?». */
+export type PersonaRete = {
+  id: string;
+  nome: string;
+};
+
+/**
+ * Chi c'è nella propria rete, in ordine alfabetico.
+ *
+ * Nessun filtro sul ruolo e nessun `leader_id` nella query: il perimetro lo
+ * decide la RLS su `profiles`. Un collaboratore riceve solo sé stesso, un
+ * leader sé e i propri collaboratori, l'admin tutti. È la stessa regola che
+ * governa i clienti, quindi i due elenchi non possono divergere.
+ */
+export function useSquadra() {
+  return useQuery({
+    queryKey: ['squadra'],
+    staleTime: 1000 * 60 * 10,
+    queryFn: async (): Promise<PersonaRete[]> => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .order('full_name');
+      if (error) throw error;
+      return (data ?? []).map((p) => ({
+        id: p.id as string,
+        nome: (p.full_name as string) ?? '—',
+      }));
+    },
+  });
+}
