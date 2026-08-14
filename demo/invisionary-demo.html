@@ -1157,6 +1157,28 @@
     </div>
 
     <!-- RINNOVO: un tocco per i 30 giorni, oppure data scelta a mano -->
+    <!-- Il .ics quando il download non può partire (dentro l'artifact la
+         pagina è in sandbox). Meglio mostrare il file che dire di averlo
+         scaricato: nell'app vera si apre direttamente nel calendario. -->
+    <div class="modal" id="icsModal">
+      <div class="sheet">
+        <div class="between">
+          <div style="min-width:0">
+            <h3 class="heading">Evento per il calendario</h3>
+            <p class="cap" id="icsNome" style="font-family:var(--mono)"></p>
+          </div>
+          <button class="iconbtn" onclick="agChiudiIcs()" aria-label="Chiudi">✕</button>
+        </div>
+        <p class="cap">Nell'app questo file si apre direttamente nel calendario del telefono.
+          Qui l'anteprima gira in una pagina protetta che non può scaricare niente, quindi te
+          lo faccio vedere: è un <b>.ics</b> vero, secondo lo standard RFC 5545.</p>
+        <pre id="icsCorpo" style="margin:0;padding:12px;background:var(--surface2);border:1px solid var(--border);
+          border-radius:var(--r-md);font-family:var(--mono);font-size:11px;line-height:1.5;
+          overflow-x:auto;white-space:pre;color:var(--text)"></pre>
+        <button class="btn sec" onclick="agChiudiIcs()">Chiudi</button>
+      </div>
+    </div>
+
     <div class="modal" id="renModal">
       <div class="sheet">
         <div class="between">
@@ -2964,14 +2986,36 @@
       'STATUS:CONFIRMED','END:VEVENT','END:VCALENDAR'
     ];
     const contenuto=righe.join('\r\n')+'\r\n';
+    const nome='call-con-'+p.con.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.ics';
+
+    // Dentro il visualizzatore degli artifact la pagina è in una sandbox e i
+    // download non partono: `a.click()` non fa niente. Prima si diceva lo
+    // stesso «file scaricato», che è la cosa peggiore — chi legge va a
+    // cercare nella cartella Download un file che non c'è mai stato.
+    // `window.claude.use` esiste solo lì dentro, ed è il modo di accorgersene.
+    // (La capability `downloads` non risolve il problema: `.ics` non è fra le
+    // estensioni ammesse.)
+    if (typeof window.claude?.use === 'function') {
+      agMostraIcs(nome, contenuto);
+      return;
+    }
+
     const blob=new Blob([contenuto],{type:'text/calendar;charset=utf-8'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
-    a.href=url; a.download='call-con-'+p.con.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.ics';
+    a.href=url; a.download=nome;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),10000);
     toast('File .ics scaricato: aprilo per aggiungerlo al calendario.');
   }
+
+  /** Il file che l'app produrrebbe, mostrato invece di scaricato. */
+  function agMostraIcs(nome, contenuto){
+    document.getElementById('icsNome').textContent=nome;
+    document.getElementById('icsCorpo').textContent=contenuto;
+    document.getElementById('icsModal').classList.add('on');
+  }
+  function agChiudiIcs(){ document.getElementById('icsModal').classList.remove('on'); }
 
   /* ===== Punti e premi =====
      ⚠️ I punti premio NON sono i punti del rank.
