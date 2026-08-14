@@ -1062,17 +1062,7 @@
       <!-- COMMUNITY -->
       <section class="view" data-view="community">
         <button class="btn sm" onclick="toast('Modulo «Nuovo feedback» con foto (demo)')">+ Nuovo feedback</button>
-        <div class="list">
-          <div class="card" style="gap:8px">
-            <div class="between"><h3 class="heading">Leader Demo</h3><span class="cap">24/07/2026</span></div>
-            <span>Primo traguardo del mese raggiunto — grande squadra! 💪</span>
-            <div style="aspect-ratio:4/3;background:var(--surface2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px">foto</div>
-          </div>
-          <div class="card" style="gap:8px">
-            <div class="between"><h3 class="heading">Collaboratore Demo</h3><span class="cap">22/07/2026</span></div>
-            <span>Completato il corso «Fondamenti». Si continua!</span>
-          </div>
-        </div>
+        <div class="list" id="cmList"></div>
         <p class="cap" style="text-align:center">Contenuti a scopo educativo e motivazionale.</p>
       </section>
 
@@ -1398,6 +1388,9 @@
     if(id==='funnel'){ fnApertoIl=Date.now(); fnRender(); }
     if(id==='crm') crmSub('list');
     if(id==='trading'){ tSub('home'); renderTrading(); }
+    // La conferma non sopravvive all'uscita: tornare e trovare «Elimina?»
+    // ancora aperto è il modo per cancellare qualcosa senza volerlo.
+    if(id==='community'){ cmConferma=null; renderCommunity(); }
   }
   function updateAppbar(id){
     const bar=document.getElementById('appbar');
@@ -3682,6 +3675,57 @@
     fnRender();
     fnInvia();
     if(quale==='limite') fnArrivatiOra = fnLead.length;   // si rimette a posto
+  }
+
+  /* ===== Community: si cancella quello che si è pubblicato =====
+     Mancava del tutto, qui come nell'app: si pubblicava una foto davanti a
+     tutta la rete e non c'era modo di toglierla. Il database l'ha sempre
+     permesso — era l'interfaccia a non offrirlo. */
+  let cmPost = [
+    {id:1, autore:'leader',      nome:'Leader Demo',        data:'24/07/2026',
+     testo:'Primo traguardo del mese raggiunto — grande squadra! 💪', foto:true},
+    {id:2, autore:'collab',      nome:'Collaboratore Demo', data:'22/07/2026',
+     testo:'Completato il corso «Fondamenti». Si continua!', foto:false},
+    {id:3, autore:'me',          nome:'Admin Demo',         data:'20/07/2026',
+     testo:'Nuova base di conoscenza caricata per l\'agente.', foto:false}
+  ];
+  let cmConferma = null;   // id del post per cui si sta chiedendo conferma
+
+  function renderCommunity(){
+    const el=document.getElementById('cmList'); if(!el) return;
+    const io=meKey();
+    el.innerHTML = cmPost.map(p=>{
+      const mio = p.autore===io;
+      const foto = p.foto
+        ? '<div style="aspect-ratio:4/3;background:var(--surface2);border-radius:12px;display:flex;'+
+          'align-items:center;justify-content:center;color:var(--muted);font-size:13px">foto</div>' : '';
+      let azioni='';
+      if(mio && cmConferma===p.id){
+        azioni='<p class="cap error">'+(p.foto?'Elimino il post e la foto.':'Elimino il post.')+
+          ' Non si torna indietro.</p>'+
+          '<div class="row"><button class="btn sm" style="flex:1" data-cm-si="'+p.id+'">Elimina</button>'+
+          '<button class="btn sec sm" style="flex:1" data-cm-no="1">Annulla</button></div>';
+      } else if(mio){
+        azioni='<button class="btn sec sm" data-cm-chiedi="'+p.id+'">Elimina</button>';
+      }
+      return '<div class="card" style="gap:8px">'+
+        '<div class="between"><h3 class="heading">'+esc(p.nome)+'</h3>'+
+        '<span class="cap">'+p.data+'</span></div>'+
+        '<span>'+esc(p.testo)+'</span>'+foto+azioni+'</div>';
+    }).join('');
+
+    el.querySelectorAll('[data-cm-chiedi]').forEach(b=>{
+      b.onclick=()=>{ cmConferma=Number(b.dataset.cmChiedi); renderCommunity(); };
+    });
+    el.querySelectorAll('[data-cm-no]').forEach(b=>{
+      b.onclick=()=>{ cmConferma=null; renderCommunity(); };
+    });
+    el.querySelectorAll('[data-cm-si]').forEach(b=>{
+      b.onclick=()=>{
+        cmPost=cmPost.filter(x=>x.id!==Number(b.dataset.cmSi));
+        cmConferma=null; renderCommunity(); toast('Post eliminato');
+      };
+    });
   }
 
   /* Le scorciatoie della dashboard. Le voci che non competono al ruolo non

@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 import type { FeedbackPost } from '@/types/models';
 
+import { percorsoDaUrlPubblico } from './storage';
 import { supabase } from './supabase';
 
 export type PickedImage = { base64: string; mimeType: string };
@@ -74,6 +75,38 @@ export function useCreateFeedbackPost() {
         author_name: authorName,
       });
       if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['feedback'] }),
+  });
+}
+
+/**
+ * Cancella un proprio post, foto compresa.
+ *
+ * Mancava del tutto: si poteva pubblicare una foto davanti a tutta la rete e
+ * non c'era modo di toglierla. Il database l'ha sempre permesso
+ * (`feedback_posts_modify` su `owner_id = auth.uid() or is_admin()`) — era
+ * l'interfaccia a non offrirlo.
+ *
+ * L'ordine conta: prima la riga, poi il file. Al contrario, se la seconda
+ * chiamata fallisse resterebbe un post che punta a una foto sparita — una
+ * cornice rotta nel feed di tutti. Così, nel peggiore dei casi, resta un file
+ * che nessuno raggiunge più dal feed.
+ */
+export function useDeleteFeedbackPost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (post: { id: string; photo_url: string | null }): Promise<void> => {
+      const { error } = await supabase.from('feedback_posts').delete().eq('id', post.id);
+      if (error) throw error;
+
+      const percorso = percorsoDaUrlPubblico(post.photo_url, 'feedback');
+      if (percorso) {
+        const { error: fileErr } = await supabase.storage.from('feedback').remove([percorso]);
+        // Il post è già sparito dal feed: un file rimasto indietro non è una
+        // cosa da mostrare a chi ha appena cancellato.
+        if (fileErr) console.error('Foto non rimossa dallo storage:', fileErr.message);
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['feedback'] }),
   });

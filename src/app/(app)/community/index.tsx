@@ -1,11 +1,13 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, EmptyState, ThemedText, Colonna } from '@/components/ui';
-import { useFeedbackPosts } from '@/lib/feedback';
+import { useAuth } from '@/context/auth';
 import { messaggioErrore } from '@/lib/errori';
+import { useDeleteFeedbackPost, useFeedbackPosts } from '@/lib/feedback';
 import { radius, spacing, useTheme } from '@/theme';
 import type { FeedbackPost } from '@/types/models';
 
@@ -17,6 +19,7 @@ function formatDate(iso: string): string {
 
 export default function Community() {
   const { data, isLoading, isError, error, refetch, isRefetching } = useFeedbackPosts();
+  const { profile } = useAuth();
   const router = useRouter();
   const { colors } = useTheme();
 
@@ -51,19 +54,28 @@ export default function Community() {
               />
             )
           }
-          renderItem={({ item }) => <PostCard post={item} />}
+          renderItem={({ item }) => (
+            // Cancellare il proprio è un diritto, non una gentilezza: quello
+            // che si pubblica qui lo vede tutta la rete, foto compresa.
+            <PostCard post={item} mio={item.owner_id === profile?.id} />
+          )}
         />
       </Colonna>
     </SafeAreaView>
   );
 }
 
-function PostCard({ post }: { post: FeedbackPost }) {
+function PostCard({ post, mio }: { post: FeedbackPost; mio: boolean }) {
   const { colors } = useTheme();
+  const elimina = useDeleteFeedbackPost();
+  const [conferma, setConferma] = useState(false);
+
+  const autore = post.author_name || 'Membro';
+
   return (
     <Card style={{ gap: spacing.sm }}>
       <View style={styles.head}>
-        <ThemedText variant="heading">{post.author_name || 'Membro'}</ThemedText>
+        <ThemedText variant="heading">{autore}</ThemedText>
         <ThemedText tone="muted" variant="caption">
           {formatDate(post.created_at)}
         </ThemedText>
@@ -72,11 +84,44 @@ function PostCard({ post }: { post: FeedbackPost }) {
       {post.photo_url ? (
         <Image
           source={{ uri: post.photo_url }}
+          // Senza, uno screen reader annuncia «immagine» e basta. Non si può
+          // descrivere una foto che non si è vista, ma si può dire di chi è.
+          accessibilityLabel={`Foto pubblicata da ${autore}`}
           style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md, backgroundColor: colors.surfaceAlt }}
           contentFit="cover"
           transition={150}
         />
       ) : null}
+
+      {mio &&
+        (conferma ? (
+          <View style={{ gap: spacing.sm }}>
+            <ThemedText tone="error" variant="caption">
+              {post.photo_url ? 'Elimino il post e la foto. Non si torna indietro.' : 'Elimino il post. Non si torna indietro.'}
+            </ThemedText>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <Button
+                title="Elimina"
+                style={{ flex: 1 }}
+                loading={elimina.isPending}
+                onPress={() => elimina.mutate({ id: post.id, photo_url: post.photo_url })}
+              />
+              <Button
+                title="Annulla"
+                variant="secondary"
+                style={{ flex: 1 }}
+                onPress={() => setConferma(false)}
+              />
+            </View>
+            {elimina.isError && (
+              <ThemedText tone="error" variant="caption">
+                {messaggioErrore(elimina.error, 'Eliminazione non riuscita.')}
+              </ThemedText>
+            )}
+          </View>
+        ) : (
+          <Button title="Elimina" variant="secondary" onPress={() => setConferma(true)} />
+        ))}
     </Card>
   );
 }
