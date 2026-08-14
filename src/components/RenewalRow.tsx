@@ -38,7 +38,8 @@ export function RenewalRow({ renewal, giorniPreavviso, onPress }: Props) {
   const mostraStato = !attivo;
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
+    <Pressable
+        accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
       <Card style={{ gap: spacing.xs }}>
         <View style={styles.header}>
           <ThemedText variant="heading" style={{ flex: 1 }}>

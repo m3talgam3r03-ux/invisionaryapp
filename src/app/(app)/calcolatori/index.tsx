@@ -10,6 +10,7 @@ export default function CalcolatoriIndex() {
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
       <Pressable
+        accessibilityRole="button"
         onPress={() => router.push('/calcolatori/lottaggio')}
         style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
       >
@@ -22,6 +23,7 @@ export default function CalcolatoriIndex() {
       </Pressable>
 
       <Pressable
+        accessibilityRole="button"
         onPress={() => router.push('/calcolatori/interesse-composto')}
         style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
       >

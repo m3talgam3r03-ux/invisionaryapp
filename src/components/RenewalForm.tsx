@@ -86,6 +86,7 @@ export function RenewalForm({ initial, submitLabel, loading, onSubmit }: Renewal
             const selected = status === s;
             return (
               <Pressable
+                accessibilityRole="button"
                 key={s}
                 onPress={() => setStatus(s)}
                 style={{

@@ -271,6 +271,8 @@ export default function Agente() {
               onPress={send}
               disabled={!canSend}
               accessibilityRole="button"
+              accessibilityLabel={t.agente.inviaEtichetta}
+              accessibilityState={{ disabled: !canSend }}
               style={[styles.send, { backgroundColor: colors.accent, opacity: canSend ? 1 : 0.4 }]}
             >
               {sending ? (

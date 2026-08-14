@@ -50,6 +50,7 @@ export default function ConnettiMt5() {
             const selected = platform === p;
             return (
               <Pressable
+                accessibilityRole="button"
                 key={p}
                 onPress={() => setPlatform(p)}
                 style={{

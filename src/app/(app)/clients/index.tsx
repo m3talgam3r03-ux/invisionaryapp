@@ -205,7 +205,8 @@ function ClientRow({ client, onPress }: { client: Client; onPress: () => void })
   }
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
+    <Pressable
+        accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
       <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Avatar name={client.nome} />
         <View style={{ flex: 1, gap: 3 }}>

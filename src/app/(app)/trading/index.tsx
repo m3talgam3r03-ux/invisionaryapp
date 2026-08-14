@@ -52,6 +52,7 @@ export default function Trading() {
 
       {accounts?.map((a) => (
         <Pressable
+        accessibilityRole="button"
           key={a.id}
           onPress={() => router.push({ pathname: '/trading/[id]', params: { id: a.id } })}
           style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}

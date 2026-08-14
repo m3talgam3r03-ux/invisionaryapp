@@ -41,6 +41,7 @@ export default function CourseDetail() {
         const isDone = completed?.has(lesson.id) ?? false;
         return (
           <Pressable
+            accessibilityRole="button"
             key={lesson.id}
             onPress={() =>
               router.push({ pathname: '/formazione/lezione/[lessonId]', params: { lessonId: lesson.id } })

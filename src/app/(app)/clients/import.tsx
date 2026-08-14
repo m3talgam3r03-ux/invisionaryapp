@@ -264,6 +264,7 @@ function Chip({
   const { colors } = useTheme();
   return (
     <Pressable
+      accessibilityRole="button"
       onPress={onPress}
       style={{
         paddingHorizontal: spacing.md,

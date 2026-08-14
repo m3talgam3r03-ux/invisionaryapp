@@ -609,6 +609,10 @@ export const t = {
     annotati: (n: number) =>
       n === 1 ? 'Ho annotato una cosa su di te.' : `Ho annotato ${n} cose su di te.`,
 
+    // La freccia «↑» del pulsante non si legge ad alta voce: chi usa VoiceOver
+    // sentirebbe «pulsante» e basta, senza sapere che è quello che invia.
+    inviaEtichetta: 'Invia la domanda',
+
     budget: 'Utilizzo',
     domandeOggi: (fatte: number, max: number) => `${fatte} domande di ${max} oggi`,
     domandeSenzaLimite: (fatte: number) => `${fatte} domande oggi`,

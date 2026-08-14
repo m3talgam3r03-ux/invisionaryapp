@@ -27,6 +27,11 @@ export function ClientPicker({ value, valueName, onChange, label = 'Cliente' }: 
         {label}
       </ThemedText>
       <Pressable
+        accessibilityRole="button"
+        // Il contenuto è un segnaposto finché non si sceglie: senza etichetta
+        // uno screen reader leggerebbe «Seleziona cliente (opzionale)» e basta,
+        // senza dire di quale campo si tratta.
+        accessibilityLabel={`${label}: ${displayName ?? 'nessuno selezionato'}`}
         onPress={() => setOpen(true)}
         style={[styles.field, { borderColor: colors.border, backgroundColor: colors.surface }]}
       >
@@ -36,11 +41,26 @@ export function ClientPicker({ value, valueName, onChange, label = 'Cliente' }: 
       </Pressable>
 
       <Modal visible={open} animationType="slide" transparent onRequestClose={() => setOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-          <Pressable style={[styles.sheet, { backgroundColor: colors.surface }]} onPress={() => {}}>
+        {/* Lo sfondo chiude toccandolo: va detto, altrimenti si annuncia
+            «pulsante» senza dire cosa fa. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Chiudi"
+          style={styles.backdrop}
+          onPress={() => setOpen(false)}
+        >
+          {/* Il foglio non è un comando: intercetta il tocco perché non arrivi
+              allo sfondo e chiuda. `accessibilityViewIsModal` tiene il lettore
+              di schermo dentro la modale invece di farlo vagare sotto. */}
+          <Pressable
+            accessibilityViewIsModal
+            style={[styles.sheet, { backgroundColor: colors.surface }]}
+            onPress={() => {}}
+          >
             <ThemedText variant="heading">Seleziona cliente</ThemedText>
 
             <Pressable
+              accessibilityRole="button"
               style={styles.row}
               onPress={() => {
                 onChange(null, null);
@@ -59,6 +79,7 @@ export function ClientPicker({ value, valueName, onChange, label = 'Cliente' }: 
               )}
               renderItem={({ item }) => (
                 <Pressable
+                  accessibilityRole="button"
                   style={styles.row}
                   onPress={() => {
                     onChange(item.id, item.nome);

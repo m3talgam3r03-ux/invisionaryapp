@@ -77,6 +77,7 @@ export default function FormazioneIndex() {
         const completo = av ? av.percentuale >= 100 : false;
         return (
           <Pressable
+        accessibilityRole="button"
             key={c.id}
             onPress={() =>
               router.push({ pathname: '/formazione/[courseId]', params: { courseId: c.id } })
