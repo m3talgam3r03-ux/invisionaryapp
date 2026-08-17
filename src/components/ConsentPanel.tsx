@@ -4,6 +4,7 @@ import { Card, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { useConsents, useSetConsent } from '@/lib/consents';
+import { messaggioErrore } from '@/lib/errori';
 import { radius, spacing, useTheme } from '@/theme';
 import { CANALI, type Canale, type Client } from '@/types/models';
 
@@ -51,6 +52,16 @@ export function ConsentPanel({ client }: { client: Client }) {
           />
         ))}
       </Card>
+
+      {/* Un consenso che non si salva è il silenzio peggiore dell'app: si
+          tocca «no», il pallino non si muove, e si va via convinti di aver
+          revocato. Il contatto resta contattabile, e la prova di quel «no»
+          non esiste da nessuna parte. */}
+      {setConsent.isError && (
+        <ThemedText tone="error" variant="caption">
+          {messaggioErrore(setConsent.error, t.crm.consensi.nonSalvato)}
+        </ThemedText>
+      )}
 
       {!puoModificare && (
         <ThemedText tone="muted" variant="caption">

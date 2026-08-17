@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Card, Screen, ThemedText, Sezione } from '@/components/ui';
 import { t } from '@/i18n/it';
 import { domandeRimaste, statoBudget } from '@/lib/agente';
+import { messaggioErrore } from '@/lib/errori';
 import { useBudgetAgente, useDimentica, useDimenticaTutto, useMemorie } from '@/lib/agente-data';
 import { spacing, useTheme } from '@/theme';
 
@@ -57,6 +58,15 @@ export default function MemoriaAgente() {
           {t.agente.memoriaPrivata}
         </ThemedText>
       </View>
+
+      {/* Qui il silenzio è una cancellazione chiesta e non avvenuta: si tocca
+          «Dimentica», la riga resta, e non è chiaro se sia un ritardo o un
+          rifiuto. Su dati che l'agente conserva su di te va detto. */}
+      {(dimentica.isError || dimenticaTutto.isError) && (
+        <ThemedText tone="error" variant="caption">
+          {messaggioErrore(dimentica.error ?? dimenticaTutto.error, t.agente.nonDimenticato)}
+        </ThemedText>
+      )}
 
       {isLoading ? (
         <ThemedText tone="muted">{t.comune.caricamento}</ThemedText>

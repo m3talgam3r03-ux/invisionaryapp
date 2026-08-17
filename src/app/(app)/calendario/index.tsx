@@ -14,6 +14,7 @@ import {
   useSlotLiberi,
   type Prenotazione,
 } from '@/lib/calendario';
+import { messaggioErrore } from '@/lib/errori';
 import { creaICS } from '@/lib/ics';
 import { condividiICS, condivisioneICSDisponibile } from '@/lib/ics-share';
 import { can } from '@/lib/permissions';
@@ -152,6 +153,15 @@ export default function Calendario() {
                     onPress={() => annulla.mutate(p.id)}
                   />
                 </View>
+
+                {/* Se la disdetta non passa, l'appuntamento resta e l'altra
+                    persona continua ad aspettarti. Il silenzio qui costa a
+                    qualcun altro, non solo a chi tocca il pulsante. */}
+                {annulla.isError && (
+                  <ThemedText tone="error" variant="caption">
+                    {messaggioErrore(annulla.error, t.calendario.annullaNonRiuscito)}
+                  </ThemedText>
+                )}
               </Card>
             );
           })

@@ -5,13 +5,14 @@ import { MappaItalia } from '@/components/MappaItalia';
 import { Card, Screen, ThemedText, Sezione } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
+import { messaggioErrore } from '@/lib/errori';
 import { NOMI_REGIONI, costruisciMappa, regionePiuAffollata, testoRiepilogo } from '@/lib/mappa';
 import { useImpostaRegione, useMappaIscritti, useRiepilogoMappa } from '@/lib/mappa-data';
 import { radius, spacing, useTheme } from '@/theme';
 
 export default function Mappa() {
   const { profile } = useAuth();
-  const { data: conteggi, isLoading, isError } = useMappaIscritti();
+  const { data: conteggi, isLoading, isError, error } = useMappaIscritti();
   const { data: riepilogo } = useRiepilogoMappa();
   const imposta = useImpostaRegione();
 
@@ -33,7 +34,7 @@ export default function Mappa() {
         <ThemedText tone="muted">{t.comune.caricamento}</ThemedText>
       ) : isError ? (
         <ThemedText tone="error" variant="caption">
-          {t.comune.errore}
+          {messaggioErrore(error, t.comune.errore)}
         </ThemedText>
       ) : (
         <Card style={{ gap: spacing.md }}>
@@ -56,7 +57,12 @@ export default function Mappa() {
       {/* La propria regione: si vede la mappa e ci si aggiunge da lì */}
       <View style={{ gap: spacing.sm }}>
         <Sezione titolo={t.mappa.tuaRegione} />
-        <Pressable onPress={() => setApriScelta((v) => !v)} accessibilityRole="button">
+        <Pressable
+          onPress={() => setApriScelta((v) => !v)}
+          accessibilityRole="button"
+          accessibilityLabel={`${t.mappa.tuaRegione}: ${mia ?? t.mappa.nessunaScelta}`}
+          accessibilityState={{ expanded: apriScelta }}
+        >
           <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
             <ThemedText style={{ flex: 1 }} tone={mia ? 'default' : 'muted'}>
               {mia ?? t.mappa.nonIndicata}
@@ -64,6 +70,14 @@ export default function Mappa() {
             <ThemedText tone="muted">{apriScelta ? '⌃' : '⌄'}</ThemedText>
           </Card>
         </Pressable>
+
+        {/* Se il salvataggio non va, va detto: la scheda si chiude comunque e
+            senza un messaggio sembra che la scelta sia stata registrata. */}
+        {imposta.isError && (
+          <ThemedText tone="error" variant="caption">
+            {messaggioErrore(imposta.error, t.mappa.regioneNonSalvata)}
+          </ThemedText>
+        )}
 
         {apriScelta && (
           <ScrollView

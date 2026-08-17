@@ -101,6 +101,16 @@ export default function Funnel() {
               />
             </View>
 
+            {/* Accendere e spegnere una pagina PUBBLICA in silenzio è grave in
+                entrambi i versi: si crede di averla chiusa e continua a
+                raccogliere contatti, oppure di averla aperta e non arriva
+                niente. */}
+            {attiva.isError && (
+              <ThemedText tone="error" variant="caption">
+                {messaggioErrore(attiva.error, t.funnel.statoNonCambiato)}
+              </ThemedText>
+            )}
+
             {aperto === f.id && (
               <View style={{ gap: spacing.xs, marginTop: spacing.sm }}>
                 {(lead ?? []).length === 0 ? (

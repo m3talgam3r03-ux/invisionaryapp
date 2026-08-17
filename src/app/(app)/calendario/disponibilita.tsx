@@ -83,6 +83,11 @@ export default function Disponibilita() {
                 loading={elimina.isPending}
                 onPress={() => elimina.mutate(r.id)}
               />
+              {elimina.isError && (
+                <ThemedText tone="error" variant="caption">
+                  {messaggioErrore(elimina.error, t.calendario.rimozioneNonRiuscita)}
+                </ThemedText>
+              )}
             </Card>
           ))
         )}

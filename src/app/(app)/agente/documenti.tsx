@@ -206,6 +206,13 @@ export default function Documenti() {
           appoggiarsi ai materiali della piattaforma.
         </ThemedText>
       )}
+      {/* Un documento non rimosso resta nelle risposte dell'agente: se lo si
+          toglieva perché sbagliato o superato, continuerebbe a citarlo. */}
+      {remove.isError && (
+        <ThemedText tone="error" variant="caption">
+          {messaggioErrore(remove.error, 'Il documento NON è stato rimosso: è ancora nella base.')}
+        </ThemedText>
+      )}
       {docs?.map((d) => (
         <Card key={d.source} style={{ gap: spacing.xs }}>
           <ThemedText variant="heading">{d.source}</ThemedText>

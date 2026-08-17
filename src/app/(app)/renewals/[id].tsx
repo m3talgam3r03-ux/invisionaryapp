@@ -117,6 +117,13 @@ export default function RenewalDetail() {
           confermaEliminazione(() => remove.mutate(renewal.id, { onSuccess: () => router.back() }))
         }
       />
+      {/* Senza questo si confermava, non succedeva niente, e il rinnovo
+          restava nello scadenzario a scadere. */}
+      {remove.isError && (
+        <ThemedText tone="error" variant="caption">
+          {messaggioErrore(remove.error, t.rinnovi.form.eliminazioneFallita)}
+        </ThemedText>
+      )}
     </Screen>
   );
 }

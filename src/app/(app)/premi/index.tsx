@@ -6,6 +6,7 @@ import { Button, Card, Screen, ThemedText, Sezione } from '@/components/ui';
 import { ProgressBar } from '@/components/ProgressBar';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
+import { messaggioErrore } from '@/lib/errori';
 import { formatNumber } from '@/lib/format';
 import {
   avanzamento,
@@ -47,7 +48,7 @@ export default function Premi() {
       await riscatta.mutateAsync(p.id);
       setMessaggio({ testo: t.premi.riscattato, errore: false });
     } catch (err) {
-      setMessaggio({ testo: messaggioErrore(err), errore: true });
+      setMessaggio({ testo: erroreRiscatto(err), errore: true });
     }
   }
 
@@ -213,14 +214,23 @@ function descrizioneVoce(origine: string, motivo: string | null): string {
   return `${testa} · ${t.premi.metrica[motivo] ?? motivo}`;
 }
 
-function messaggioErrore(err: unknown): string {
+/**
+ * Perché un riscatto non è andato.
+ *
+ * Prima i due casi che solo questa schermata sa leggere — premio finito,
+ * saldo che sarebbe sceso sotto zero — poi si passa la palla a
+ * `messaggioErrore()`. Prima finiva tutto in «riscatto non riuscito», e un
+ * telefono senza campo si presentava come un problema del premio: si
+ * riprovava a riscattare invece di cercare la linea.
+ */
+function erroreRiscatto(err: unknown): string {
   const testo = String((err as { message?: string })?.message ?? '').toLowerCase();
   if (testo.includes('esaurito') || testo.includes('non disponibile')) return t.premi.erroreEsaurito;
   // Il CHECK su points_balance: il saldo sarebbe andato sotto zero.
   if (testo.includes('saldo') || testo.includes('points_balance') || testo.includes('check')) {
     return t.premi.errorePunti;
   }
-  return t.premi.erroreGenerico;
+  return messaggioErrore(err, t.premi.erroreGenerico);
 }
 
 const styles = StyleSheet.create({

@@ -150,6 +150,7 @@ export default function ClientDetail() {
           )
         }
         accessibilityRole="button"
+        accessibilityState={{ disabled: remove.isPending }}
         disabled={remove.isPending}
         style={{ alignSelf: 'center', padding: spacing.sm }}
       >
@@ -157,6 +158,16 @@ export default function ClientDetail() {
           {remove.isPending ? 'Eliminazione…' : 'Elimina cliente'}
         </ThemedText>
       </Pressable>
+
+      {/* Se l'eliminazione non riesce non succedeva NIENTE: si confermava, la
+          scritta tornava «Elimina cliente» e il contatto restava lì. Il caso
+          più probabile è un rinnovo collegato, e allora il messaggio giusto
+          («c'è dell'altro collegato») dice anche cosa fare. */}
+      {remove.isError && (
+        <ThemedText tone="error" variant="caption" style={{ textAlign: 'center' }}>
+          {messaggioErrore(remove.error, 'Eliminazione non riuscita.')}
+        </ThemedText>
+      )}
     </Screen>
   );
 }

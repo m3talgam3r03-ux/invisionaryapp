@@ -278,6 +278,11 @@ export const t = {
       dato: (canale: string) => `${canale}: consenso dato`,
       revocato: (canale: string) => `${canale}: consenso revocato`,
       soloProprietario: 'Solo chi possiede il contatto può registrarne i consensi.',
+      /**
+       * Il silenzio peggiore dell'app: si tocca «no», non cambia niente, e si
+       * va via convinti di aver revocato. Il contatto resta contattabile.
+       */
+      nonSalvato: 'Il consenso NON è stato registrato. Riprova: finché non passa, vale quello di prima.',
     },
 
     privacy: {
@@ -354,6 +359,7 @@ export const t = {
       salva: 'Salva modifiche',
       crea: 'Crea rinnovo',
       elimina: 'Elimina rinnovo',
+      eliminazioneFallita: 'Il rinnovo NON è stato eliminato: è ancora nello scadenzario.',
       eliminaConferma: 'Eliminare definitivamente il rinnovo?',
       salvataggioFallito: 'Salvataggio non riuscito.',
       creazioneFallita: 'Creazione non riuscita.',
@@ -534,6 +540,10 @@ export const t = {
       `${quanti} ${quanti === 1 ? 'appuntamento' : 'appuntamenti'} da questa fascia`,
     anteprimaAvanzo: (minuti: number) => `, e ${minuti} min che restano fuori`,
     rimuovi: 'Rimuovi',
+    rimozioneNonRiuscita: 'La fascia NON è stata rimossa: è ancora prenotabile.',
+    /** Il silenzio qui costa a qualcun altro: l'altra persona continua ad aspettarti. */
+    annullaNonRiuscito:
+      'L’appuntamento NON è stato annullato: risulta ancora fissato, e l’altra persona ti aspetta.',
     rimuoviAvviso:
       'Togliere una fascia non annulla gli appuntamenti già presi: quelli restano, e si annullano uno per uno.',
 
@@ -604,6 +614,9 @@ export const t = {
     spento: 'Spento',
     accendi: 'Accendi',
     spegni: 'Spegni',
+    /** La pagina è pubblica: credere di averla spenta e non averlo fatto è peggio dell'errore. */
+    statoNonCambiato:
+      'Lo stato del funnel NON è cambiato. La pagina è rimasta com’era: controlla e riprova.',
     spegniAiuto:
       'Spegnere non cancella: la pagina smette di accettare contatti, quelli già arrivati restano.',
 
@@ -631,6 +644,7 @@ export const t = {
       vincolo: 'Vincolo',
     } as Record<string, string>,
     dimentica: 'Dimentica',
+    nonDimenticato: 'Non sono riuscito a dimenticarlo: la nota è ancora lì. Riprova.',
     dimenticaTutto: 'Dimentica tutto',
     confermaTutto: 'Sicuro? Cancello tutto quello che ho annotato su di te.',
     dimenticato: 'Fatto, l’ho dimenticato.',
@@ -670,6 +684,9 @@ export const t = {
 
     tuaRegione: 'La tua regione',
     nonIndicata: 'Non indicata — tocca per sceglierla',
+    /** Per l'etichetta vocale: «Non indicata — tocca» letto è un'istruzione, non un valore. */
+    nessunaScelta: 'nessuna',
+    regioneNonSalvata: 'La regione non è stata salvata. Riprova.',
     facoltativa:
       'Indicarla è facoltativo, e si può togliere in qualsiasi momento toccando di nuovo la stessa regione.',
     privacy:
