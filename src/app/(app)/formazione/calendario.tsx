@@ -2,6 +2,7 @@ import { Card, Screen, ThemedText } from '@/components/ui';
 import { messaggioErrore } from '@/lib/errori';
 import { useEvents } from '@/lib/events';
 import { spacing } from '@/theme';
+import { t } from '@/i18n/it';
 
 function formatDateTimeIT(iso: string): string {
   const d = new Date(iso);
@@ -20,13 +21,13 @@ export default function Calendario() {
 
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
-      {isLoading && <ThemedText tone="muted">Caricamento eventi…</ThemedText>}
+      {isLoading && <ThemedText tone="muted">{t.formazione.caricamentoEventi}</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(error, 'Errore nel caricamento del calendario.')}
+          {messaggioErrore(error, t.comune.errore)}
         </ThemedText>
       )}
-      {events?.length === 0 && <ThemedText tone="muted">Nessun evento in programma.</ThemedText>}
+      {events?.length === 0 && <ThemedText tone="muted">{t.formazione.nessunEvento}</ThemedText>}
 
       {events?.map((ev) => (
         <Card key={ev.id} style={{ gap: spacing.xs }}>

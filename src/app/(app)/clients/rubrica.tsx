@@ -118,7 +118,7 @@ export default function Rubrica() {
         <ThemedText tone="muted" variant="caption">
           {t.crm.consensi.sottotitolo}
         </ThemedText>
-        <Button title="Torna ai contatti" onPress={() => router.back()} />
+        <Button title={t.crm.rubrica.tornaAiContatti} onPress={() => router.back()} />
       </Screen>
     );
   }

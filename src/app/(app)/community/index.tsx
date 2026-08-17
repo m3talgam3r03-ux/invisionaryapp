@@ -10,6 +10,7 @@ import { messaggioErrore } from '@/lib/errori';
 import { useDeleteFeedbackPost, useFeedbackPosts } from '@/lib/feedback';
 import { radius, spacing, useTheme } from '@/theme';
 import type { FeedbackPost } from '@/types/models';
+import { t } from '@/i18n/it';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -27,7 +28,7 @@ export default function Community() {
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
       <Colonna>
         <View style={styles.actions}>
-          <Button title="+ Nuovo feedback" onPress={() => router.push('/community/nuovo')} style={{ flex: 1 }} />
+          <Button title={t.community.nuovoFeedback} onPress={() => router.push('/community/nuovo')} style={{ flex: 1 }} />
         </View>
   
         <FlatList
@@ -40,17 +41,17 @@ export default function Community() {
           ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
           ListEmptyComponent={
             isLoading ? (
-              <ThemedText tone="muted">Caricamento…</ThemedText>
+              <ThemedText tone="muted">{t.community.caricamento}</ThemedText>
             ) : isError ? (
               <EmptyState
                 tone="error"
-                title="Impossibile caricare la community"
-                hint={messaggioErrore(error, 'Errore sconosciuto.')}
+                title={t.community.erroreElenco}
+                hint={messaggioErrore(error, t.comune.errore)}
               />
             ) : (
               <EmptyState
-                title="Ancora nessun feedback"
-                hint="Condividi un traguardo o un pensiero con la tua rete."
+                title={t.community.vuota}
+                hint={t.community.vuotaSuggerimento}
               />
             )
           }
@@ -70,7 +71,7 @@ function PostCard({ post, mio }: { post: FeedbackPost; mio: boolean }) {
   const elimina = useDeleteFeedbackPost();
   const [conferma, setConferma] = useState(false);
 
-  const autore = post.author_name || 'Membro';
+  const autore = post.author_name || t.community.autoreIgnoto;
 
   return (
     <Card style={{ gap: spacing.sm }}>
@@ -86,7 +87,7 @@ function PostCard({ post, mio }: { post: FeedbackPost; mio: boolean }) {
           source={{ uri: post.photo_url }}
           // Senza, uno screen reader annuncia «immagine» e basta. Non si può
           // descrivere una foto che non si è vista, ma si può dire di chi è.
-          accessibilityLabel={`Foto pubblicata da ${autore}`}
+          accessibilityLabel={t.community.fotoDi(autore)}
           style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md, backgroundColor: colors.surfaceAlt }}
           contentFit="cover"
           transition={150}
@@ -97,17 +98,17 @@ function PostCard({ post, mio }: { post: FeedbackPost; mio: boolean }) {
         (conferma ? (
           <View style={{ gap: spacing.sm }}>
             <ThemedText tone="error" variant="caption">
-              {post.photo_url ? 'Elimino il post e la foto. Non si torna indietro.' : 'Elimino il post. Non si torna indietro.'}
+              {post.photo_url ? t.community.confermaConFoto : t.community.conferma}
             </ThemedText>
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <Button
-                title="Elimina"
+                title={t.community.elimina}
                 style={{ flex: 1 }}
                 loading={elimina.isPending}
                 onPress={() => elimina.mutate({ id: post.id, photo_url: post.photo_url })}
               />
               <Button
-                title="Annulla"
+                title={t.comune.annulla}
                 variant="secondary"
                 style={{ flex: 1 }}
                 onPress={() => setConferma(false)}
@@ -115,12 +116,12 @@ function PostCard({ post, mio }: { post: FeedbackPost; mio: boolean }) {
             </View>
             {elimina.isError && (
               <ThemedText tone="error" variant="caption">
-                {messaggioErrore(elimina.error, 'Eliminazione non riuscita.')}
+                {messaggioErrore(elimina.error, t.community.eliminazioneFallita)}
               </ThemedText>
             )}
           </View>
         ) : (
-          <Button title="Elimina" variant="secondary" onPress={() => setConferma(true)} />
+          <Button title={t.community.elimina} variant="secondary" onPress={() => setConferma(true)} />
         ))}
     </Card>
   );

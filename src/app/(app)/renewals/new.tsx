@@ -4,6 +4,7 @@ import { RenewalForm } from '@/components/RenewalForm';
 import { Screen, ThemedText } from '@/components/ui';
 import { messaggioErrore } from '@/lib/errori';
 import { useCreateRenewal } from '@/lib/renewals';
+import { t } from '@/i18n/it';
 
 export default function NewRenewal() {
   const create = useCreateRenewal();
@@ -21,7 +22,7 @@ export default function NewRenewal() {
       />
       {create.isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(create.error, 'Creazione non riuscita.')}
+          {messaggioErrore(create.error, t.rinnovi.form.creazioneFallita)}
         </ThemedText>
       )}
     </Screen>

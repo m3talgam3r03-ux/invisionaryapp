@@ -24,7 +24,7 @@ export function ClientForm({ initial, submitLabel, loading, onSubmit }: ClientFo
 
   function submit() {
     if (!nome.trim()) {
-      setError('Il nome è obbligatorio.');
+      setError(t.crm.form.nomeObbligatorio);
       return;
     }
     setError(null);
@@ -40,24 +40,24 @@ export function ClientForm({ initial, submitLabel, loading, onSubmit }: ClientFo
   return (
     <View style={{ gap: spacing.lg }}>
       <TextField
-        label="Nome *"
+        label={t.crm.form.nome}
         value={nome}
         onChangeText={setNome}
-        placeholder="Mario Rossi"
+        placeholder={t.crm.form.nomeEsempio}
         errorText={error ?? undefined}
       />
       <TextField
-        label="Contatto"
+        label={t.crm.form.contatto}
         value={contatto ?? ''}
         onChangeText={setContatto}
-        placeholder="email o telefono"
+        placeholder={t.crm.form.contattoEsempio}
         autoCapitalize="none"
       />
       <TextField
-        label="Prodotto"
+        label={t.crm.form.prodotto}
         value={prodotto ?? ''}
         onChangeText={setProdotto}
-        placeholder="es. prodotto o servizio"
+        placeholder={t.crm.form.prodottoEsempio}
       />
 
       {/* Fase della trattativa: ogni cambio finisce nello storico del contatto */}
@@ -72,10 +72,10 @@ export function ClientForm({ initial, submitLabel, loading, onSubmit }: ClientFo
         </ScrollView>
       </View>
       <TextField
-        label="Note"
+        label={t.crm.form.note}
         value={note ?? ''}
         onChangeText={setNote}
-        placeholder="Note libere"
+        placeholder={t.crm.form.noteEsempio}
         multiline
         numberOfLines={4}
         style={{ height: 100, textAlignVertical: 'top', paddingTop: spacing.md }}

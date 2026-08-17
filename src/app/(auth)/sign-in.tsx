@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth';
 import { authErrorMessage } from '@/lib/auth-errors';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { BRAND, spacing } from '@/theme';
+import { t } from '@/i18n/it';
 
 export default function SignIn() {
   const { signIn } = useAuth();
@@ -45,7 +46,7 @@ export default function SignIn() {
           tentativo, invece di lasciare che fallisca con un errore tecnico. */}
       {!isSupabaseConfigured && (
         <Card style={{ gap: spacing.xs }}>
-          <ThemedText variant="heading">Database non collegato</ThemedText>
+          <ThemedText variant="heading">{t.auth.databaseNonCollegato}</ThemedText>
           <ThemedText tone="muted" variant="caption">
             Nel file <ThemedText variant="caption">.env</ThemedText> mancano l’indirizzo e la chiave
             del progetto Supabase, quindi l’app non ha dove verificare le credenziali. L’accesso
@@ -58,23 +59,23 @@ export default function SignIn() {
       )}
 
       <TextField
-        label="Email"
+        label={t.auth.email}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
         autoComplete="email"
         keyboardType="email-address"
         textContentType="emailAddress"
-        placeholder="nome@esempio.com"
+        placeholder={t.auth.emailEsempio}
       />
       <TextField
-        label="Password"
+        label={t.auth.password}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         autoComplete="password"
         textContentType="password"
-        placeholder="••••••••"
+        placeholder={t.auth.passwordNascosta}
       />
 
       {error && (
@@ -84,7 +85,7 @@ export default function SignIn() {
       )}
 
       <Button
-        title="Accedi"
+        title={t.auth.accedi}
         onPress={onSubmit}
         loading={loading}
         disabled={!isSupabaseConfigured}

@@ -6,6 +6,7 @@ import { formatNumber } from '@/lib/format';
 import { useSyncAccounts, useTradingAccounts } from '@/lib/trading';
 import { messaggioErrore } from '@/lib/errori';
 import { spacing } from '@/theme';
+import { t } from '@/i18n/it';
 
 export default function Trading() {
   const router = useRouter();
@@ -15,9 +16,9 @@ export default function Trading() {
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
-        <Button title="+ Collega MT5" style={{ flex: 1 }} onPress={() => router.push('/trading/connetti')} />
+        <Button title={t.trading.collegaMt5} style={{ flex: 1 }} onPress={() => router.push('/trading/connetti')} />
         <Button
-          title="Classifica"
+          title={t.trading.classificaAzione}
           variant="secondary"
           style={{ flex: 1 }}
           onPress={() => router.push('/trading/classifica')}
@@ -26,7 +27,7 @@ export default function Trading() {
 
       {accounts && accounts.length > 0 && (
         <Button
-          title="Sincronizza ora"
+          title={t.trading.sincronizza}
           variant="secondary"
           loading={sync.isPending}
           onPress={() => sync.mutate(undefined)}
@@ -34,23 +35,23 @@ export default function Trading() {
       )}
       {sync.isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(sync.error, 'Sincronizzazione non riuscita.')}
+          {messaggioErrore(sync.error, t.trading.sincronizzaFallita)}
         </ThemedText>
       )}
 
-      {isLoading && <ThemedText tone="muted">Caricamento account…</ThemedText>}
+      {isLoading && <ThemedText tone="muted">{t.trading.caricamentoAccount}</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
           {/* Qui c'era «verifica .env e la migrazione 0008», e compariva a
               QUALUNQUE errore: anche un timeout di rete. Chi usa l'app non ha
               un file .env e non sa cosa sia una migrazione. */}
-          {messaggioErrore(error, 'Impossibile caricare gli account collegati.')}
+          {messaggioErrore(error, t.trading.erroreAccount)}
         </ThemedText>
       )}
       {accounts?.length === 0 && (
         <EmptyState
-          title="Nessun account collegato"
-          hint="Collega un account MT5 in sola lettura con la tua investor password."
+          title={t.trading.nessunAccount}
+          hint={t.trading.nessunAccountSuggerimento}
         />
       )}
 

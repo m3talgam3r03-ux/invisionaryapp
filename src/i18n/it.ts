@@ -164,6 +164,60 @@ export const t = {
   },
 
   crm: {
+    /** Il modulo del contatto: usato sia in creazione sia in modifica. */
+    form: {
+      nomeObbligatorio: 'Il nome è obbligatorio.',
+      nome: 'Nome *',
+      nomeEsempio: 'Mario Rossi',
+      contatto: 'Contatto',
+      contattoEsempio: 'email o telefono',
+      prodotto: 'Prodotto',
+      prodottoEsempio: 'es. prodotto o servizio',
+      note: 'Note',
+      noteEsempio: 'Note libere',
+      creazioneFallita: 'Creazione non riuscita.',
+      salvataggioFallito: 'Salvataggio non riuscito.',
+    },
+    /** La scheda di un singolo contatto. */
+    scheda: {
+      caricamento: 'Caricamento…',
+      nonTrovato: 'Cliente non trovato',
+      nonTrovatoSuggerimento: 'Potrebbe essere stato eliminato.',
+      modifica: 'Modifica',
+      annulla: 'Annulla',
+      chiama: 'Chiama',
+      whatsapp: 'WhatsApp',
+      email: 'Email',
+      confermaTitolo: 'Eliminare il cliente?',
+      confermaTesto: (nome: string) => `«${nome}» verrà eliminato definitivamente.`,
+      elimina: 'Elimina cliente',
+      eliminazioneInCorso: 'Eliminazione…',
+      eliminazioneFallita: 'Eliminazione non riuscita.',
+    },
+    /** L'elenco dei contatti. */
+    elenco: {
+      caricamento: 'Caricamento clienti…',
+      errore: 'Impossibile caricare i clienti',
+      nessunRisultatoTitolo: 'Nessun risultato',
+      nessunRisultato: (query: string) => `Nessun cliente corrisponde a «${query}».`,
+      cancellaRicerca: 'Cancella la ricerca',
+      vuoto: 'Nessun cliente',
+      vuotoSuggerimento: 'Aggiungi il primo contatto, oppure importa un elenco da CSV o Excel.',
+      aggiungi: '+ Aggiungi cliente',
+      aggiungiEtichetta: 'Aggiungi cliente',
+      contatti: (n: number) => (n === 1 ? '1 contatto' : `${n} contatti`),
+      diTotali: (mostrati: number, totali: number) => `${mostrati} di ${totali}`,
+      file: 'File ›',
+    },
+    /** Il selettore cliente nelle altre schermate. */
+    selettore: {
+      titolo: 'Seleziona cliente',
+      facoltativo: 'Seleziona cliente (opzionale)',
+      nessuno: '— Nessun cliente',
+      vuoto: 'Nessun cliente disponibile. Aggiungine dal CRM.',
+      chiudi: 'Chiudi',
+      nessunoSelezionato: 'nessuno selezionato',
+    },
     titolo: 'Contatti',
     nuovo: '+ Nuovo contatto',
     importa: 'Importa',
@@ -191,6 +245,13 @@ export const t = {
 
     importa2: 'Importa',
     importaSchermata: {
+      titolo: 'Importa clienti da file',
+      scegliFile: 'Scegli un file',
+      scegliAltroFile: 'Scegli un altro file',
+      vaiAiClienti: 'Vai ai clienti',
+      importaAltro: 'Importa un altro file',
+      letturaFallita: 'Lettura del file non riuscita.',
+      importFallito: 'Import non riuscito.',
       dichiarazione: 'Dichiarazione obbligatoria',
       dichiarazioneSpiega:
         'Prima di importare va dichiarato da dove arrivano questi dati e con quale base li tratti. È la sola cosa che si può esibire se qualcuno chiede perché quei contatti sono nel sistema.',
@@ -212,6 +273,9 @@ export const t = {
     rubrica: {
       titolo: 'Dalla rubrica',
       apri: 'Aggiungi dalla rubrica',
+      tornaAiContatti: 'Torna ai contatti',
+      /** Il pulsante è un glifo: senza etichetta annuncia solo «pulsante». */
+      chiamaEtichetta: (nome: string) => `Chiama ${nome}`,
       spiega:
         'L’app legge la rubrica del telefono e ti mostra chi c’è. Scegli tu chi aggiungere: nessun contatto viene copiato senza la tua selezione.',
       avvisoPrivacy:
@@ -360,6 +424,11 @@ export const t = {
       crea: 'Crea rinnovo',
       elimina: 'Elimina rinnovo',
       eliminazioneFallita: 'Il rinnovo NON è stato eliminato: è ancora nello scadenzario.',
+      dataNonValida: 'Inserisci una data di scadenza valida (AAAA-MM-GG).',
+      prodotto: 'Prodotto',
+      prodottoEsempio: 'es. abbonamento o pacchetto',
+      scadenza: 'Scadenza (AAAA-MM-GG)',
+      durata: 'Durata del rinnovo (giorni)',
       eliminaConferma: 'Eliminare definitivamente il rinnovo?',
       salvataggioFallito: 'Salvataggio non riuscito.',
       creazioneFallita: 'Creazione non riuscita.',
@@ -401,6 +470,36 @@ export const t = {
   },
 
   trading: {
+    collegaMt5: '+ Collega MT5',
+    classificaAzione: 'Classifica',
+    sincronizza: 'Sincronizza ora',
+    sincronizzaQuesto: 'Sincronizza questo account',
+    sincronizzaFallita: 'Sincronizzazione non riuscita.',
+    caricamentoAccount: 'Caricamento account…',
+    erroreAccount: 'Impossibile caricare gli account collegati.',
+    nessunAccount: 'Nessun account collegato',
+    nessunAccountSuggerimento:
+      'Collega un account MT5 in sola lettura con la tua investor password.',
+    accountNonTrovato: 'Account non trovato.',
+    caricamentoOperazioni: 'Caricamento operazioni…',
+    saldo: 'Saldo',
+    equity: 'Equity',
+    rendimento: 'Rendimento (stima)',
+    inAttesaSync: 'In attesa di sincronizzazione',
+    saldoCon: (importo: string, valuta: string) => `Saldo: ${importo} ${valuta}`,
+    disclaimer:
+      'Solo lettura (investor password). Le metriche sono in percentuale e a scopo informativo, non importi garantiti né consulenza finanziaria.',
+    connetti: {
+      login: 'Login (numero conto)',
+      loginEsempio: 'es. 5012345',
+      server: 'Server',
+      serverEsempio: 'es. BrokerName-Live',
+      investor: 'Investor password',
+      investorEsempio: 'password di sola lettura',
+      campiMancanti: 'Compila login, server e investor password.',
+      collega: 'Collega account',
+      collegamentoFallito: 'Collegamento non riuscito.',
+    },
     classifica: {
       titolo: 'Classifica trader',
       sottotitolo: 'Ordinata sulla quota di operazioni chiuse in utile del mese in corso.',
@@ -773,8 +872,15 @@ export const t = {
     avanzamentoRete: 'Avanzamento rete',
     caricamentoCorsi: 'Caricamento corsi…',
     erroreCorsi: 'Impossibile caricare i corsi.',
-    erroreCorsiDettaglio: (motivo: string) => `${motivo} — verifica .env e la migrazione 0004.`,
+    // Qui c'era «— verifica .env e la migrazione 0004», stessa cosa che stava
+    // nel Trading: chi usa l'app non ha un file .env sul telefono.
+    erroreCorsiDettaglio: (motivo: string) => motivo,
     erroreSconosciuto: 'Errore sconosciuto',
+    caricamentoLezioni: 'Caricamento lezioni…',
+    nessunaLezione: 'Nessuna lezione in questo corso.',
+    lezioneNonTrovata: 'Lezione non trovata.',
+    caricamentoEventi: 'Caricamento eventi…',
+    nessunEvento: 'Nessun evento in programma.',
     nessunCorso: 'Nessun corso',
     nessunCorsoSuggerimento:
       'I corsi vengono gestiti dall’amministratore. Puoi caricare il seed dimostrativo.',
@@ -786,5 +892,68 @@ export const t = {
     lezioniSu: (fatte: number, totale: number) => `${fatte} di ${totale} lezioni`,
     completato: 'Completato',
     durata: (min: number) => `${min} min`,
+  },
+
+  /** Accesso e registrazione. */
+  auth: {
+    accedi: 'Accedi',
+    registrati: 'Registrati',
+    creaAccount: 'Crea account',
+    email: 'Email',
+    emailEsempio: 'nome@esempio.com',
+    password: 'Password',
+    passwordNascosta: '••••••••',
+    passwordMinima: 'almeno 6 caratteri',
+    passwordCorta: 'La password deve avere almeno 6 caratteri.',
+    nome: 'Nome e cognome',
+    nomeEsempio: 'Mario Rossi',
+    /**
+     * Questo avviso è per chi installa l'app, non per chi la usa: compare solo
+     * se mancano le chiavi, cioè su una build non configurata. Resta tecnico
+     * di proposito — chi lo vede è chi può risolverlo.
+     */
+    databaseNonCollegato: 'Database non collegato',
+  },
+
+  community: {
+    nuovoFeedback: '+ Nuovo feedback',
+    caricamento: 'Caricamento…',
+    erroreElenco: 'Impossibile caricare la community',
+    vuota: 'Ancora nessun feedback',
+    vuotaSuggerimento: 'Condividi un traguardo o un pensiero con la tua rete.',
+    autoreIgnoto: 'Membro',
+    messaggio: 'Messaggio',
+    messaggioEsempio: 'Condividi un traguardo o un pensiero con la rete…',
+    aggiungiFoto: 'Aggiungi foto',
+    pubblica: 'Pubblica',
+    fotoNonScelta: 'Permesso negato o nessuna immagine selezionata.',
+    vuoto: 'Scrivi un messaggio o allega una foto.',
+    pubblicazioneFallita: 'Pubblicazione non riuscita.',
+    selezioneFallita: 'Selezione immagine non riuscita.',
+    /** Quello che si pubblica lo vede tutta la rete: toglierlo è un diritto. */
+    elimina: 'Elimina',
+    confermaConFoto: 'Elimino il post e la foto. Non si torna indietro.',
+    conferma: 'Elimino il post. Non si torna indietro.',
+    eliminazioneFallita: 'Eliminazione non riuscita.',
+    fotoDi: (autore: string) => `Foto pubblicata da ${autore}`,
+  },
+
+  calcolatori: {
+    lottaggio: 'Calcolatore lottaggio',
+    composto: 'Interesse composto',
+  },
+
+  /** La base di conoscenza dell'agente: schermata da amministratore. */
+  baseConoscenza: {
+    competenzaDiBase: 'Competenza di base',
+    aggiungiContenuto: 'Aggiungi un contenuto',
+    fonte: 'Fonte / titolo',
+    fonteEsempio: 'es. Guida rete 2026',
+    testo: 'Testo',
+    testoEsempio: 'Incolla qui il contenuto…',
+    aggiungi: 'Aggiungi alla base di conoscenza',
+    caricamentoFallito: 'Caricamento non riuscito.',
+    ingestioneFallita: 'Ingestione non riuscita.',
+    rimozioneFallita: 'Il documento NON è stato rimosso: è ancora nella base.',
   },
 } as const;

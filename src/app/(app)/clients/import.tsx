@@ -43,7 +43,7 @@ export default function ImportClients() {
         setMapping(guessMapping(parsed.headers));
       }
     } catch (e) {
-      setPickError(messaggioErrore(e, 'Lettura del file non riuscita.'));
+      setPickError(messaggioErrore(e, t.crm.importaSchermata.letturaFallita));
     } finally {
       setPicking(false);
     }
@@ -70,8 +70,8 @@ export default function ImportClients() {
         <ThemedText tone="muted">
           {importedCount} clienti importati correttamente.
         </ThemedText>
-        <Button title="Vai ai clienti" onPress={() => router.replace('/clients')} />
-        <Button title="Importa un altro file" variant="secondary" onPress={reset} />
+        <Button title={t.crm.importaSchermata.vaiAiClienti} onPress={() => router.replace('/clients')} />
+        <Button title={t.crm.importaSchermata.importaAltro} variant="secondary" onPress={reset} />
       </Screen>
     );
   }
@@ -80,12 +80,12 @@ export default function ImportClients() {
   if (!sheet || !mapping) {
     return (
       <Screen contentStyle={{ gap: spacing.lg }}>
-        <ThemedText variant="heading">Importa clienti da file</ThemedText>
+        <ThemedText variant="heading">{t.crm.importaSchermata.titolo}</ThemedText>
         <ThemedText tone="muted" variant="caption">
           Formati supportati: CSV e Excel (.xlsx). La prima riga deve contenere le intestazioni delle
           colonne.
         </ThemedText>
-        <Button title="Scegli un file" onPress={choose} loading={picking} />
+        <Button title={t.crm.importaSchermata.scegliFile} onPress={choose} loading={picking} />
         {pickError && (
           <ThemedText tone="error" variant="caption">
             {pickError}
@@ -219,7 +219,7 @@ export default function ImportClients() {
 
       {importer.isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(importer.error, 'Import non riuscito.')}
+          {messaggioErrore(importer.error, t.crm.importaSchermata.importFallito)}
         </ThemedText>
       )}
 
@@ -247,7 +247,7 @@ export default function ImportClients() {
             )
           }
         />
-        <Button title="Scegli un altro file" variant="secondary" onPress={reset} />
+        <Button title={t.crm.importaSchermata.scegliAltroFile} variant="secondary" onPress={reset} />
       </View>
     </Screen>
   );

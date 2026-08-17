@@ -6,6 +6,7 @@ import { useCourse, useLessons } from '@/lib/courses';
 import { messaggioErrore } from '@/lib/errori';
 import { useLessonProgress } from '@/lib/progress';
 import { spacing } from '@/theme';
+import { t } from '@/i18n/it';
 
 export default function CourseDetail() {
   const { courseId } = useLocalSearchParams<{ courseId: string }>();
@@ -30,13 +31,13 @@ export default function CourseDetail() {
         </View>
       )}
 
-      {isLoading && <ThemedText tone="muted">Caricamento lezioni…</ThemedText>}
+      {isLoading && <ThemedText tone="muted">{t.formazione.caricamentoLezioni}</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(error, 'Errore nel caricamento delle lezioni.')}
+          {messaggioErrore(error, t.comune.errore)}
         </ThemedText>
       )}
-      {lessons?.length === 0 && <ThemedText tone="muted">Nessuna lezione in questo corso.</ThemedText>}
+      {lessons?.length === 0 && <ThemedText tone="muted">{t.formazione.nessunaLezione}</ThemedText>}
 
       {lessons?.map((lesson, i) => {
         const isDone = completed?.has(lesson.id) ?? false;

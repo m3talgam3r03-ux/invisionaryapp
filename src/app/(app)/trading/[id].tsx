@@ -7,6 +7,7 @@ import { formatNumber } from '@/lib/format';
 import { netProfit, returnPct, useSyncAccounts, useTradingAccount, useTrades } from '@/lib/trading';
 import { spacing } from '@/theme';
 import type { Trade } from '@/types/models';
+import { t } from '@/i18n/it';
 
 function fmtDate(iso: string | null): string {
   if (!iso) return '';
@@ -30,7 +31,7 @@ export default function TradingAccountDetail() {
   if (account.isError || !account.data) {
     return (
       <Screen>
-        <ThemedText tone="error">Account non trovato.</ThemedText>
+        <ThemedText tone="error">{t.trading.accountNonTrovato}</ThemedText>
       </Screen>
     );
   }
@@ -51,27 +52,27 @@ export default function TradingAccountDetail() {
       </View>
 
       <Card style={{ gap: spacing.sm }}>
-        <ResultRow label="Saldo" value={a.balance != null ? `${formatNumber(a.balance)} ${a.currency ?? ''}` : '—'} />
-        <ResultRow label="Equity" value={a.equity != null ? `${formatNumber(a.equity)} ${a.currency ?? ''}` : '—'} />
-        <ResultRow label="Rendimento (stima)" value={`${formatNumber(ret, 2)} %`} accent />
+        <ResultRow label={t.trading.saldo} value={a.balance != null ? `${formatNumber(a.balance)} ${a.currency ?? ''}` : '—'} />
+        <ResultRow label={t.trading.equity} value={a.equity != null ? `${formatNumber(a.equity)} ${a.currency ?? ''}` : '—'} />
+        <ResultRow label={t.trading.rendimento} value={`${formatNumber(ret, 2)} %`} accent />
       </Card>
 
       <Button
-        title="Sincronizza questo account"
+        title={t.trading.sincronizzaQuesto}
         variant="secondary"
         loading={sync.isPending}
         onPress={() => sync.mutate(a.id)}
       />
       {sync.isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(sync.error, 'Sincronizzazione non riuscita.')}
+          {messaggioErrore(sync.error, t.trading.sincronizzaFallita)}
         </ThemedText>
       )}
 
       <ThemedText variant="label" tone="muted">
         Operazioni ({list.length})
       </ThemedText>
-      {trades.isLoading && <ThemedText tone="muted">Caricamento operazioni…</ThemedText>}
+      {trades.isLoading && <ThemedText tone="muted">{t.trading.caricamentoOperazioni}</ThemedText>}
       {list.length === 0 && !trades.isLoading && (
         <ThemedText tone="muted" variant="caption">
           Nessuna operazione sincronizzata. Premi «Sincronizza» quando l'account è connesso.

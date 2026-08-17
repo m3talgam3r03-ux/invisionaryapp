@@ -7,6 +7,7 @@ import { useAuth } from '@/context/auth';
 import { authErrorMessage } from '@/lib/auth-errors';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { BRAND, spacing } from '@/theme';
+import { t } from '@/i18n/it';
 
 export default function SignUp() {
   const { signUp } = useAuth();
@@ -21,7 +22,7 @@ export default function SignUp() {
     setError(null);
     setInfo(null);
     if (password.length < 6) {
-      setError('La password deve avere almeno 6 caratteri.');
+      setError(t.auth.passwordCorta);
       return;
     }
     setLoading(true);
@@ -44,7 +45,7 @@ export default function SignUp() {
         <ThemedText tone="gold" variant="label">
           {BRAND.payoff}
         </ThemedText>
-        <ThemedText variant="title">Crea account</ThemedText>
+        <ThemedText variant="title">{t.auth.creaAccount}</ThemedText>
         <ThemedText tone="muted" variant="caption">
           Il nuovo account parte come collaboratore. Il ruolo viene assegnato da un amministratore.
         </ThemedText>
@@ -52,7 +53,7 @@ export default function SignUp() {
 
       {!isSupabaseConfigured && (
         <Card style={{ gap: spacing.xs }}>
-          <ThemedText variant="heading">Database non collegato</ThemedText>
+          <ThemedText variant="heading">{t.auth.databaseNonCollegato}</ThemedText>
           <ThemedText tone="muted" variant="caption">
             Nel file <ThemedText variant="caption">.env</ThemedText> mancano l’indirizzo e la chiave
             del progetto Supabase: senza, non è possibile creare un account.
@@ -61,30 +62,30 @@ export default function SignUp() {
       )}
 
       <TextField
-        label="Nome e cognome"
+        label={t.auth.nome}
         value={fullName}
         onChangeText={setFullName}
         autoCapitalize="words"
         textContentType="name"
-        placeholder="Mario Rossi"
+        placeholder={t.auth.nomeEsempio}
       />
       <TextField
-        label="Email"
+        label={t.auth.email}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
         autoComplete="email"
         keyboardType="email-address"
         textContentType="emailAddress"
-        placeholder="nome@esempio.com"
+        placeholder={t.auth.emailEsempio}
       />
       <TextField
-        label="Password"
+        label={t.auth.password}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         textContentType="newPassword"
-        placeholder="almeno 6 caratteri"
+        placeholder={t.auth.passwordMinima}
       />
 
       {error && (
@@ -98,7 +99,7 @@ export default function SignUp() {
         </ThemedText>
       )}
 
-      <Button title="Registrati" onPress={onSubmit} loading={loading} disabled={!isSupabaseConfigured} />
+      <Button title={t.auth.registrati} onPress={onSubmit} loading={loading} disabled={!isSupabaseConfigured} />
 
       <View style={{ flexDirection: 'row', gap: spacing.xs, justifyContent: 'center' }}>
         <ThemedText tone="muted" variant="caption">

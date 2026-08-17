@@ -4,6 +4,7 @@ import { ClientForm } from '@/components/ClientForm';
 import { Screen, ThemedText } from '@/components/ui';
 import { useCreateClient } from '@/lib/clients';
 import { messaggioErrore } from '@/lib/errori';
+import { t } from '@/i18n/it';
 
 export default function NewClient() {
   const create = useCreateClient();
@@ -22,7 +23,7 @@ export default function NewClient() {
       />
       {create.isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(create.error, 'Creazione non riuscita.')}
+          {messaggioErrore(create.error, t.crm.form.creazioneFallita)}
         </ThemedText>
       )}
     </Screen>

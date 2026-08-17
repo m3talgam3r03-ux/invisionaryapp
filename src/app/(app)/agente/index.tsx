@@ -384,7 +384,7 @@ function Welcome() {
   return (
     <View style={{ gap: spacing.md, paddingVertical: spacing.xxl, alignItems: 'center' }}>
       <Crest size={72} />
-      <ThemedText variant="title">Agente AI</ThemedText>
+      <ThemedText variant="title">{t.dashboard.agente.titolo}</ThemedText>
       <ThemedText tone="muted" variant="caption" style={{ textAlign: 'center', maxWidth: 300 }}>
         Fai una domanda sui contenuti della piattaforma. Le risposte si basano sulla base di
         conoscenza; nessuna consulenza finanziaria personalizzata.

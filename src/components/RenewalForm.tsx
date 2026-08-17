@@ -6,6 +6,7 @@ import { Button, TextField, ThemedText } from '@/components/ui';
 import { isValidISODate } from '@/lib/date';
 import { radius, spacing, useTheme } from '@/theme';
 import { RENEWAL_STATUS, type RenewalInput, type RenewalStatus } from '@/types/models';
+import { t } from '@/i18n/it';
 
 const STATUS_LABEL: Record<RenewalStatus, string> = {
   attivo: 'Attivo',
@@ -33,7 +34,7 @@ export function RenewalForm({ initial, submitLabel, loading, onSubmit }: Renewal
 
   function submit() {
     if (!isValidISODate(scadenza)) {
-      setError('Inserisci una data di scadenza valida (AAAA-MM-GG).');
+      setError(t.rinnovi.form.dataNonValida);
       return;
     }
     const durata = parseInt(alertDays, 10);
@@ -57,9 +58,9 @@ export function RenewalForm({ initial, submitLabel, loading, onSubmit }: Renewal
           setClientName(nome);
         }}
       />
-      <TextField label="Prodotto" value={prodotto} onChangeText={setProdotto} placeholder="es. abbonamento o pacchetto" />
+      <TextField label={t.rinnovi.form.prodotto} value={prodotto} onChangeText={setProdotto} placeholder={t.rinnovi.form.prodottoEsempio} />
       <TextField
-        label="Scadenza (AAAA-MM-GG)"
+        label={t.rinnovi.form.scadenza}
         value={scadenza}
         onChangeText={setScadenza}
         placeholder="2026-12-31"
@@ -67,7 +68,7 @@ export function RenewalForm({ initial, submitLabel, loading, onSubmit }: Renewal
         errorText={error ?? undefined}
       />
       <TextField
-        label="Durata del rinnovo (giorni)"
+        label={t.rinnovi.form.durata}
         value={alertDays}
         onChangeText={setAlertDays}
         keyboardType="number-pad"

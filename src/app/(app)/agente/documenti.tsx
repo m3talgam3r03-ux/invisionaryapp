@@ -16,6 +16,7 @@ import { DOMAIN_IDS, domainLabel, type DomainId } from '@/lib/domains';
 import { can } from '@/lib/permissions';
 import { messaggioErrore } from '@/lib/errori';
 import { radius, spacing, useTheme } from '@/theme';
+import { t } from '@/i18n/it';
 
 export default function Documenti() {
   const { colors } = useTheme();
@@ -85,7 +86,7 @@ export default function Documenti() {
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
       {/* — Corpus incluso nell'app — */}
       <Card style={{ gap: spacing.sm }}>
-        <ThemedText variant="heading">Competenza di base</ThemedText>
+        <ThemedText variant="heading">{t.baseConoscenza.competenzaDiBase}</ThemedText>
         <ThemedText tone="muted" variant="caption">
           {CORPUS.length} documenti su vendita, marketing, network marketing, investimenti,
           trading, mindset e compliance sono inclusi nell&apos;app. Caricali per dare all&apos;agente
@@ -106,7 +107,7 @@ export default function Documenti() {
         )}
         {seed.isError && (
           <ThemedText tone="error" variant="caption">
-            {messaggioErrore(seed.error, 'Caricamento non riuscito.')}
+            {messaggioErrore(seed.error, t.baseConoscenza.caricamentoFallito)}
           </ThemedText>
         )}
         {seed.isSuccess && !seeding && (
@@ -117,7 +118,7 @@ export default function Documenti() {
       </Card>
 
       {/* — Aggiunta manuale — */}
-      <ThemedText variant="heading">Aggiungi un contenuto</ThemedText>
+      <ThemedText variant="heading">{t.baseConoscenza.aggiungiContenuto}</ThemedText>
       <ThemedText tone="muted" variant="caption">
         Guide, FAQ, materiali formativi. Il testo viene diviso in frammenti e indicizzato. Scegliere
         il dominio è importante: è ciò che dà priorità al documento quando la domanda riguarda
@@ -125,10 +126,10 @@ export default function Documenti() {
       </ThemedText>
 
       <TextField
-        label="Fonte / titolo"
+        label={t.baseConoscenza.fonte}
         value={source}
         onChangeText={setSource}
-        placeholder="es. Guida rete 2026"
+        placeholder={t.baseConoscenza.fonteEsempio}
       />
 
       <View style={{ gap: spacing.xs }}>
@@ -165,23 +166,23 @@ export default function Documenti() {
       </View>
 
       <TextField
-        label="Testo"
+        label={t.baseConoscenza.testo}
         value={text}
         onChangeText={setText}
-        placeholder="Incolla qui il contenuto…"
+        placeholder={t.baseConoscenza.testoEsempio}
         multiline
         numberOfLines={8}
         style={{ height: 180, textAlignVertical: 'top', paddingTop: spacing.md }}
       />
       <Button
-        title="Aggiungi alla base di conoscenza"
+        title={t.baseConoscenza.aggiungi}
         onPress={submit}
         loading={ingest.isPending}
         disabled={seeding}
       />
       {ingest.isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(ingest.error, 'Ingestione non riuscita.')}
+          {messaggioErrore(ingest.error, t.baseConoscenza.ingestioneFallita)}
         </ThemedText>
       )}
       {result && (
@@ -197,7 +198,7 @@ export default function Documenti() {
       {isLoading && <ThemedText tone="muted">Caricamento…</ThemedText>}
       {isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(error, 'Errore nel caricamento.')}
+          {messaggioErrore(error, t.comune.errore)}
         </ThemedText>
       )}
       {docs?.length === 0 && (
@@ -210,7 +211,7 @@ export default function Documenti() {
           toglieva perché sbagliato o superato, continuerebbe a citarlo. */}
       {remove.isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(remove.error, 'Il documento NON è stato rimosso: è ancora nella base.')}
+          {messaggioErrore(remove.error, t.baseConoscenza.rimozioneFallita)}
         </ThemedText>
       )}
       {docs?.map((d) => (

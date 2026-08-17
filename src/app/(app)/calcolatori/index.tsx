@@ -3,6 +3,7 @@ import { Pressable } from 'react-native';
 
 import { Card, Screen, ThemedText } from '@/components/ui';
 import { spacing } from '@/theme';
+import { t } from '@/i18n/it';
 
 export default function CalcolatoriIndex() {
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function CalcolatoriIndex() {
         style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
       >
         <Card style={{ gap: spacing.xs }}>
-          <ThemedText variant="heading">Calcolatore lottaggio</ThemedText>
+          <ThemedText variant="heading">{t.calcolatori.lottaggio}</ThemedText>
           <ThemedText tone="muted" variant="caption">
             Dimensione della posizione in base a saldo, rischio % e stop loss.
           </ThemedText>
@@ -28,7 +29,7 @@ export default function CalcolatoriIndex() {
         style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
       >
         <Card style={{ gap: spacing.xs }}>
-          <ThemedText variant="heading">Interesse composto</ThemedText>
+          <ThemedText variant="heading">{t.calcolatori.composto}</ThemedText>
           <ThemedText tone="muted" variant="caption">
             Proiezione del montante con versamenti periodici.
           </ThemedText>

@@ -4,6 +4,7 @@ import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { Button, ThemedText } from '@/components/ui';
 import { useClients } from '@/lib/clients';
 import { radius, spacing, useTheme } from '@/theme';
+import { t } from '@/i18n/it';
 
 type ClientPickerProps = {
   value: string | null;
@@ -31,12 +32,12 @@ export function ClientPicker({ value, valueName, onChange, label = 'Cliente' }: 
         // Il contenuto è un segnaposto finché non si sceglie: senza etichetta
         // uno screen reader leggerebbe «Seleziona cliente (opzionale)» e basta,
         // senza dire di quale campo si tratta.
-        accessibilityLabel={`${label}: ${displayName ?? 'nessuno selezionato'}`}
+        accessibilityLabel={`${label}: ${displayName ?? t.crm.selettore.nessunoSelezionato}`}
         onPress={() => setOpen(true)}
         style={[styles.field, { borderColor: colors.border, backgroundColor: colors.surface }]}
       >
         <ThemedText tone={displayName ? 'default' : 'muted'}>
-          {displayName ?? 'Seleziona cliente (opzionale)'}
+          {displayName ?? t.crm.selettore.facoltativo}
         </ThemedText>
       </Pressable>
 
@@ -45,7 +46,7 @@ export function ClientPicker({ value, valueName, onChange, label = 'Cliente' }: 
             «pulsante» senza dire cosa fa. */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Chiudi"
+          accessibilityLabel={t.crm.selettore.chiudi}
           style={styles.backdrop}
           onPress={() => setOpen(false)}
         >
@@ -57,7 +58,7 @@ export function ClientPicker({ value, valueName, onChange, label = 'Cliente' }: 
             style={[styles.sheet, { backgroundColor: colors.surface }]}
             onPress={() => {}}
           >
-            <ThemedText variant="heading">Seleziona cliente</ThemedText>
+            <ThemedText variant="heading">{t.crm.selettore.titolo}</ThemedText>
 
             <Pressable
               accessibilityRole="button"
@@ -67,7 +68,7 @@ export function ClientPicker({ value, valueName, onChange, label = 'Cliente' }: 
                 setOpen(false);
               }}
             >
-              <ThemedText tone="muted">— Nessun cliente</ThemedText>
+              <ThemedText tone="muted">{t.crm.selettore.nessuno}</ThemedText>
             </Pressable>
 
             <FlatList
@@ -91,12 +92,12 @@ export function ClientPicker({ value, valueName, onChange, label = 'Cliente' }: 
               )}
               ListEmptyComponent={
                 <ThemedText tone="muted" variant="caption">
-                  Nessun cliente disponibile. Aggiungine dal CRM.
+                  {t.crm.selettore.vuoto}
                 </ThemedText>
               }
             />
 
-            <Button title="Chiudi" variant="secondary" onPress={() => setOpen(false)} />
+            <Button title={t.crm.selettore.chiudi} variant="secondary" onPress={() => setOpen(false)} />
           </Pressable>
         </Pressable>
       </Modal>

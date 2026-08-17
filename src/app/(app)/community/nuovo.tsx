@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth';
 import { messaggioErrore } from '@/lib/errori';
 import { pickImage, useCreateFeedbackPost, type PickedImage } from '@/lib/feedback';
 import { radius, spacing, useTheme } from '@/theme';
+import { t } from '@/i18n/it';
 
 export default function NuovoFeedback() {
   const router = useRouter();
@@ -24,15 +25,15 @@ export default function NuovoFeedback() {
     try {
       const img = await pickImage();
       if (img) setPhoto(img);
-      else setError('Permesso negato o nessuna immagine selezionata.');
+      else setError(t.community.fotoNonScelta);
     } catch (e) {
-      setError(messaggioErrore(e, 'Selezione immagine non riuscita.'));
+      setError(messaggioErrore(e, t.community.selezioneFallita));
     }
   }
 
   function publish() {
     if (!body.trim() && !photo) {
-      setError('Scrivi un messaggio o allega una foto.');
+      setError(t.community.vuoto);
       return;
     }
     setError(null);
@@ -45,10 +46,10 @@ export default function NuovoFeedback() {
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
       <TextField
-        label="Messaggio"
+        label={t.community.messaggio}
         value={body}
         onChangeText={setBody}
-        placeholder="Condividi un traguardo o un pensiero con la rete…"
+        placeholder={t.community.messaggioEsempio}
         multiline
         numberOfLines={5}
         style={{ height: 120, textAlignVertical: 'top', paddingTop: spacing.md }}
@@ -68,7 +69,7 @@ export default function NuovoFeedback() {
           </Pressable>
         </View>
       ) : (
-        <Button title="Aggiungi foto" variant="secondary" onPress={choosePhoto} />
+        <Button title={t.community.aggiungiFoto} variant="secondary" onPress={choosePhoto} />
       )}
 
       {error && (
@@ -78,11 +79,11 @@ export default function NuovoFeedback() {
       )}
       {create.isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(create.error, 'Pubblicazione non riuscita.')}
+          {messaggioErrore(create.error, t.community.pubblicazioneFallita)}
         </ThemedText>
       )}
 
-      <Button title="Pubblica" onPress={publish} loading={create.isPending} />
+      <Button title={t.community.pubblica} onPress={publish} loading={create.isPending} />
 
       <ThemedText tone="muted" variant="caption" style={{ textAlign: 'center' }}>
         Rispetta la rete: contenuti a scopo educativo e motivazionale.

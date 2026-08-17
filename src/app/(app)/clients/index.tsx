@@ -113,10 +113,8 @@ export default function ClientsList() {
           <View style={styles.metaRow}>
             <ThemedText tone="muted" variant="caption">
               {query
-                ? `${clients.length} di ${total}`
-                : total === 1
-                  ? '1 contatto'
-                  : `${total} contatti`}
+                ? t.crm.elenco.diTotali(clients.length, total)
+                : t.crm.elenco.contatti(total)}
             </ThemedText>
             <View style={{ flexDirection: 'row', gap: spacing.md }}>
               <Pressable
@@ -134,7 +132,7 @@ export default function ClientsList() {
                 hitSlop={8}
               >
                 <ThemedText tone="muted" variant="caption">
-                  File ›
+                  {t.crm.elenco.file}
                 </ThemedText>
               </Pressable>
             </View>
@@ -151,25 +149,25 @@ export default function ClientsList() {
           }
           ListEmptyComponent={
             isLoading ? (
-              <ThemedText tone="muted">Caricamento clienti…</ThemedText>
+              <ThemedText tone="muted">{t.crm.elenco.caricamento}</ThemedText>
             ) : isError ? (
               <EmptyState
                 tone="error"
-                title="Impossibile caricare i clienti"
-                hint={messaggioErrore(error, 'Errore sconosciuto.')}
+                title={t.crm.elenco.errore}
+                hint={messaggioErrore(error, t.comune.errore)}
               />
             ) : query ? (
               <EmptyState
-                title="Nessun risultato"
-                hint={`Nessun cliente corrisponde a «${query}».`}
-                actionLabel="Cancella la ricerca"
+                title={t.crm.elenco.nessunRisultatoTitolo}
+                hint={t.crm.elenco.nessunRisultato(query)}
+                actionLabel={t.crm.elenco.cancellaRicerca}
                 onAction={() => setQuery('')}
               />
             ) : (
               <EmptyState
-                title="Nessun cliente"
-                hint="Aggiungi il primo contatto, oppure importa un elenco da CSV o Excel."
-                actionLabel="+ Aggiungi cliente"
+                title={t.crm.elenco.vuoto}
+                hint={t.crm.elenco.vuotoSuggerimento}
+                actionLabel={t.crm.elenco.aggiungi}
                 onAction={() => router.push('/clients/new')}
               />
             )
@@ -194,7 +192,7 @@ export default function ClientsList() {
         <Pressable
           onPress={() => router.push('/clients/new')}
           accessibilityRole="button"
-          accessibilityLabel="Aggiungi cliente"
+          accessibilityLabel={t.crm.elenco.aggiungiEtichetta}
           style={({ pressed }) => [
             styles.fab,
             { backgroundColor: colors.accent, opacity: pressed ? 0.85 : 1 },
@@ -294,7 +292,7 @@ function ClientRow({
           <Pressable
             onPress={() => open(contact.tel!)}
             accessibilityRole="button"
-            accessibilityLabel={`Chiama ${client.nome}`}
+            accessibilityLabel={t.crm.rubrica.chiamaEtichetta(client.nome)}
             hitSlop={8}
             style={[styles.quick, { borderColor: colors.border }]}
           >

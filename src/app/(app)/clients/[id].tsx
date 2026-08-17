@@ -16,12 +16,12 @@ import type { ContactStatusHistoryEntry } from '@/types/models';
 
 /** Conferma cross-platform (Alert su native, confirm su web). */
 function confirmDelete(nome: string, onConfirm: () => void) {
-  const message = `«${nome}» verrà eliminato definitivamente.`;
+  const message = t.crm.scheda.confermaTesto(nome);
   if (Platform.OS === 'web') {
     if (typeof window !== 'undefined' && window.confirm(message)) onConfirm();
     return;
   }
-  Alert.alert('Eliminare il cliente?', message, [
+  Alert.alert(t.crm.scheda.confermaTitolo, message, [
     { text: 'Annulla', style: 'cancel' },
     { text: 'Elimina', style: 'destructive', onPress: onConfirm },
   ]);
@@ -39,7 +39,7 @@ export default function ClientDetail() {
   if (isLoading) {
     return (
       <Screen>
-        <ThemedText tone="muted">Caricamento…</ThemedText>
+        <ThemedText tone="muted">{t.crm.scheda.caricamento}</ThemedText>
       </Screen>
     );
   }
@@ -47,7 +47,7 @@ export default function ClientDetail() {
   if (isError || !client) {
     return (
       <Screen>
-        <EmptyState tone="error" title="Cliente non trovato" hint="Potrebbe essere stato eliminato." />
+        <EmptyState tone="error" title={t.crm.scheda.nonTrovato} hint={t.crm.scheda.nonTrovatoSuggerimento} />
       </Screen>
     );
   }
@@ -74,10 +74,10 @@ export default function ClientDetail() {
         />
         {update.isError && (
           <ThemedText tone="error" variant="caption">
-            {messaggioErrore(update.error, 'Salvataggio non riuscito.')}
+            {messaggioErrore(update.error, t.crm.form.salvataggioFallito)}
           </ThemedText>
         )}
-        <Button title="Annulla" variant="secondary" onPress={() => setEditing(false)} />
+        <Button title={t.crm.scheda.annulla} variant="secondary" onPress={() => setEditing(false)} />
       </Screen>
     );
   }
@@ -106,12 +106,12 @@ export default function ClientDetail() {
       {/* Azioni rapide: è la ragione per cui si apre una scheda dal telefono. */}
       {(contact.tel || contact.mailto) && (
         <View style={styles.actions}>
-          {contact.tel && <QuickAction label="Chiama" glyph="✆" onPress={() => open(contact.tel!)} />}
+          {contact.tel && <QuickAction label={t.crm.scheda.chiama} glyph="✆" onPress={() => open(contact.tel!)} />}
           {contact.whatsapp && (
-            <QuickAction label="WhatsApp" glyph="✽" onPress={() => open(contact.whatsapp!)} />
+            <QuickAction label={t.crm.scheda.whatsapp} glyph="✽" onPress={() => open(contact.whatsapp!)} />
           )}
           {contact.mailto && (
-            <QuickAction label="Email" glyph="✉" onPress={() => open(contact.mailto!)} />
+            <QuickAction label={t.crm.scheda.email} glyph="✉" onPress={() => open(contact.mailto!)} />
           )}
         </View>
       )}
@@ -140,7 +140,7 @@ export default function ClientDetail() {
       {/* Dove si è mosso il contatto: serve a capire dove si perde la rete */}
       <Storico righe={storico ?? []} />
 
-      <Button title="Modifica" onPress={() => setEditing(true)} />
+      <Button title={t.crm.scheda.modifica} onPress={() => setEditing(true)} />
 
       {/* Eliminare non è un'azione costruttiva: niente colore d'accento. */}
       <Pressable
@@ -155,7 +155,7 @@ export default function ClientDetail() {
         style={{ alignSelf: 'center', padding: spacing.sm }}
       >
         <ThemedText tone="error" variant="caption">
-          {remove.isPending ? 'Eliminazione…' : 'Elimina cliente'}
+          {remove.isPending ? t.crm.scheda.eliminazioneInCorso : t.crm.scheda.elimina}
         </ThemedText>
       </Pressable>
 
@@ -165,7 +165,7 @@ export default function ClientDetail() {
           («c'è dell'altro collegato») dice anche cosa fare. */}
       {remove.isError && (
         <ThemedText tone="error" variant="caption" style={{ textAlign: 'center' }}>
-          {messaggioErrore(remove.error, 'Eliminazione non riuscita.')}
+          {messaggioErrore(remove.error, t.crm.scheda.eliminazioneFallita)}
         </ThemedText>
       )}
     </Screen>

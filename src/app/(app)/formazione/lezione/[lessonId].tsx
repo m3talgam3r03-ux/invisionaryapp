@@ -6,6 +6,7 @@ import { useLesson } from '@/lib/courses';
 import { messaggioErrore } from '@/lib/errori';
 import { useLessonProgress, useToggleLesson } from '@/lib/progress';
 import { spacing } from '@/theme';
+import { t } from '@/i18n/it';
 
 export default function LessonScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
@@ -23,7 +24,7 @@ export default function LessonScreen() {
   if (isError || !lesson) {
     return (
       <Screen>
-        <ThemedText tone="error">Lezione non trovata.</ThemedText>
+        <ThemedText tone="error">{t.formazione.lezioneNonTrovata}</ThemedText>
       </Screen>
     );
   }

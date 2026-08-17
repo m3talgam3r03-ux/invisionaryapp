@@ -6,6 +6,7 @@ import { Button, Screen, TextField, ThemedText } from '@/components/ui';
 import { messaggioErrore } from '@/lib/errori';
 import { useConnectAccount } from '@/lib/trading';
 import { radius, spacing, useTheme } from '@/theme';
+import { t } from '@/i18n/it';
 
 export default function ConnettiMt5() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function ConnettiMt5() {
 
   function submit() {
     if (!login.trim() || !server.trim() || !password) {
-      setError('Compila login, server e investor password.');
+      setError(t.trading.connetti.campiMancanti);
       return;
     }
     setError(null);
@@ -38,9 +39,9 @@ export default function ConnettiMt5() {
         password master). La password viene inoltrata a MetaApi e non è salvata nell'app.
       </ThemedText>
 
-      <TextField label="Login (numero conto)" value={login} onChangeText={setLogin} keyboardType="number-pad" placeholder="es. 5012345" />
-      <TextField label="Server" value={server} onChangeText={setServer} autoCapitalize="none" placeholder="es. BrokerName-Live" />
-      <TextField label="Investor password" value={password} onChangeText={setPassword} secureTextEntry placeholder="password di sola lettura" />
+      <TextField label={t.trading.connetti.login} value={login} onChangeText={setLogin} keyboardType="number-pad" placeholder={t.trading.connetti.loginEsempio} />
+      <TextField label={t.trading.connetti.server} value={server} onChangeText={setServer} autoCapitalize="none" placeholder={t.trading.connetti.serverEsempio} />
+      <TextField label={t.trading.connetti.investor} value={password} onChangeText={setPassword} secureTextEntry placeholder={t.trading.connetti.investorEsempio} />
 
       <View style={{ gap: spacing.sm }}>
         <ThemedText variant="label" tone="muted">
@@ -79,11 +80,11 @@ export default function ConnettiMt5() {
       )}
       {connect.isError && (
         <ThemedText tone="error" variant="caption">
-          {messaggioErrore(connect.error, 'Collegamento non riuscito.')}
+          {messaggioErrore(connect.error, t.trading.connetti.collegamentoFallito)}
         </ThemedText>
       )}
 
-      <Button title="Collega account" onPress={submit} loading={connect.isPending} />
+      <Button title={t.trading.connetti.collega} onPress={submit} loading={connect.isPending} />
 
       <ThemedText tone="muted" variant="caption" style={{ textAlign: 'center' }}>
         Dopo il collegamento l'account impiega qualche istante a connettersi: poi usa «Sincronizza».
