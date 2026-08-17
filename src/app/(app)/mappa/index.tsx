@@ -107,6 +107,12 @@ export default function Mappa() {
       <ThemedText tone="muted" variant="caption">
         {t.mappa.privacy}
       </ThemedText>
+
+      {/* CC BY 4.0: il credito va dove l'opera si vede, non in un file di
+          licenze che nessuno apre. È l'unica cosa che quella licenza chiede. */}
+      <ThemedText tone="muted" variant="caption">
+        {t.mappa.crediti}
+      </ThemedText>
     </Screen>
   );
 }

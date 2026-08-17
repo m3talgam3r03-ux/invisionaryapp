@@ -790,6 +790,12 @@ export const t = {
       'Indicarla è facoltativo, e si può togliere in qualsiasi momento toccando di nuovo la stessa regione.',
     privacy:
       'Sulla mappa escono solo conteggi: mai nomi, mai indirizzi. Le regioni con pochi iscritti non mostrano il numero — un conteggio di uno non è una statistica, è una persona.',
+    /**
+     * I confini non sono nostri: `@svg-maps/italy` è CC BY 4.0, e quella
+     * licenza chiede una cosa sola in cambio — il credito visibile a chi
+     * guarda l'opera. Va dove la mappa si vede, non sepolto in un file.
+     */
+    crediti: 'Confini delle regioni: @svg-maps/italy di Victor Cazanave — CC BY 4.0.',
   },
 
   podio: {

@@ -6,7 +6,7 @@
  * pulsante non protegge un dato.
  *
  * COSA SERVE PER FARLI GIRARE
- *   1. Un progetto Supabase con le migrazioni 0001 → 0023 applicate
+ *   1. Un progetto Supabase con le migrazioni 0001 → 0028 applicate
  *      (usa un progetto di prova, non quello di produzione: questi test scrivono).
  *   2. I tre utenti demo: node scripts/seed-demo-users.mjs
  *   3. Authentication → Email → «Confirm email» disattivato
