@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { progressoVersoProssimo, rankLabel } from '@/lib/rank';
+import { formaClassifica, progressoVersoProssimo, rankLabel } from '@/lib/rank';
 
 describe('nomi dei livelli', () => {
   it('le figure hanno un nome italiano', () => {
@@ -50,5 +50,35 @@ describe('progresso verso il livello successivo', () => {
 
   it('a punti zero e traguardo zero non divide per zero', () => {
     expect(Number.isFinite(progressoVersoProssimo(0, 0))).toBe(true);
+  });
+});
+
+describe('formaClassifica', () => {
+  // `classifica()` nel database filtra con can_read_member(): un collaboratore
+  // riceve solo la propria riga. Disegnarla come una classifica gli diceva
+  // «sei primo della rete», che è falso.
+  const io = 'utente-1';
+
+  it('senza righe non c’è niente da mostrare', () => {
+    expect(formaClassifica([], io)).toBe('vuota');
+    expect(formaClassifica(undefined, io)).toBe('vuota');
+  });
+
+  it('una riga sola, ed è la mia: non è una gara', () => {
+    expect(formaClassifica([{ user_id: io }], io)).toBe('solo-io');
+  });
+
+  it('una riga sola ma di qualcun altro resta una classifica', () => {
+    // Non è il mio punteggio: chiamarlo «il tuo» sarebbe sbagliato al
+    // contrario. Caso raro, ma la regola deve reggerlo.
+    expect(formaClassifica([{ user_id: 'altro' }], io)).toBe('classifica');
+  });
+
+  it('due o più righe sono una classifica', () => {
+    expect(formaClassifica([{ user_id: io }, { user_id: 'altro' }], io)).toBe('classifica');
+  });
+
+  it('senza sapere chi sono io, non dice «solo io»', () => {
+    expect(formaClassifica([{ user_id: io }], undefined)).toBe('classifica');
   });
 });

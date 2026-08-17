@@ -12,7 +12,7 @@ import { condividiCard, condivisioneCardDisponibile } from '@/lib/condivisione-s
 import { messaggioErrore } from '@/lib/errori';
 import { useLeaderboard, useMyStats, type LeaderboardEntry } from '@/lib/leaderboard';
 import { useRankRules } from '@/lib/rank-rules';
-import { progressoVersoProssimo, rankLabel } from '@/lib/rank';
+import { formaClassifica, progressoVersoProssimo, rankLabel } from '@/lib/rank';
 import { spacing, useTheme } from '@/theme';
 
 export default function RankScreen() {
@@ -25,6 +25,7 @@ export default function RankScreen() {
   const punti = me?.punti ?? 0;
   const progresso = progressoVersoProssimo(punti, me?.punti_al_prossimo ?? null);
   const alMassimo = me?.punti_al_prossimo == null;
+  const forma = formaClassifica(board.data, session?.user.id);
 
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
@@ -80,9 +81,13 @@ export default function RankScreen() {
           da `condivisione.ts` e non da questa schermata. */}
       {me && <CondividiTraguardo rank={rankLabel(me.tier_name)} punti={punti} />}
 
-      {/* Classifica */}
+      {/* Classifica.
+          `classifica()` nel database filtra con can_read_member(), quindi un
+          collaboratore riceve solo la propria riga. Disegnarla come una
+          classifica gli mostrava una card sola in posizione 1 col bordo
+          acceso: «sei primo della rete», che non è vero. */}
       <ThemedText variant="label" tone="muted">
-        {t.rank.classifica}
+        {forma === 'solo-io' ? t.rank.soloIoTitolo : t.rank.classifica}
       </ThemedText>
 
       {board.isLoading && <ThemedText tone="muted">{t.rank.caricamentoClassifica}</ThemedText>}
@@ -92,9 +97,27 @@ export default function RankScreen() {
         </ThemedText>
       )}
 
-      {board.data?.map((m, i) => (
-        <RigaClassifica key={m.user_id} riga={m} posizione={i + 1} io={m.user_id === session?.user.id} />
-      ))}
+      {!board.isLoading && !board.isError && forma === 'vuota' && (
+        <ThemedText tone="muted" variant="caption">
+          {t.rank.classificaVuota}
+        </ThemedText>
+      )}
+
+      {forma === 'solo-io' && (
+        <ThemedText tone="muted" variant="caption">
+          {t.rank.soloIo}
+        </ThemedText>
+      )}
+
+      {forma === 'classifica' &&
+        board.data?.map((m, i) => (
+          <RigaClassifica
+            key={m.user_id}
+            riga={m}
+            posizione={i + 1}
+            io={m.user_id === session?.user.id}
+          />
+        ))}
 
       <ThemedText tone="muted" variant="caption" style={{ textAlign: 'center' }}>
         {t.rank.disclaimer}

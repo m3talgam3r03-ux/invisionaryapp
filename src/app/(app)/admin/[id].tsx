@@ -50,6 +50,20 @@ export default function AdminUserDetail() {
     (p) => canBeAssignedAsLeader(p.role) && p.id !== target.id,
   );
 
+  /**
+   * Togliere il ruolo all'ultimo amministratore rende l'app ingestibile: da
+   * quel momento nessuno può assegnare ruoli, e per rimediare serve essere
+   * amministratori. Si esce solo dalla dashboard di Supabase.
+   *
+   * Il divieto vero è nel database (migrazione 0028, `vieta_ultimo_admin`) —
+   * qui si evita l'errore prima che accada, e soprattutto si spiega perché.
+   * Nascondere non è impedire: la stessa `update` passa da PostgREST.
+   */
+  const altriAdmin = (allProfiles ?? []).filter(
+    (p) => p.role === 'admin' && p.id !== target.id,
+  ).length;
+  const ultimoAdmin = target.role === 'admin' && altriAdmin === 0;
+
   function save() {
     if (!role) return;
     update.mutate(
@@ -73,9 +87,21 @@ export default function AdminUserDetail() {
         </ThemedText>
         <View style={styles.chips}>
           {ROLES.map((r) => (
-            <Chip key={r} label={ROLE_LABEL[r]} selected={role === r} onPress={() => setRole(r)} />
+            <Chip
+              key={r}
+              label={ROLE_LABEL[r]}
+              selected={role === r}
+              // L'unico amministratore non può smettere di esserlo.
+              disabilitato={ultimoAdmin && r !== 'admin'}
+              onPress={() => setRole(r)}
+            />
           ))}
         </View>
+        {ultimoAdmin && (
+          <ThemedText tone="gold" variant="caption">
+            {t.admin.ultimoAdmin}
+          </ThemedText>
+        )}
       </Card>
 
       {expectsLeader(role) && (
@@ -121,15 +147,21 @@ function Chip({
   label,
   selected,
   onPress,
+  disabilitato = false,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
+  disabilitato?: boolean;
 }) {
   const { colors } = useTheme();
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole="radio"
+      // Uno screen reader deve sapere sia quale è scelto sia quale non si può
+      // scegliere: senza `disabled` annuncerebbe un comando che non risponde.
+      accessibilityState={{ selected, disabled: disabilitato }}
+      disabled={disabilitato}
       onPress={onPress}
       style={{
         paddingHorizontal: spacing.md,
@@ -138,6 +170,7 @@ function Chip({
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: selected ? colors.accent : colors.border,
         backgroundColor: selected ? colors.accent : colors.surface,
+        opacity: disabilitato ? 0.4 : 1,
       }}
     >
       <ThemedText variant="caption" style={{ color: selected ? '#FFFFFF' : colors.text }}>

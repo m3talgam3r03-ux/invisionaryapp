@@ -136,3 +136,18 @@ describe('messaggioErrore', () => {
     expect(spia).not.toHaveBeenCalled();
   });
 });
+
+describe('errori sollevati da noi', () => {
+  it('«ultimo_amministratore» diventa una frase, non un identificatore', () => {
+    // Il nome dell'eccezione è scelto apposta perché arrivi qui riconoscibile.
+    // Senza questa riga l'admin leggerebbe letteralmente «ultimo_amministratore».
+    const m = messaggioErrore(new Error('ultimo_amministratore'));
+    expect(m).not.toContain('_');
+    expect(m).toMatch(/amministratore/i);
+  });
+
+  it('lo riconosce anche dentro il messaggio completo di Postgres', () => {
+    const grezzo = new Error('P0001: ultimo_amministratore\nHINT: Nomina un altro...');
+    expect(categoriaErrore(grezzo)).toBe('ultimoAdmin');
+  });
+});

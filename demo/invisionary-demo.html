@@ -1073,16 +1073,21 @@
           <div id="adminList" class="list">
             <h2 class="title">Gestione utenti</h2>
             <p class="cap">Assegna ruoli e gerarchia. I nuovi utenti si registrano come collaboratori; creazione ed eliminazione account avvengono da Supabase.</p>
-            <div class="card press" onclick="adSub('detail')"><div class="between"><h3 class="heading">Admin Demo</h3><span class="label gold">Amministratore</span></div></div>
-            <div class="card press" onclick="adSub('detail')"><div class="between"><h3 class="heading">Leader Demo</h3><span class="label gold">Leader</span></div></div>
-            <div class="card press" onclick="adSub('detail')"><div class="between"><h3 class="heading">Collaboratore Demo</h3><span class="label gold">Collaboratore</span></div><p class="cap">Leader: Leader Demo</p></div>
+            <div id="adUtenti" class="list"></div>
           </div>
           <div id="adminDetail" style="display:none" class="list">
             <button class="btn sec sm" style="align-self:flex-start" onclick="adSub('list')">‹ Utenti</button>
-            <h2 class="title">Collaboratore Demo</h2>
-            <div class="card"><span class="label">Ruolo</span><div class="row" style="flex-wrap:wrap"><span class="chip">Amministratore</span><span class="chip">Leader</span><span class="chip on">Collaboratore</span></div></div>
-            <div class="card"><span class="label">Leader</span><div class="row" style="flex-wrap:wrap"><span class="chip">— Nessuno</span><span class="chip on">Leader Demo</span></div></div>
-            <button class="btn" onclick="toast('Modifiche salvate (demo)')">Salva</button>
+            <h2 class="title" id="adNome"></h2>
+            <div class="card">
+              <span class="label">Ruolo</span>
+              <div class="row" style="flex-wrap:wrap" id="adRuoli"></div>
+              <p class="cap gold" id="adAvviso" style="display:none"></p>
+            </div>
+            <div class="card" id="adLeaderBox">
+              <span class="label">Leader</span>
+              <div class="row" style="flex-wrap:wrap" id="adLeader"></div>
+            </div>
+            <button class="btn" id="adSalva">Salva</button>
           </div>
         </div>
       </section>
@@ -1689,12 +1694,18 @@
     // Classifica generale: solo leader e admin. Il collaboratore vede il proprio percorso.
     const board=document.getElementById('rankBoard');
     if(role==='collaborator'){
-      board.innerHTML='<div class="sect"><span class="s">✦</span><span class="t">Il tuo percorso</span><span class="l"></span></div>'+
-        '<div class="card"><p class="cap">La classifica della rete è visibile a leader e amministratori. '+
-        'Qui vedi il tuo avanzamento: ogni lezione completata, ogni cliente e ogni rinnovo attivo ti avvicinano al rank successivo.</p></div>';
+      board.innerHTML='<div class="sect"><span class="s">✦</span><span class="t">Dove ti trovi</span><span class="l"></span></div>'+
+        '<div class="card"><p class="cap">La classifica confronta chi guida la rete e la propria squadra: '+
+        'tu vedi il tuo punteggio, non quello degli altri. Il rank sale con le lezioni completate, i clienti '+
+        'seguiti e i rinnovi mantenuti — non con la posizione di qualcun altro.</p></div>';
       return;
     }
-    const board_rows=OWNERS.map(o=>({ ...o, pt:pointsOf(o.k, lessonsOf(o.k)) }))
+    // Il perimetro è lo stesso del CRM: `can_read_member()` dà al leader sé e
+    // i propri collaboratori, non l'amministratore. Prima la demo elencava
+    // tutti e quattro anche al leader, mostrandogli una riga che nell'app non
+    // gli arriverebbe mai.
+    const perimetroRank = role==='admin' ? OWNERS : OWNERS.filter(o=>TEAM_OF_LEADER.includes(o.k));
+    const board_rows=perimetroRank.map(o=>({ ...o, pt:pointsOf(o.k, lessonsOf(o.k)) }))
       .sort((a,b)=>b.pt-a.pt);
     const me=meKey();
     board.innerHTML='<div class="sect"><span class="s">✦</span><span class="t">Classifica della rete</span><span class="l"></span></div>'+
@@ -1709,10 +1720,96 @@
           '<span class="label gold">'+o.pt+' pt</span></div>';
       }).join('');
   }
+  /* ===== Pannello admin =====
+     Gli utenti sono gli stessi OWNERS del CRM, con ruolo modificabile. Prima
+     erano tre card fisse che aprivano sempre lo stesso dettaglio finto. */
+  const AD_RUOLI = [['admin','Amministratore'],['leader','Leader'],['collaboratore','Collaboratore']];
+  let adUtenti = [
+    {k:'me',     nome:'Admin Demo',         ruolo:'admin',         leader:null},
+    {k:'leader', nome:'Leader Demo',        ruolo:'leader',        leader:null},
+    {k:'collab', nome:'Collaboratore Demo', ruolo:'collaboratore', leader:'leader'},
+    {k:'marco',  nome:'Marco Blu',          ruolo:'collaboratore', leader:'leader'}
+  ];
+  let adAperto=null;   // chiave dell'utente in modifica
+  let adBozza=null;    // {ruolo, leader} non ancora salvati
+
+  /** Quanti amministratori ci sono oltre a `escluso`. */
+  function adAltriAdmin(escluso){
+    return adUtenti.filter(u=>u.ruolo==='admin' && u.k!==escluso).length;
+  }
+
   function renderAdmin(){
     const gate=document.getElementById('adminGate'), body=document.getElementById('adminBody');
-    if(role!=='admin'){ gate.innerHTML='<div class="card"><h3 class="heading error">Area riservata</h3><p class="cap">Il pannello admin è visibile solo agli amministratori. Cambia ruolo in "Admin" qui sopra per vederlo.</p></div>'; body.style.display='none'; }
-    else { gate.innerHTML=''; body.style.display=''; adSub('list'); }
+    if(role!=='admin'){
+      gate.innerHTML='<div class="card"><h3 class="heading error">Area riservata</h3><p class="cap">Il pannello admin è visibile solo agli amministratori. Cambia ruolo in "Admin" qui sopra per vederlo.</p></div>';
+      body.style.display='none';
+      return;
+    }
+    gate.innerHTML=''; body.style.display=''; adSub('list');
+
+    const el=document.getElementById('adUtenti');
+    el.innerHTML=adUtenti.map(u=>{
+      const capo=u.leader ? adUtenti.find(x=>x.k===u.leader) : null;
+      const etichetta=AD_RUOLI.find(r=>r[0]===u.ruolo)[1];
+      return '<div class="card press" data-ad="'+u.k+'"><div class="between">'+
+        '<h3 class="heading">'+esc(u.nome)+'</h3>'+
+        '<span class="label gold">'+etichetta+'</span></div>'+
+        (capo?'<p class="cap">Leader: '+esc(capo.nome)+'</p>':'')+'</div>';
+    }).join('');
+    el.querySelectorAll('[data-ad]').forEach(d=>{ d.onclick=()=>adApri(d.dataset.ad); });
+  }
+
+  function adApri(k){
+    adAperto=k;
+    const u=adUtenti.find(x=>x.k===k); if(!u) return;
+    adBozza={ruolo:u.ruolo, leader:u.leader};
+    adSub('detail');
+    adRenderDettaglio();
+  }
+
+  function adRenderDettaglio(){
+    const u=adUtenti.find(x=>x.k===adAperto); if(!u) return;
+    document.getElementById('adNome').textContent=u.nome;
+
+    // Togliere il ruolo all'ULTIMO amministratore rende l'app ingestibile: da
+    // quel momento nessuno può assegnare ruoli, e per rimediare bisognerebbe
+    // essere admin. Nell'app il divieto è nel database (migrazione 0028) —
+    // qui, come lì, l'interfaccia lo spiega prima che accada.
+    const ultimo = u.ruolo==='admin' && adAltriAdmin(u.k)===0;
+
+    document.getElementById('adRuoli').innerHTML=AD_RUOLI.map(([k,et])=>{
+      const spento = ultimo && k!=='admin';
+      return '<span class="chip'+(adBozza.ruolo===k?' on':'')+'" data-ruolo="'+k+'"'+
+        (spento?' style="opacity:.4;cursor:not-allowed" aria-disabled="true"':'')+'>'+et+'</span>';
+    }).join('');
+
+    const avviso=document.getElementById('adAvviso');
+    avviso.style.display = ultimo ? '' : 'none';
+    avviso.textContent = ultimo
+      ? 'È l\'unico amministratore. Se gli togli il ruolo nessuno può più assegnarne — nemmeno a sé stesso — e per rimettere le cose a posto servirebbe entrare nel database. Nomina prima un altro amministratore.'
+      : '';
+
+    // Il leader si assegna solo ai collaboratori.
+    const box=document.getElementById('adLeaderBox');
+    box.style.display = adBozza.ruolo==='collaboratore' ? '' : 'none';
+    const capi=adUtenti.filter(x=>x.ruolo==='leader' && x.k!==u.k);
+    document.getElementById('adLeader').innerHTML=
+      '<span class="chip'+(adBozza.leader===null?' on':'')+'" data-leader="">— Nessuno</span>'+
+      capi.map(c=>'<span class="chip'+(adBozza.leader===c.k?' on':'')+'" data-leader="'+c.k+'">'+esc(c.nome)+'</span>').join('');
+
+    document.getElementById('adRuoli').querySelectorAll('[data-ruolo]').forEach(c=>{
+      if(c.getAttribute('aria-disabled')==='true') return;
+      c.onclick=()=>{ adBozza.ruolo=c.dataset.ruolo; adRenderDettaglio(); };
+    });
+    document.getElementById('adLeader').querySelectorAll('[data-leader]').forEach(c=>{
+      c.onclick=()=>{ adBozza.leader=c.dataset.leader||null; adRenderDettaglio(); };
+    });
+    document.getElementById('adSalva').onclick=()=>{
+      u.ruolo=adBozza.ruolo;
+      u.leader=adBozza.ruolo==='collaboratore' ? adBozza.leader : null;
+      renderAdmin();
+      toast('Modifiche salvate');
+    };
   }
 
   function crmSub(v){

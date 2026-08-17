@@ -31,6 +31,8 @@ export type Categoria =
   | 'duplicato'
   | 'collegato'
   | 'lento'
+  /** L'app resterebbe senza amministratori: `vieta_ultimo_admin()` (0028). */
+  | 'ultimoAdmin'
   | 'sconosciuto';
 
 /** La forma minima di un errore Supabase/PostgREST. */
@@ -44,6 +46,8 @@ const MESSAGGI: Record<Categoria, string> = {
   duplicato: 'Esiste già: questo dato è stato inserito un’altra volta.',
   collegato: 'Non si può eliminare: c’è dell’altro collegato a questo.',
   lento: 'La richiesta ha impiegato troppo tempo. Riprova fra poco.',
+  ultimoAdmin:
+    'Non si può: è l’unico amministratore rimasto. Nominane un altro, poi riprova.',
   sconosciuto: 'Qualcosa non ha funzionato. Riprova fra poco.',
 };
 
@@ -74,6 +78,9 @@ export function categoriaErrore(errore: unknown): Categoria {
   }
 
   // ── Testo ─────────────────────────────────────────────────────────────────
+  // I `raise exception` nostri hanno un nome scelto apposta perché arrivi fin
+  // qui riconoscibile: senza, l'utente leggerebbe «ultimo_amministratore».
+  if (testo.includes('ultimo_amministratore')) return 'ultimoAdmin';
   if (
     testo.includes('failed to fetch') ||
     testo.includes('network request failed') ||

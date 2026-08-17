@@ -1400,6 +1400,61 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
       expect(data!.leader_id).toBe(id.leader);
     });
   });
+
+  // --------------------------------------------------------------------------
+  // 0028: non si resta senza amministratori.
+  //
+  // Il caso è questo: l'unico admin si mette «collaboratore» con due tocchi.
+  // Da quel momento `is_admin()` è falso per tutti, nessuno può più assegnare
+  // ruoli, e rimediare richiede di essere admin. L'app diventa gestibile solo
+  // dalla dashboard di Supabase.
+  // --------------------------------------------------------------------------
+  describe('ultimo amministratore', () => {
+    it('l’unico admin non può togliersi il ruolo', async () => {
+      const { error } = await client.admin
+        .from('profiles')
+        .update({ role: 'collaboratore' })
+        .eq('id', id.admin);
+
+      expect(error, 'il trigger deve rifiutare, non lasciar passare').not.toBeNull();
+      expect(error!.message).toContain('ultimo_amministratore');
+
+      const { data } = await admin.from('profiles').select('role').eq('id', id.admin).single();
+      expect(data!.role, 'e il ruolo non deve essere cambiato').toBe('admin');
+    });
+
+    it('l’unico admin non può essere eliminato', async () => {
+      const { error } = await client.admin.from('profiles').delete().eq('id', id.admin);
+      expect(error).not.toBeNull();
+      expect(error!.message).toContain('ultimo_amministratore');
+    });
+
+    it('con due admin, uno dei due può smettere', async () => {
+      // Il divieto protegge dal restare a zero, non dal ridurre.
+      await admin.from('profiles').update({ role: 'admin' }).eq('id', id.leader);
+      try {
+        const { error } = await client.admin
+          .from('profiles')
+          .update({ role: 'collaboratore' })
+          .eq('id', id.admin);
+        expect(error, 'con un altro admin in giro deve passare').toBeNull();
+      } finally {
+        // Rimesso com'era: gli altri test contano su questi ruoli.
+        await admin.from('profiles').update({ role: 'admin' }).eq('id', id.admin);
+        await admin.from('profiles').update({ role: 'leader' }).eq('id', id.leader);
+      }
+    });
+
+    it('gli altri campi restano modificabili', async () => {
+      // Il guardrail scatta solo quando un admin smette di esserlo: un
+      // aggiornamento qualsiasi non deve nemmeno contare gli amministratori.
+      const { error } = await client.admin
+        .from('profiles')
+        .update({ regione: 'Lombardia' })
+        .eq('id', id.admin);
+      expect(error).toBeNull();
+    });
+  });
 });
 
 // Se manca la configurazione lo diciamo, così il silenzio non sembra un successo.

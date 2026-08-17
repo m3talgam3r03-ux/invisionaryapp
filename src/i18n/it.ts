@@ -152,6 +152,15 @@ export const t = {
     nessunLeaderDisponibile:
       'Nessun leader disponibile: assegna prima il ruolo «Leader» a un utente.',
     salvataggioFallito: 'Salvataggio non riuscito.',
+    /**
+     * Il divieto vero è nel database (migrazione 0028). Qui si spiega perché,
+     * che è la parte che serve: un pulsante spento senza motivo sembra un
+     * guasto, e chi lo incontra prova a girarci intorno.
+     */
+    ultimoAdmin:
+      'È l’unico amministratore. Se gli togli il ruolo nessuno può più assegnarne — nemmeno a sé stesso — e per rimettere le cose a posto servirebbe entrare nel database. Nomina prima un altro amministratore.',
+    ultimoAdminErrore:
+      'Non si può: è l’unico amministratore rimasto. Nominane un altro, poi riprova.',
   },
 
   crm: {
@@ -362,6 +371,16 @@ export const t = {
       `Prossimo: ${nome} · ${mancanti} ${mancanti === 1 ? 'punto' : 'punti'} al traguardo.`,
     classifica: 'Classifica della rete',
     caricamentoClassifica: 'Caricamento classifica…',
+    classificaVuota: 'La classifica non è ancora stata calcolata. Torna fra poco.',
+    /**
+     * Un collaboratore riceve solo la propria riga: il perimetro è deciso da
+     * `can_read_member()` nel database. Mostrargliela come una classifica in
+     * cui è primo direbbe una cosa falsa — e chi la scopre parlando con un
+     * collega smette di fidarsi anche del resto della schermata.
+     */
+    soloIoTitolo: 'Dove ti trovi',
+    soloIo:
+      'La classifica confronta chi guida la rete e la propria squadra: tu vedi il tuo punteggio, non quello degli altri. Il tuo rank sale con le lezioni completate, i clienti seguiti e i rinnovi mantenuti — non con la posizione di qualcun altro.',
     io: ' · tu',
     comeSiCalcola: 'Come si calcola',
     metriche: {
