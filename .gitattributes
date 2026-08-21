@@ -1,0 +1,36 @@
+# ============================================================================
+# Fini riga: decise dal repository, non dalla configurazione di chi clona.
+#
+# Windows salva CRLF, macOS e Linux LF. Senza questo file il comportamento
+# dipende da `core.autocrlf` di ogni singola macchina: basta che a qualcuno sia
+# impostato diversamente e un salvataggio qualsiasi produce un diff di
+# centinaia di righe in cui non è cambiato niente — e in mezzo a quel rumore
+# la modifica vera non si trova più.
+#
+# `text=auto eol=lf`: nel repository sta sempre LF; sul disco ognuno vede
+# quello che gli serve.
+# ============================================================================
+* text=auto eol=lf
+
+# Binari: non toccarli, convertirli li corrompe.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.mp4 binary
+*.pdf binary
+*.jks binary
+*.keystore binary
+
+# Il file .sql va a finire in Postgres: LF sempre, senza eccezioni.
+*.sql text eol=lf
+
+# Gli script di shell devono restare LF anche su Windows, altrimenti il
+# CRLF finisce nello shebang e il sistema non trova l'interprete.
+*.sh text eol=lf
