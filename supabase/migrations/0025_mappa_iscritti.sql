@@ -107,11 +107,16 @@ as $$
     where p.regione is not null
     group by p.regione
   )
+  -- Il "from per_regione" mancava: la CTE era definita e mai usata, quindi
+  -- la colonna "n" non esisteva per gli aggregati, e Postgres rifiutava
+  -- l'intera funzione con 42703. Trovato applicando le migrazioni per la
+  -- prima volta: nessun controllo statico se ne era accorto.
   select
     coalesce(sum(n) filter (where n >= greatest(soglia, 1)), 0)::integer,
-    count(*) filter (where n >= greatest(soglia, 1))::integer,
-    count(*) filter (where n <  greatest(soglia, 1))::integer,
-    (select count(*)::integer from public.profiles where regione is null);
+    (count(*) filter (where n >= greatest(soglia, 1)))::integer,
+    (count(*) filter (where n <  greatest(soglia, 1)))::integer,
+    (select count(*)::integer from public.profiles where regione is null)
+  from per_regione;
 $$;
 
 comment on function public.riepilogo_mappa(integer) is
