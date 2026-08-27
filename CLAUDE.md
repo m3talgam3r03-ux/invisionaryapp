@@ -87,3 +87,22 @@ npx expo start      # a=Android  i=iOS  w=web  (o QR con Expo Go)
 `profiles` (role, leader_id) · `clients` (owner_id) · `renewals` (client_id, scadenza, alert_days_before) · `courses` · `lessons` (youtube_id) · `lesson_progress` · `events`. Predisporre vuote con RLS: `trading_accounts`, `trades`, `feedback_posts`.
 
 RLS: collaboratore → solo proprie righe (`owner_id = auth.uid()`); leader → proprie + collaboratori (`leader_id = leader.id`, lettura sui dati altrui); admin → accesso completo.
+
+## Si lavora in due (leggere prima di committare)
+
+Il progetto è condiviso su GitHub e ci lavorano **due persone da due macchine** —
+Windows e macOS — ognuna con la propria istanza di Claude Code.
+
+- **Non si committa su `main`.** Si apre un ramo (`git checkout -b nome-della-cosa`),
+  si lavora lì, si apre una Pull Request. Due Claude Code che scrivono sullo
+  stesso ramo si sovrascrivono nel giro di poche ore, e i conflitti su file
+  grossi come `src/i18n/it.ts` costano più del lavoro che contengono.
+- **Prima di iniziare**: `git pull` sul ramo principale, poi il proprio ramo da lì.
+- **Niente assunzioni sul sistema operativo** negli script: chi li scrive su
+  Windows deve ricordarsi che girano anche su Mac (e viceversa). Le fini riga
+  le decide `.gitattributes`, non la configurazione locale.
+- **`.env` non entra nel repository** (è in `.gitignore`, e va lasciato lì).
+  La chiave `service_role` non entra da nessuna parte: né nel repo, né in un
+  messaggio, né in un file di appunti. Scavalca ogni policy RLS.
+- Il repository è **pubblico**: è una scelta consapevole, ma vuol dire che
+  qualunque cosa venga committata è leggibile da chiunque, per sempre.
