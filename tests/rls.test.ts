@@ -219,7 +219,7 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
     it('il collaboratore non vede i rinnovi altrui', async () => {
       const creato = await admin
         .from('renewals')
-        .insert({ owner_id: id.admin, prodotto: 'RLS Test', scadenza: '2027-01-01' })
+        .insert({ owner_id: id.admin, prodotto: 'RLS Test', current_due_date: '2027-01-01' })
         .select('id')
         .single();
       if (creato.error) throw creato.error;
@@ -1297,11 +1297,30 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
     });
 
     it('nemmeno il saldo si tocca direttamente', async () => {
-      const { error } = await client.collaboratore
+      // ⚠️ Postgres NON restituisce un errore qui, e il test lo pretendeva.
+      // Una UPDATE su una tabella con RLS attiva e nessuna policy di UPDATE
+      // non viene rifiutata: semplicemente non trova righe su cui agire e
+      // riporta successo. Chiedere l'errore verificava una cosa che non
+      // succede; la proprietà vera è che il saldo non cambi.
+      const { data: prima } = await admin
+        .from('points_balance')
+        .select('saldo')
+        .eq('user_id', id.collaboratore)
+        .maybeSingle();
+
+      await client.collaboratore
         .from('points_balance')
         .update({ saldo: 999_999 })
         .eq('user_id', id.collaboratore);
-      expect(error).not.toBeNull();
+
+      const { data: dopo } = await admin
+        .from('points_balance')
+        .select('saldo')
+        .eq('user_id', id.collaboratore)
+        .maybeSingle();
+
+      expect(dopo?.saldo ?? null).toBe(prima?.saldo ?? null);
+      expect(Number(dopo?.saldo ?? 0)).not.toBe(999_999);
     });
 
     it('il collaboratore non vede il registro di un estraneo', async () => {
@@ -1364,13 +1383,19 @@ describe.skipIf(!configurato)('RLS — perimetro di lettura e scrittura per ruol
       expect(error).not.toBeNull();
     });
 
-    it('matura_punti non accredita due volte', async () => {
-      // È la proprietà su cui si regge il fatto che l'app la chiami a ogni
-      // apertura: la seconda esecuzione deve accreditare zero.
-      await client.collaboratore.rpc('matura_punti', {});
-      const { data: seconda, error } = await client.collaboratore.rpc('matura_punti', {});
-      expect(error).toBeNull();
-      expect(Number(seconda ?? 0)).toBe(0);
+    it('matura_punti non esiste più: i punti vengono dalla classifica', async () => {
+      // Questo test verificava `matura_punti()`, che accreditava punti da
+      // lezioni e clienti. La migrazione 0024 l'ha ELIMINATA di proposito
+      // quando i premi sono passati alla classifica trader — e il commento
+      // diceva «l'app la chiama a ogni apertura», cosa che non è mai stata
+      // vera: in `src/` non compare da nessuna parte.
+      //
+      // Resta come test al contrario: se un giorno riapparisse, vorrebbe dire
+      // che esistono due strade per accreditare punti, e i saldi non
+      // tornerebbero più.
+      const { error } = await client.collaboratore.rpc('matura_punti', {});
+      expect(error).not.toBeNull();
+      expect(error!.code).toBe('PGRST202');
     });
   });
 
