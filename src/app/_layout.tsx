@@ -1,11 +1,14 @@
-import {
-  Manrope_400Regular,
-  Manrope_500Medium,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-  Manrope_800ExtraBold,
-  useFonts,
-} from '@expo-google-fonts/manrope';
+// Import dai SOTTOPERCORSI, non dalla radice del pacchetto.
+// Importando da '@expo-google-fonts/manrope' finiscono nel bundle tutti e
+// sette i pesi — verificato contando i .ttf nella build — perché l'indice li
+// richiede tutti e Metro non sa scartare gli asset non usati. Così ne
+// arrivano cinque, che sono quelli che l'app disegna davvero.
+import { Manrope_400Regular } from '@expo-google-fonts/manrope/400Regular';
+import { Manrope_500Medium } from '@expo-google-fonts/manrope/500Medium';
+import { Manrope_600SemiBold } from '@expo-google-fonts/manrope/600SemiBold';
+import { Manrope_700Bold } from '@expo-google-fonts/manrope/700Bold';
+import { Manrope_800ExtraBold } from '@expo-google-fonts/manrope/800ExtraBold';
+import { useFonts } from 'expo-font';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
