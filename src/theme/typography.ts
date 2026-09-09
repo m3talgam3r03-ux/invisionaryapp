@@ -26,53 +26,60 @@ import { Platform, type TextStyle } from 'react-native';
 
 export const fontFamilies = {
   /**
-   * Una sola famiglia per tutto, come fa Apple con San Francisco.
-   * Il "condensed" di prima su Android era una famiglia DIVERSA da quella del
-   * corpo: due disegni di lettera nella stessa schermata, che è la cosa che
-   * fa sembrare un'app messa insieme invece che disegnata.
+   * Manrope, da Google Fonts — licenza aperta, incorporata nell'app.
    *
-   * `System` su iOS È San Francisco. Su Android è Roboto, che le sta vicino.
+   * Perché non il carattere di sistema: San Francisco e Roboto sono
+   * eccellenti, e sono di TUTTI. Un'app che vuole un'identità propria non
+   * può avere le stesse lettere di ogni altra app del telefono.
+   *
+   * Perché Manrope: è geometrico ma con un'altezza della x generosa, quindi
+   * regge sia il titolo da 34 punti sia la didascalia da 13. Sette pesi
+   * permettono di costruire la gerarchia col PESO invece che col maiuscolo,
+   * che è esattamente quello che abbiamo appena smesso di fare.
+   *
+   * ⚠️ Questi nomi devono corrispondere alle chiavi passate a useFonts() in
+   * src/app/_layout.tsx. React Native cerca il carattere per nome e, se non
+   * lo trova, ripiega in silenzio sul sistema senza dire niente.
    */
-  display: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
-  body: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
+  regular: 'Manrope_400Regular',
+  medium: 'Manrope_500Medium',
+  semibold: 'Manrope_600SemiBold',
+  bold: 'Manrope_700Bold',
+  extrabold: 'Manrope_800ExtraBold',
   mono: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
 } as const;
 
 export const typography = {
   /** Il numero o il nome che domina una schermata. Uno per pagina, non due. */
   display: {
-    fontFamily: fontFamilies.display,
+    fontFamily: fontFamilies.extrabold,
     fontSize: 34,
     lineHeight: 41,
     letterSpacing: -0.8,
-    fontWeight: '700',
   },
   /** Titolo di schermata. */
   title: {
-    fontFamily: fontFamilies.display,
+    fontFamily: fontFamilies.bold,
     fontSize: 28,
     lineHeight: 34,
     letterSpacing: -0.6,
-    fontWeight: '700',
   },
   /** Titolo di una scheda o di un blocco. */
   heading: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.semibold,
     fontSize: 20,
     lineHeight: 25,
     letterSpacing: -0.4,
-    fontWeight: '600',
   },
   /**
    * Il corpo del testo. 17 punti non è un capriccio: è la misura che iOS usa
    * di default, ed è tarata sulla distanza a cui si tiene un telefono.
    */
   body: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.regular,
     fontSize: 17,
     lineHeight: 24,
     letterSpacing: -0.2,
-    fontWeight: '400',
   },
   /**
    * Etichette e intestazioni di sezione.
@@ -82,19 +89,17 @@ export const typography = {
    * «questa è un'etichetta, non contenuto» — senza gridare.
    */
   label: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.semibold,
     fontSize: 15,
     lineHeight: 20,
     letterSpacing: -0.2,
-    fontWeight: '600',
   },
   /** Note, didascalie, testo di servizio. */
   caption: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.regular,
     fontSize: 13,
     lineHeight: 18,
     letterSpacing: 0,
-    fontWeight: '400',
   },
   /**
    * Numeri incolonnati: saldi, punti, quantità.
@@ -102,11 +107,10 @@ export const typography = {
    * importi non balla a ogni aggiornamento.
    */
   numero: {
-    fontFamily: fontFamilies.display,
+    fontFamily: fontFamilies.extrabold,
     fontSize: 28,
     lineHeight: 34,
     letterSpacing: -0.6,
-    fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
   mono: {

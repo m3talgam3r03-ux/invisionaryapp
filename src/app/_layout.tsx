@@ -1,3 +1,11 @@
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/manrope';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -46,11 +54,27 @@ function RootNavigator() {
   const { session, isLoading } = useAuth();
   useProtectedRoute(session, isLoading);
 
+  // I cinque pesi che l'app usa davvero. Caricarli tutti e sette
+  // aggiungerebbe due file al bundle per niente.
+  const [fontPronti] = useFonts({
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+
+  // Lo splash resta finché la sessione è nota E i caratteri sono pronti.
+  // Nasconderlo prima farebbe comparire l'app col carattere di sistema per
+  // una frazione di secondo, per poi far saltare tutto quando arriva quello
+  // vero: è il difetto che si nota di più fra quelli che nessuno sa nominare.
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && fontPronti) {
       SplashScreen.hideAsync();
     }
-  }, [isLoading]);
+  }, [isLoading, fontPronti]);
+
+  if (!fontPronti) return null;
 
   return (
     <Stack

@@ -5,7 +5,7 @@ import { ThemedText } from '@/components/ui';
 import { t } from '@/i18n/it';
 import type { VocePodio } from '@/lib/podio';
 import { ordinePodio } from '@/lib/podio';
-import { radius, spacing, useTheme } from '@/theme';
+import { radius, spacing, useTheme, fontFamilies } from '@/theme';
 
 /**
  * Il podio del mese: primo al centro e più alto, secondo a sinistra, terzo a
@@ -84,5 +84,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  numero: { fontSize: 28, fontWeight: '800' },
+  numero: { fontSize: 28, fontFamily: fontFamilies.extrabold },
 });

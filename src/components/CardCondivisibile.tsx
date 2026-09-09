@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { Crest } from '@/components/Crest';
 import { ThemedText } from '@/components/ui';
 import { STORIES, type Card } from '@/lib/condivisione';
-import { darkColors, spacing } from '@/theme';
+import { darkColors, spacing, fontFamilies } from '@/theme';
 
 /**
  * La card 1080×1920 che finisce nelle Storie.
@@ -93,14 +93,14 @@ const styles = StyleSheet.create({
     color: darkColors.gold,
     fontSize: 128,
     lineHeight: 148,
-    fontWeight: '800',
+    fontFamily: fontFamilies.extrabold,
     textAlign: 'center',
   },
   titolo: {
     color: darkColors.text,
     fontSize: 64,
     lineHeight: 76,
-    fontWeight: '700',
+    fontFamily: fontFamilies.bold,
     textAlign: 'center',
   },
   sottotitolo: {
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     color: darkColors.text,
     fontSize: 36,
     letterSpacing: 10,
-    fontWeight: '700',
+    fontFamily: fontFamilies.bold,
   },
   disclaimer: {
     position: 'absolute',

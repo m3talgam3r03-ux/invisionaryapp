@@ -24,7 +24,7 @@ import {
   useRiscatta,
   useSaldoPunti,
 } from '@/lib/premi-data';
-import { spacing, useTheme } from '@/theme';
+import { spacing, useTheme, fontFamilies } from '@/theme';
 
 export default function Premi() {
   const { profile } = useAuth();
@@ -234,7 +234,7 @@ function erroreRiscatto(err: unknown): string {
 }
 
 const styles = StyleSheet.create({
-  grande: { fontSize: 40, fontWeight: '800', lineHeight: 46 },
+  grande: { fontSize: 40, fontFamily: fontFamilies.extrabold, lineHeight: 46 },
   centro: { textAlign: 'center' },
   riga: {
     flexDirection: 'row',

@@ -6,7 +6,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { radius, spacing, useTheme } from '@/theme';
+import { radius, spacing, useTheme, fontFamilies } from '@/theme';
 
 import { ThemedText } from './ThemedText';
 
@@ -72,7 +72,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={testo} />
       ) : (
-        <ThemedText variant="label" style={{ color: testo, fontWeight: '600' }}>
+        <ThemedText variant="label" style={{ color: testo, fontFamily: fontFamilies.semibold }}>
           {title}
         </ThemedText>
       )}

@@ -26,7 +26,7 @@ import {
   type RegioneDisegnata,
   type Vista,
 } from '@/lib/mappa';
-import { radius, spacing, useTheme } from '@/theme';
+import { radius, spacing, useTheme, fontFamilies } from '@/theme';
 
 const ALTEZZA = 460;
 const [, , LARGHEZZA_MAPPA, ALTEZZA_MAPPA] = VIEW_BOX.split(/\s+/).map(Number);
@@ -166,7 +166,7 @@ export function MappaItalia({ regioni }: { regioni: RegioneDisegnata[] }) {
               key={r.id}
               d={r.contorno}
               fill={sfondo(r.livello, colors.gold)}
-              stroke={scelta?.id === r.id ? colors.accent : '#F5F3EF'}
+              stroke={scelta?.id === r.id ? colors.accent : '#F7F7F8'}
               strokeWidth={scelta?.id === r.id ? 2.4 / vista.scala : tratto}
               strokeOpacity={scelta?.id === r.id ? 1 : 0.55}
               onPress={() => {
@@ -209,7 +209,7 @@ export function MappaItalia({ regioni }: { regioni: RegioneDisegnata[] }) {
                     y={r.centro.y + raggio * 2.1}
                     fontSize={11 / Math.sqrt(vista.scala)}
                     fontWeight="700"
-                    fill="#F5F3EF"
+                    fill="#F7F7F8"
                     textAnchor="middle"
                   >
                     {r.nome}
@@ -357,10 +357,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  segno: { fontSize: 20, fontWeight: '700', lineHeight: 24 },
+  segno: { fontSize: 20, fontFamily: fontFamilies.bold, lineHeight: 24 },
   bussola: { position: 'absolute', left: spacing.md, top: spacing.md, alignItems: 'center' },
-  nord: { color: '#F5F3EF', fontSize: 11, fontWeight: '800', opacity: 0.7 },
-  ago: { color: '#C9A227', fontSize: 13, lineHeight: 15, opacity: 0.85 },
+  nord: { color: '#F7F7F8', fontSize: 11, fontFamily: fontFamilies.extrabold, opacity: 0.7 },
+  ago: { color: '#E0B23C', fontSize: 13, lineHeight: 15, opacity: 0.85 },
   reimposta: {
     position: 'absolute',
     left: spacing.sm,
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  grande: { fontSize: 30, fontWeight: '800', lineHeight: 34 },
+  grande: { fontSize: 30, fontFamily: fontFamilies.extrabold, lineHeight: 34 },
   centro: { textAlign: 'center' },
   legenda: {
     flexDirection: 'row',

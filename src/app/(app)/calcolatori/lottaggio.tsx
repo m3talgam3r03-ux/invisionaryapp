@@ -7,7 +7,7 @@ import { parseLocaleNumber } from '@/lib/calculators';
 import { formatNumber } from '@/lib/format';
 import { etaCambio, useCambio, useInstruments, type StrumentoDB } from '@/lib/instruments';
 import { arrotondaAlPassoBroker, calcolaLottaggio } from '@/lib/position-size';
-import { radius, spacing, useTheme } from '@/theme';
+import { radius, spacing, useTheme, fontFamilies } from '@/theme';
 
 /** Passo minimo tipico dei broker retail. */
 const PASSO_LOTTI = 0.01;
@@ -282,7 +282,7 @@ function Chip({
 const styles = StyleSheet.create({
   grande: {
     fontSize: 40,
-    fontWeight: '800',
+    fontFamily: fontFamilies.extrabold,
     lineHeight: 44,
   },
   chips: {

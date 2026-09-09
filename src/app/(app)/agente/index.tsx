@@ -23,7 +23,7 @@ import { LimiteAgente, askAgent, type ChatMessage } from '@/lib/ai';
 import { createConversation, getLatestConversationId, loadMessages, saveMessage } from '@/lib/conversations';
 import { can } from '@/lib/permissions';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { radius, spacing, typography, useTheme } from '@/theme';
+import { radius, spacing, typography, useTheme, fontFamilies } from '@/theme';
 
 type UIMessage = {
   id: string;
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   sendGlyph: {
     color: '#FFFFFF',
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fontFamilies.extrabold,
     lineHeight: 22,
   },
 });

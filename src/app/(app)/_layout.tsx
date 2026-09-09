@@ -5,7 +5,7 @@ import { StyleSheet, Text, useWindowDimensions, type ColorValue } from 'react-na
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { registerPushToken } from '@/lib/push';
-import { BARRA_LATERALE, navigazioneDiLato, spacing, useTheme } from '@/theme';
+import { BARRA_LATERALE, fontFamilies, navigazioneDiLato, spacing, useTheme } from '@/theme';
 
 /**
  * Navigazione principale: barra in basso con i quattro pilastri del marchio
@@ -67,8 +67,8 @@ export default function AppLayout() {
         // l'etichetta serve solo a togliere il dubbio la prima volta.
         // Di lato c'è spazio: l'etichetta diventa leggibile e sta accanto.
         tabBarLabelStyle: diLato
-          ? { fontSize: 14, letterSpacing: 0.2, fontWeight: '600' }
-          : { fontSize: 10, letterSpacing: 0.2, fontWeight: '600' },
+          ? { fontSize: 14, letterSpacing: 0.2, fontFamily: fontFamilies.semibold }
+          : { fontSize: 10, letterSpacing: 0.2, fontFamily: fontFamilies.semibold },
         tabBarItemStyle: diLato
           ? { paddingVertical: spacing.sm, justifyContent: 'flex-start' }
           : { paddingVertical: 2 },

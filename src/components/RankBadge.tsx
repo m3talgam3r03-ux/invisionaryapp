@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
 import { ThemedText } from '@/components/ui';
-import { radius, useTheme } from '@/theme';
+import { radius, useTheme, fontFamilies } from '@/theme';
 
 /** Crest del rank a carte (oro = rank/traguardi). */
 export function RankBadge({ rank, size = 64 }: { rank: string; size?: number }) {
@@ -22,7 +22,7 @@ export function RankBadge({ rank, size = 64 }: { rank: string; size?: number }) 
       <ThemedText
         style={{
           color: colors.gold,
-          fontWeight: '800',
+          fontFamily: fontFamilies.extrabold,
           fontSize: Math.round(size * 0.42),
           lineHeight: Math.round(size * 0.5),
         }}

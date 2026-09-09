@@ -20,7 +20,7 @@ import { byName, matchesQuery, parseContact } from '@/lib/contact';
 import { messaggioErrore } from '@/lib/errori';
 import { useSquadra } from '@/lib/network';
 import { can } from '@/lib/permissions';
-import { radius, spacing, useTheme } from '@/theme';
+import { radius, spacing, useTheme, fontFamilies } from '@/theme';
 import { CONTACT_STATI, type Client, type ContactStato } from '@/types/models';
 
 export default function ClientsList() {
@@ -371,6 +371,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 30,
     lineHeight: 34,
-    fontWeight: '300',
+    fontFamily: fontFamilies.regular,
   },
 });

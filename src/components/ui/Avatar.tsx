@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-import { radius, useTheme } from '@/theme';
+import { radius, useTheme, fontFamilies } from '@/theme';
 
 import { ThemedText } from './ThemedText';
 
@@ -31,7 +31,7 @@ export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
         justifyContent: 'center',
       }}
     >
-      <ThemedText variant="caption" style={{ color: colors.textMuted, fontWeight: '700' }}>
+      <ThemedText variant="caption" style={{ color: colors.textMuted, fontFamily: fontFamilies.bold }}>
         {initials(name)}
       </ThemedText>
     </View>

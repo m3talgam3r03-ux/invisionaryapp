@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import { darkColors } from './colors';
+import { fontFamilies } from './typography';
 
 /**
  * Opzioni di navigazione condivise, sul modello delle app social iOS.
@@ -37,7 +38,7 @@ export const stackScreenOptions = {
   headerTitleStyle: {
     color: darkColors.text,
     fontSize: 17,
-    fontWeight: '700' as const,
+    fontFamily: fontFamilies.bold,
   },
   headerBackTitle: '',
   contentStyle: { backgroundColor: darkColors.background },

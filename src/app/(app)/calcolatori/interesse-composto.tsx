@@ -12,7 +12,7 @@ import {
   type PuntoGrafico,
 } from '@/lib/calculators';
 import { formatNumber } from '@/lib/format';
-import { radius, spacing, useTheme } from '@/theme';
+import { radius, spacing, useTheme, fontFamilies } from '@/theme';
 
 const ALTEZZA_GRAFICO = 180;
 
@@ -292,7 +292,7 @@ function Riga({
 const styles = StyleSheet.create({
   grande: {
     fontSize: 34,
-    fontWeight: '800',
+    fontFamily: fontFamilies.extrabold,
     lineHeight: 40,
   },
   centro: { textAlign: 'center' },
