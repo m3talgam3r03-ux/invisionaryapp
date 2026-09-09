@@ -119,7 +119,6 @@ export default function AppLayout() {
       <Tabs.Screen name="calendario" options={{ href: null }} />
       <Tabs.Screen name="premi" options={{ href: null }} />
       <Tabs.Screen name="mappa" options={{ href: null }} />
-      <Tabs.Screen name="funnel" options={{ href: null }} />
       <Tabs.Screen name="renewals" options={{ href: null }} />
       <Tabs.Screen name="rank" options={{ href: null }} />
       <Tabs.Screen name="admin" options={{ href: null }} />

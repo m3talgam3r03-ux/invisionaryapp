@@ -135,18 +135,6 @@ export default function Dashboard() {
             colore={colors.accent}
             onPress={() => router.push('/mappa')}
           />
-          {/* Il funnel era riservato a chi guida la rete. Il database non l'ha
-              mai detto: `funnels_select` dà a ciascuno i PROPRI funnel, e
-              `funnel_leads_select` dà a ciascuno i contatti che ha raccolto.
-              Un collaboratore che fa network marketing è esattamente chi ha
-              bisogno di una pagina che raccolga i suoi contatti: nasconderla
-              rendeva il funnel uno strumento da leader, che non è. */}
-          <Scorciatoia
-            glifo="⌾"
-            etichetta={t.dashboard.breve.funnel}
-            colore={colors.accent}
-            onPress={() => router.push('/funnel')}
-          />
           {can(profile, 'admin.panel') && (
             <Scorciatoia
               glifo="⚙"
