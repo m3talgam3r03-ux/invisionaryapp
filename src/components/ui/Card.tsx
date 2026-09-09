@@ -1,22 +1,29 @@
-import { Platform, StyleSheet, View, type ViewProps } from 'react-native';
+import { Platform, View, type ViewProps } from 'react-native';
 
-import { radius, spacing, useTheme } from '@/theme';
+import { elevazione, radius, spacing, useTheme } from '@/theme';
+
+type CardProps = ViewProps & {
+  /**
+   * Scheda «incassata»: sta DENTRO un'altra superficie invece che sopra il
+   * fondo. Niente ombra, un gradino di luminosità in più. È il modo in cui
+   * iOS disegna un campo dentro una scheda.
+   */
+  incassata?: boolean;
+};
 
 /**
- * Superficie del design system: sfondo, bordo sottile, angoli arrotondati.
+ * La superficie del sistema.
  *
- * ── PERCHÉ HA UN'OMBRA ──
- * Prima era una superficie piatta con un filetto: su uno sfondo quasi dello
- * stesso colore le schede non si staccavano, e una schermata leggeva come
- * un'unica massa grigia in cui bisognava cercare i confini. L'ombra è appena
- * accennata — non serve a fare effetto, serve a far capire che quella è una
- * scheda e finisce lì.
+ * ── PERCHÉ NON HA PIÙ UN BORDO ──
+ * Prima ogni scheda era circondata da un filetto grigio. Con otto schede su
+ * una schermata il risultato è una griglia di rettangoli, e l'occhio conta i
+ * bordi invece di leggere il contenuto.
  *
- * Su Android `elevation` disegna anche uno sfondo proprio: per questo il
- * colore resta esplicito, altrimenti su alcune versioni la scheda si schiarisce
- * da sola e perde il contrasto col testo.
+ * Apple non li disegna: usa il livello. La scheda è un gradino più chiara del
+ * fondo e ha un'ombra morbida, e tanto basta a dire dove comincia e dove
+ * finisce. Meno righe, e la stessa informazione.
  */
-export function Card({ style, ...rest }: ViewProps) {
+export function Card({ style, incassata = false, ...rest }: CardProps) {
   const { colors, isDark } = useTheme();
 
   return (
@@ -24,28 +31,23 @@ export function Card({ style, ...rest }: ViewProps) {
       {...rest}
       style={[
         {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
-          borderWidth: StyleSheet.hairlineWidth,
+          backgroundColor: incassata ? colors.surfaceAlt : colors.surface,
           borderRadius: radius.lg,
           padding: spacing.lg,
         },
-        // Sul tema chiaro l'ombra va tenuta più leggera: la stessa che dà
-        // profondità sul buio, sul chiaro sporca.
-        Platform.select({
-          ios: {
-            shadowColor: '#000',
-            shadowOpacity: isDark ? 0.35 : 0.08,
-            shadowRadius: 12,
-            shadowOffset: { width: 0, height: 4 },
-          },
-          android: { elevation: isDark ? 3 : 2 },
-          default: {
-            boxShadow: isDark
-              ? '0 4px 14px rgba(0,0,0,0.35)'
-              : '0 2px 8px rgba(0,0,0,0.08)',
-          },
-        }),
+        // L'ombra solo a chi sta SOPRA qualcosa. Una scheda incassata che
+        // proietta un'ombra verso l'esterno è un oggetto impossibile, e si
+        // vede che è sbagliato anche senza saper dire perché.
+        // Sul web l'ombra si scrive con `boxShadow`; su iOS e Android con le
+        // proprietà `shadow*`. Sono forme diverse, quindi il ramo è esplicito.
+        !incassata &&
+          (Platform.OS === 'web'
+            ? {
+                boxShadow: isDark
+                  ? '0 6px 18px rgba(0,0,0,0.5)'
+                  : '0 3px 10px rgba(0,0,0,0.06)',
+              }
+            : elevazione.scheda(isDark)),
         style,
       ]}
     />

@@ -1,93 +1,121 @@
 /**
- * Design tokens colore — brand Invisionary (dark-first).
+ * Colore — impostato come lo imposta Apple.
  *
- * Regole d'uso:
- * - `accent` (rosso carte) SOLO per accenti, CTA e stati. MAI per il corpo del testo.
- * - `gold` SOLO per rank e vittorie (classifiche, badge, traguardi).
- * - Estetica premium/"mano vincente": nessun immaginario da azzardo.
+ * ── LA DIFFERENZA DI FONDO ──
+ * Prima ogni superficie aveva un bordo sottile per farsi vedere. Apple non
+ * disegna quasi mai un bordo: usa **livelli**. Lo sfondo è il fondo, la scheda
+ * sta un gradino sopra, il campo dentro la scheda un gradino ancora. Si capisce
+ * cosa contiene cosa dalla luminosità, non da una riga grigia — e una schermata
+ * con dieci schede non diventa una griglia di rettangoli.
+ *
+ * Da qui i tre livelli espliciti: `background` → `surface` → `surfaceAlt`,
+ * distanziati abbastanza da vedersi ma non da separarsi.
+ *
+ * ── PERCHÉ QUASI NEUTRO ──
+ * Il colore è un accento, non un materiale. Le superfici stanno su grigi
+ * appena caldi; il rosso compare su ciò che si tocca e su ciò che è in
+ * ritardo, l'oro solo su rank e vittorie. Su Apple Music l'interfaccia è
+ * nera e grigia: il colore lo mettono le copertine, cioè il contenuto.
+ *
+ * ── COSA RESTA DEL MARCHIO ──
+ * Il rosso carte e l'oro non si toccano: sono l'identità. Cambia quanto spesso
+ * compaiono, non quali sono.
  */
 
-/**
- * Palette base condivisa (i valori grezzi del brand).
- *
- * ── PERCHÉ I SCURI SONO CALDI ──
- * Erano grigi neutri tendenti al blu (#0E0E10 → #2E2E33). Accanto all'oro del
- * marchio un grigio freddo lo spegne: i due colori si contrastano invece di
- * stare insieme, e l'oro sembra ottone. Questi scuri hanno una punta di rosso —
- * pochissimo, ma basta a far cantare l'oro e il rosso carte.
- *
- * ── E PERCHÉ I LIVELLI SONO PIÙ DISTANTI ──
- * Fra sfondo e superficie c'erano dodici punti di luminosità: le schede non si
- * staccavano dallo sfondo e tutto leggeva come un'unica massa grigia. Ora lo
- * scalino è più netto, così una scheda si vede che è una scheda.
- */
 export const palette = {
-  ink900: '#0B0A0A', // background — più profondo, così le schede si sollevano
-  ink800: '#1A1817', // surface
-  ink700: '#262321', // surface alternativa / elevazione
-  ink600: '#38342F', // bordi — visibili senza gridare
-  bone: '#F5F3EF', // testo (già caldo: ora la famiglia è coerente)
-  smoke: '#918B84', // testo attenuato, riscaldato come il resto
-  cardRed: '#C8102E', // accent (rosso carte) — per i RIEMPIMENTI
+  // ── Scuri (il tema di casa) ────────────────────────────────────────────
+  // Quasi neri, con una punta di caldo perché l'oro non sembri ottone.
+  ink900: '#0A0A0C', // fondo
+  ink800: '#161618', // scheda
+  ink700: '#1F1F22', // dentro la scheda (campi, righe)
+  ink600: '#2C2C30', // separatori, quando proprio servono
+  ink500: '#48484E', // bordi visibili sui controlli
+
+  bone: '#F7F7F8', // testo principale
+  smoke: '#98989F', // testo secondario — 5,1 di contrasto su ink900
+  ash: '#6C6C74', // testo terziario, disattivato
+
+  // ── Chiari ─────────────────────────────────────────────────────────────
+  paper: '#FFFFFF',
+  paper2: '#F2F2F7', // il grigio delle liste raggruppate iOS
+  paper3: '#E5E5EA',
+
+  // ── Marchio ────────────────────────────────────────────────────────────
+  cardRed: '#E5334E', // riempimenti e accenti: più luminoso del vecchio #C8102E
   /**
-   * Il rosso quando fa da TESTO.
-   *
-   * `cardRed` su una superficie scura dà un contrasto di 3,01 — sotto la
-   * soglia di 4,5 per il testo normale. Non si legge bene, e non è un
-   * problema nuovo: c'era anche prima, solo che nessuno l'aveva misurato.
-   * Questo schiarito sta a 4,82 e resta lo stesso rosso di carte.
-   *
-   * Il pieno resta `cardRed`, dove conta il bianco sopra (5,88: a posto).
+   * Il rosso quando fa da TESTO su fondo scuro.
+   * `cardRed` come testo sta sotto la soglia di leggibilità; questo sta sopra
+   * ed è lo stesso rosso percepito.
    */
-  cardRedText: '#EC4A62',
-  gold: '#C9A227', // rank / vittorie
-  green: '#2E8B57', // success
-  red: '#D21F3C', // error
+  cardRedText: '#FF6B7F',
+  cardRedDark: '#C4102A', // il rosso su fondo chiaro, dove serve più corpo
+
+  gold: '#E0B23C', // rank e vittorie, mai altro
+  goldDark: '#8A6D14',
+
+  green: '#30D158', // il verde di iOS
+  greenDark: '#248A3D',
+  red: '#FF453A', // l'errore di iOS
+  redDark: '#C9291F',
 } as const;
 
-/** Forma di un tema colore (i valori sono stringhe: entrambe le palette la rispettano). */
 export type ThemeColors = {
+  /** Il fondo della schermata. */
   background: string;
+  /** Un gradino sopra il fondo: le schede. */
   surface: string;
+  /** Un gradino sopra la scheda: campi e righe dentro una scheda. */
   surfaceAlt: string;
+  /** Separatori. Da usare con parsimonia: il livello viene prima del bordo. */
   border: string;
+  /** Bordo visibile, per i controlli che devono dichiararsi toccabili. */
+  borderStrong: string;
   text: string;
   textMuted: string;
+  /** Terzo livello di testo: disattivato, segnaposto. */
+  textFaint: string;
   accent: string;
   /** Il rosso quando fa da testo: quello pieno non ha contrasto sufficiente. */
   accentText: string;
   gold: string;
   success: string;
   error: string;
+  /** Ombra: cambia colore fra chiaro e scuro, non solo opacità. */
+  shadow: string;
 };
 
-// Tema scuro (default dell'app).
 export const darkColors: ThemeColors = {
   background: palette.ink900,
   surface: palette.ink800,
   surfaceAlt: palette.ink700,
   border: palette.ink600,
+  borderStrong: palette.ink500,
   text: palette.bone,
   textMuted: palette.smoke,
+  textFaint: palette.ash,
   accent: palette.cardRed,
   accentText: palette.cardRedText,
   gold: palette.gold,
   success: palette.green,
   error: palette.red,
+  shadow: '#000000',
 };
 
-// Tema chiaro (predisposto per il futuro; l'app di default resta scura).
 export const lightColors: ThemeColors = {
-  background: '#F5F3EF',
-  surface: '#FFFFFF',
-  surfaceAlt: '#ECEAE4',
-  border: '#DAD7CF',
-  text: palette.ink900,
-  textMuted: '#5F584F',
-  accent: '#C8102E',
-  // Su fondo chiaro il rosso pieno ha contrasto a sufficienza: resta lui.
-  accentText: '#B00D28',
-  gold: '#9A7B12', // oro più scuro per contrasto su sfondo chiaro
-  success: '#2E8B57',
-  error: '#D21F3C',
+  // Sul chiaro il fondo è il grigio e la scheda è bianca: è il verso opposto
+  // dello scuro, ed è come iOS costruisce le liste raggruppate.
+  background: palette.paper2,
+  surface: palette.paper,
+  surfaceAlt: palette.paper2,
+  border: palette.paper3,
+  borderStrong: '#C7C7CC',
+  text: '#111114',
+  textMuted: '#6C6C74',
+  textFaint: '#A0A0A8',
+  accent: palette.cardRedDark,
+  accentText: palette.cardRedDark,
+  gold: palette.goldDark,
+  success: palette.greenDark,
+  error: palette.redDark,
+  shadow: '#1A1A2E',
 };

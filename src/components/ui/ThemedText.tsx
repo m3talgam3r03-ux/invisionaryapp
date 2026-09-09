@@ -2,7 +2,7 @@ import { Text, type TextProps } from 'react-native';
 
 import { typography, useTheme, type TypographyVariant } from '@/theme';
 
-type Tone = 'default' | 'muted' | 'accent' | 'gold' | 'success' | 'error';
+type Tone = 'default' | 'muted' | 'faint' | 'accent' | 'gold' | 'success' | 'error';
 
 export type ThemedTextProps = TextProps & {
   variant?: TypographyVariant;
@@ -27,6 +27,7 @@ export function ThemedText({ variant = 'body', tone = 'default', style, ...rest 
     gold: colors.gold,
     success: colors.success,
     error: colors.error,
+    faint: colors.textFaint,
   };
 
   return <Text {...rest} style={[typography[variant], { color: toneColor[tone] }, style]} />;

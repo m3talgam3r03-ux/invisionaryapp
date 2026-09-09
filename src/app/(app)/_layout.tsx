@@ -39,8 +39,10 @@ export default function AppLayout() {
       screenOptions={{
         headerShown: false,
         tabBarPosition: diLato ? 'left' : 'bottom',
-        tabBarActiveTintColor: colors.text,
-        tabBarInactiveTintColor: colors.textMuted,
+        // La scheda attiva si tinge dell'ACCENTO, non di bianco: è così che
+        // iOS dice «sei qui», e qui l'accento è il rosso del marchio.
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textFaint,
         // Stesso colore del contenuto e un filetto al posto dell'ombra: la barra
         // appartiene alla schermata invece di galleggiarci sopra.
         tabBarStyle: diLato
@@ -57,9 +59,9 @@ export default function AppLayout() {
               borderTopColor: colors.border,
               borderTopWidth: StyleSheet.hairlineWidth,
               elevation: 0,
-              height: 60,
-              paddingTop: spacing.xs,
-              paddingBottom: spacing.xs,
+              height: 68,
+              paddingTop: spacing.sm,
+              paddingBottom: spacing.sm,
             },
         // Etichette piccole sotto icone grandi: si naviga guardando le icone,
         // l'etichetta serve solo a togliere il dubbio la prima volta.
@@ -90,19 +92,14 @@ export default function AppLayout() {
         name="clients"
         options={{
           title: t.nav.network,
-          // Cuori e quadri restano rossi anche da spenti: è la regola del marchio.
-          tabBarIcon: ({ color, focused }) => (
-            <Icona glifo="♥" color={focused ? colors.accent : color} />
-          ),
+          tabBarIcon: ({ color }) => <Icona glifo="♥" color={color} />,
         }}
       />
       <Tabs.Screen
         name="formazione"
         options={{
           title: t.nav.formazione,
-          tabBarIcon: ({ color, focused }) => (
-            <Icona glifo="♦" color={focused ? colors.accent : color} />
-          ),
+          tabBarIcon: ({ color }) => <Icona glifo="♦" color={color} />,
         }}
       />
       <Tabs.Screen

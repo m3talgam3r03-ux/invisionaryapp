@@ -1,74 +1,113 @@
 import { Platform, type TextStyle } from 'react-native';
 
 /**
- * Tipografia — brand Invisionary.
- * - display: sans condensata maiuscola con tracking ampio per i titoli.
- * - body: sans neutra leggibile per il corpo del testo.
+ * Tipografia — impostata come la imposta Apple.
  *
- * Per la Fase 0 usiamo i font di sistema (su Android esiste `sans-serif-condensed`,
- * su iOS simuliamo il "condensed" con maiuscolo + tracking). Font custom (es. un
- * condensed tipo Archivo/Oswald) si potranno aggiungere con `expo-font` più avanti.
+ * ── COSA È CAMBIATO, E PERCHÉ ──
+ * Prima ogni titolo era MAIUSCOLO con `letterSpacing: 2`. È una scelta da
+ * poster: funziona su tre parole e crolla su una schermata piena, perché il
+ * maiuscolo toglie il profilo alle parole — le ascendenti e le discendenti,
+ * quelle che l'occhio usa per riconoscere una forma senza leggerla lettera per
+ * lettera. Con dieci titoli così su una pagina si legge tutto due volte.
+ *
+ * Apple fa l'opposto e lo fa ovunque, da Impostazioni a Music: **frase
+ * normale, peso alto, tracking NEGATIVO sui corpi grandi**. Un titolo da 28
+ * punti con le lettere leggermente ravvicinate legge come un oggetto solo; lo
+ * stesso titolo con tracking positivo legge come una fila di lettere.
+ *
+ * La gerarchia la fa la DIMENSIONE, non il maiuscolo. Da 13 a 34 ci sono
+ * cinque gradini netti: chi guarda capisce l'ordine senza doverlo decifrare.
+ *
+ * ── I NOMI RESTANO QUELLI ──
+ * `display`, `title`, `heading`, `body`, `label`, `caption`, `mono` sono usati
+ * in una trentina di schermate. Cambiano i valori, non le chiavi: l'app cambia
+ * faccia senza che nessun componente venga toccato.
  */
+
 export const fontFamilies = {
-  display: Platform.select({
-    ios: 'System',
-    android: 'sans-serif-condensed',
-    default: 'System',
-  }),
-  body: Platform.select({
-    ios: 'System',
-    android: 'sans-serif',
-    default: 'System',
-  }),
-  mono: Platform.select({
-    ios: 'Menlo',
-    android: 'monospace',
-    default: 'monospace',
-  }),
+  /**
+   * Una sola famiglia per tutto, come fa Apple con San Francisco.
+   * Il "condensed" di prima su Android era una famiglia DIVERSA da quella del
+   * corpo: due disegni di lettera nella stessa schermata, che è la cosa che
+   * fa sembrare un'app messa insieme invece che disegnata.
+   *
+   * `System` su iOS È San Francisco. Su Android è Roboto, che le sta vicino.
+   */
+  display: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
+  body: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
+  mono: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
 } as const;
 
 export const typography = {
+  /** Il numero o il nome che domina una schermata. Uno per pagina, non due. */
   display: {
     fontFamily: fontFamilies.display,
-    fontSize: 40,
-    lineHeight: 44,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    fontWeight: '800',
+    fontSize: 34,
+    lineHeight: 41,
+    letterSpacing: -0.8,
+    fontWeight: '700',
   },
+  /** Titolo di schermata. */
   title: {
     fontFamily: fontFamilies.display,
-    fontSize: 24,
-    lineHeight: 28,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: -0.6,
     fontWeight: '700',
   },
+  /** Titolo di una scheda o di un blocco. */
   heading: {
     fontFamily: fontFamilies.body,
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: '700',
-  },
-  body: {
-    fontFamily: fontFamilies.body,
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '400',
-  },
-  label: {
-    fontFamily: fontFamilies.body,
-    fontSize: 13,
-    lineHeight: 16,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
+    fontSize: 20,
+    lineHeight: 25,
+    letterSpacing: -0.4,
     fontWeight: '600',
   },
+  /**
+   * Il corpo del testo. 17 punti non è un capriccio: è la misura che iOS usa
+   * di default, ed è tarata sulla distanza a cui si tiene un telefono.
+   */
+  body: {
+    fontFamily: fontFamilies.body,
+    fontSize: 17,
+    lineHeight: 24,
+    letterSpacing: -0.2,
+    fontWeight: '400',
+  },
+  /**
+   * Etichette e intestazioni di sezione.
+   *
+   * Non più maiuscolo: nelle liste raggruppate di iOS l'intestazione è in
+   * frase normale, semibold, in grigio. Il grigio e il peso bastano a dire
+   * «questa è un'etichetta, non contenuto» — senza gridare.
+   */
+  label: {
+    fontFamily: fontFamilies.body,
+    fontSize: 15,
+    lineHeight: 20,
+    letterSpacing: -0.2,
+    fontWeight: '600',
+  },
+  /** Note, didascalie, testo di servizio. */
   caption: {
     fontFamily: fontFamilies.body,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: 0,
     fontWeight: '400',
+  },
+  /**
+   * Numeri incolonnati: saldi, punti, quantità.
+   * `tabular-nums` tiene le cifre della stessa larghezza, così una colonna di
+   * importi non balla a ogni aggiornamento.
+   */
+  numero: {
+    fontFamily: fontFamilies.display,
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: -0.6,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
   mono: {
     fontFamily: fontFamilies.mono,
