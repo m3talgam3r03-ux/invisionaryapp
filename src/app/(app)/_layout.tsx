@@ -111,6 +111,7 @@ export default function AppLayout() {
       />
 
       {/* Fuori dalla barra, ma raggiungibili dalla Home */}
+      <Tabs.Screen name="altro" options={{ href: null }} />
       <Tabs.Screen name="agente" options={{ href: null }} />
       <Tabs.Screen name="calcolatori" options={{ href: null }} />
       <Tabs.Screen name="calendario" options={{ href: null }} />

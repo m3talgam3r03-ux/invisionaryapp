@@ -114,8 +114,7 @@ export const t = {
     },
     pilastroApri: 'Apri →',
     pilastroInArrivo: 'In arrivo',
-    /** Le scorciatoie: nomi corti, perché stanno sotto un'icona. */
-    scorciatoie: 'Tutto il resto',
+    /** Le voci di «Altro»: nomi corti, stanno in un elenco. */
     breve: {
       agente: 'Agente AI',
       scadenzario: 'Scadenzario',
@@ -129,6 +128,34 @@ export const t = {
     },
     disclaimer:
       'Contenuti a scopo educativo e informativo. Nessuna promessa di rendimento né consulenza finanziaria personalizzata.',
+  },
+
+  /**
+   * «Altro»: le nove destinazioni che prima stavano tutte sulla home.
+   * I dettagli sotto ogni voce non sono decorazione — sono quello che
+   * permette di scegliere senza entrare e tornare indietro.
+   */
+  altro: {
+    titolo: 'Altro',
+    ogniGiorno: 'Ogni giorno',
+    agenteDettaglio: 'Chiedi del metodo, della rete, dei mercati',
+    scadenzarioDettaglio: 'Le scadenze della rete e le richieste da approvare',
+    scadenzarioMioDettaglio: 'Le tue scadenze, con un avviso prima che arrivino',
+    calendarioDettaglio: 'Prenota una call scegliendo fra gli orari liberi',
+
+    comeVai: 'Come stai andando',
+    /** Il chiarimento va QUI, non dentro le schermate: è qui che si sceglie. */
+    comeVaiSpiega:
+      'Due misure diverse: il rank è un livello e si ricalcola da solo, i punti sono una valuta che si spende.',
+    rankDettaglio: 'Il tuo livello, dal 2 all’Asso',
+    premiDettaglio: 'I punti vinti in classifica, e cosa ci si prende',
+
+    strumenti: 'Strumenti',
+    calcolatoriDettaglio: 'Lottaggio e interesse composto',
+    mappaDettaglio: 'Quante persone ci sono in ogni regione',
+
+    amministrazione: 'Amministrazione',
+    adminDettaglio: 'Ruoli, gerarchia e base di conoscenza',
   },
 
   admin: {

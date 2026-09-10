@@ -9,3 +9,4 @@ export { TextField } from './TextField';
 export { Avatar, initials } from './Avatar';
 export { SearchField } from './SearchField';
 export { EmptyState } from './EmptyState';
+export * from './Riga';

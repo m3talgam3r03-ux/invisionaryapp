@@ -1,20 +1,13 @@
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Crest } from '@/components/Crest';
 import { DaFareAdesso } from '@/components/DaFareAdesso';
-import { Scorciatoia } from '@/components/Scorciatoia';
-import { ProgressBar } from '@/components/ProgressBar';
-import { RankBadge } from '@/components/RankBadge';
-import { Button, Card, Screen, ThemedText, Sezione } from '@/components/ui';
+import { Card, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
-import { ROLE_LABEL, t } from '@/i18n/it';
-import { useMyStats } from '@/lib/leaderboard';
-import { can } from '@/lib/permissions';
-import { progressoVersoProssimo, rankLabel } from '@/lib/rank';
+import { t } from '@/i18n/it';
 import { PILLARS, RED_SUITS, radius, spacing, useTheme } from '@/theme';
 
-/** Dove porta ogni pilastro. Erano cinque ternari annidati dentro il render. */
+/** Dove porta ogni pilastro. */
 const ROTTE_PILASTRI = {
   trading: '/trading',
   network: '/clients',
@@ -22,13 +15,31 @@ const ROTTE_PILASTRI = {
   community: '/community',
 } as const;
 
+/**
+ * La home.
+ *
+ * ── COSA È SPARITO, E PERCHÉ ──
+ * Offriva DIECI destinazioni: i quattro pilastri, sette scorciatoie in una
+ * griglia, la scheda del rank. Non era una casa, era un lanciatore — e chi
+ * apriva l'app doveva scegliere fra dieci cose prima di poterne fare una.
+ *
+ * Una schermata che chiede di scegliere non aiuta: la scelta costa, e la paga
+ * ogni volta che si apre l'app. Adesso ne restano due:
+ *
+ *   1. **Cosa c'è da fare oggi.** In cima, perché è il motivo per cui si apre
+ *      un'app di lavoro. Se non c'è niente lo dice, e va bene così.
+ *   2. **I quattro pilastri.** Sono anche le quattro schede in basso: la
+ *      ridondanza è voluta, perché sul telefono il pollice sta in basso ma
+ *      l'occhio parte dall'alto.
+ *
+ * Tutto il resto sta in «Altro», dietro l'unico pulsante in alto a destra.
+ * Non è nascosto: è messo via, che è un'altra cosa. Nove voci in un elenco si
+ * scorrono; nove piastrelle in una griglia si devono confrontare.
+ */
 export default function Dashboard() {
-  const { profile, isProfileLoading, signOut } = useAuth();
+  const { profile, isProfileLoading } = useAuth();
   const { colors } = useTheme();
   const router = useRouter();
-  // Tutti gli hook prima di qualunque return: l'ordine deve restare identico a
-  // ogni render, altrimenti React si perde.
-  const { data: mioRank } = useMyStats();
 
   if (isProfileLoading && !profile) {
     return (
@@ -38,194 +49,78 @@ export default function Dashboard() {
     );
   }
 
-  const firstName = profile?.full_name?.split(' ')[0] || t.dashboard.benvenuto;
-  // Chi non vede la rete trova «I miei rinnovi» al posto dello scadenzario.
-  const scadenzario = can(profile, 'renewals.network')
-    ? t.dashboard.scadenzario
-    : t.dashboard.scadenzarioMio;
+  const nome = profile?.full_name?.split(' ')[0] || t.dashboard.benvenuto;
 
   return (
-    <Screen scroll>
-      {/* Intestazione con emblema, saluto e badge ruolo */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.push('/agente')} accessibilityRole="button">
-          <Crest size={58} />
+    <Screen scroll contentStyle={{ gap: spacing.xl }}>
+      {/* Saluto e una sola uscita laterale */}
+      <View style={styles.testa}>
+        <ThemedText variant="title" style={{ flex: 1 }}>
+          {t.dashboard.saluto(nome)}
+        </ThemedText>
+        <Pressable
+          onPress={() => router.push('/altro')}
+          accessibilityRole="button"
+          accessibilityLabel={t.altro.titolo}
+          hitSlop={10}
+          style={({ pressed }) => [
+            styles.altro,
+            { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
+          <ThemedText variant="label">{t.altro.titolo}</ThemedText>
         </Pressable>
-        <View style={{ flex: 1, gap: spacing.xs }}>
-          <ThemedText variant="title">{t.dashboard.saluto(firstName)}</ThemedText>
-          {profile && (
-            <View style={[styles.badge, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
-              <ThemedText variant="caption" tone="muted">
-                {ROLE_LABEL[profile.role]}
-              </ThemedText>
-            </View>
-          )}
-        </View>
       </View>
 
-      {/* I quattro pilastri, in cima: sono la cosa che si usa di più, e prima
-          stavano in fondo a dieci schede di scorrimento. */}
-      <View style={styles.pillars}>
-        {PILLARS.map((p) => {
-          const href = ROTTE_PILASTRI[p.key];
-          const colore = RED_SUITS.has(p.suit) ? colors.accent : colors.text;
-          return (
-            <Pressable
-              key={p.key}
-              style={styles.pillarItem}
-              accessibilityRole="button"
-              accessibilityLabel={p.label}
-              onPress={() => router.push(href)}
-            >
-              <Card style={styles.pillarCard}>
-                <ThemedText style={[styles.suit, { color: colore }]}>{p.suit}</ThemedText>
-                <ThemedText variant="label">{p.label}</ThemedText>
-              </Card>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {/* Cosa richiede attenzione adesso.
-          Qui c'era un riquadro che cambiava col ruolo e diceva, al leader,
-          «qui vedrai i tuoi collaboratori, i loro rinnovi e l'avanzamento
-          formazione»: una promessa, non un'informazione. Al collaboratore
-          elencava i quattro pilastri disegnati due centimetri più su.
-          Il pannello admin non si perde: sta nelle scorciatoie qui sotto. */}
+      {/* Il motivo per cui si apre l'app */}
       <DaFareAdesso />
 
-      {/* Tutto il resto, in una griglia invece che in sette schede impilate.
-          Ogni destinazione resta raggiungibile: cambia che ci stanno tutte
-          sotto gli occhi, invece che una sotto l'altra. */}
-      <View style={{ gap: spacing.sm }}>
-        <Sezione titolo={t.dashboard.scorciatoie} />
-        <View style={styles.scorciatoie}>
-          <Scorciatoia
-            glifo="◉"
-            etichetta={t.dashboard.breve.agente}
-            colore={colors.gold}
-            onPress={() => router.push('/agente')}
-          />
-          <Scorciatoia
-            glifo="◷"
-            etichetta={scadenzario === t.dashboard.scadenzario
-              ? t.dashboard.breve.scadenzario
-              : t.dashboard.breve.scadenzarioMio}
-            onPress={() => router.push('/renewals')}
-          />
-          <Scorciatoia
-            glifo="∑"
-            etichetta={t.dashboard.breve.calcolatori}
-            onPress={() => router.push('/calcolatori')}
-          />
-          <Scorciatoia
-            glifo="◴"
-            etichetta={t.dashboard.breve.calendario}
-            onPress={() => router.push('/calendario')}
-          />
-          <Scorciatoia
-            glifo="★"
-            etichetta={t.dashboard.breve.premi}
-            colore={colors.gold}
-            onPress={() => router.push('/premi')}
-          />
-          <Scorciatoia
-            glifo="⬢"
-            etichetta={t.dashboard.breve.mappa}
-            colore={colors.accent}
-            onPress={() => router.push('/mappa')}
-          />
-          {can(profile, 'admin.panel') && (
-            <Scorciatoia
-              glifo="⚙"
-              etichetta={t.dashboard.breve.admin}
-              onPress={() => router.push('/admin')}
-            />
-          )}
-        </View>
+      {/* I quattro pilastri */}
+      <View style={styles.pilastri}>
+        {PILLARS.map((p) => (
+          <Pressable
+            key={p.key}
+            style={styles.pilastro}
+            accessibilityRole="button"
+            accessibilityLabel={p.label}
+            onPress={() => router.push(ROTTE_PILASTRI[p.key])}
+          >
+            <Card style={styles.scheda}>
+              <ThemedText
+                style={[styles.seme, { color: RED_SUITS.has(p.suit) ? colors.accent : colors.text }]}
+              >
+                {p.suit}
+              </ThemedText>
+              <ThemedText variant="label">{p.label}</ThemedText>
+            </Card>
+          </Pressable>
+        ))}
       </View>
-
-      {/* Rank a carte: punti e distanza dal livello successivo, a colpo d'occhio */}
-      <Card style={{ gap: spacing.sm }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <View style={{ flex: 1, gap: spacing.xs }}>
-            <ThemedText variant="heading">{t.dashboard.rank.titolo}</ThemedText>
-            {mioRank ? (
-              <ThemedText tone="muted" variant="caption">
-                {t.rank.punti(Math.round(mioRank.punti))}
-                {mioRank.punti_al_prossimo != null
-                  ? ` · ${t.rank.prossimo(rankLabel(mioRank.prossimo_tier!), mioRank.punti_al_prossimo)}`
-                  : ` · ${t.rank.massimo}`}
-              </ThemedText>
-            ) : (
-              <ThemedText tone="muted" variant="caption">
-                {t.dashboard.rank.testo}
-              </ThemedText>
-            )}
-          </View>
-          {mioRank && <RankBadge rank={mioRank.tier_name} size={48} />}
-        </View>
-
-        {mioRank && (
-          <ProgressBar
-            percent={progressoVersoProssimo(mioRank.punti, mioRank.punti_al_prossimo) * 100}
-          />
-        )}
-
-        <Button
-          title={t.dashboard.rank.azione}
-          variant="secondary"
-          onPress={() => router.push('/rank')}
-        />
-      </Card>
-
-      <Button title={t.comune.esci} variant="secondary" onPress={() => void signOut()} />
-
-      <ThemedText tone="muted" variant="caption" style={styles.disclaimer}>
-        {t.dashboard.disclaimer}
-      </ThemedText>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  testa: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.lg,
+    gap: spacing.md,
   },
-  badge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+  altro: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     borderRadius: radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
   },
-  pillars: {
+  pilastri: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.md,
-    justifyContent: 'center',
   },
-  pillarItem: {
-    flexBasis: '46%',
-    flexGrow: 1,
-  },
-  pillarCard: {
+  pilastro: { flexBasis: '46%', flexGrow: 1 },
+  scheda: {
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.lg,
-  },
-  scorciatoie: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.sm,
+    paddingVertical: spacing.xl,
   },
-  suit: {
-    fontSize: 28,
-    lineHeight: 32,
-  },
-  disclaimer: {
-    textAlign: 'center',
-  },
+  seme: { fontSize: 30, lineHeight: 34 },
 });
