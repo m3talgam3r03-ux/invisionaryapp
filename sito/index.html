@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Invisionary — Winning Dream Team</title>
+<meta name="description" content="La piattaforma della rete Invisionary: CRM, trading, formazione e community in un'unica app. Contenuti a scopo educativo.">
+<meta property="og:title" content="Invisionary — Winning Dream Team">
+<meta property="og:description" content="CRM, trading, formazione e community in un'unica app.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Stessi valori del tema dell'app.
+     Sono scritti due volte, e non per pigrizia: questa è una pagina statica
+     che non puo` importare il tema di React Native, e caricare l'intero
+     bundle dell'app per disegnare un titolo sarebbe assurdo. Se i colori
+     cambiano di la`, vanno cambiati anche qui. */
+  :root{
+    --bg:#0A0A0C; --surface:#161618; --surface2:#1F1F22; --border:#2C2C30;
+    --text:#F7F7F8; --muted:#98989F; --faint:#6C6C74;
+    --accent:#E5334E; --accent-text:#FF6B7F; --gold:#E0B23C;
+    --r-md:14px; --r-lg:20px; --r-xl:32px;
+    --sans:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  a{color:inherit}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+  /* Apertura */
+  header{padding:88px 0 72px;text-align:center;position:relative;overflow:hidden}
+  header::before{content:'';position:absolute;inset:-40% 0 auto 0;height:520px;pointer-events:none;
+    background:radial-gradient(60% 60% at 50% 0%, rgba(229,51,78,.16), transparent 70%)}
+  .semi{position:relative;display:flex;justify-content:center;gap:18px;font-size:30px;line-height:1;margin-bottom:26px}
+  .semi span:nth-child(2),.semi span:nth-child(3){color:var(--accent)}
+  .kicker{position:relative;color:var(--gold);font-weight:700;font-size:13px;letter-spacing:.18em;
+    text-transform:uppercase;margin:0 0 14px}
+  h1{position:relative;margin:0 0 18px;font-size:clamp(38px,7vw,68px);font-weight:800;
+    letter-spacing:-.035em;line-height:1.04}
+  .sub{position:relative;margin:0 auto 34px;max-width:600px;color:var(--muted);font-size:19px}
+  .cta{position:relative;display:inline-flex;align-items:center;gap:10px;background:var(--accent);
+    color:#fff;text-decoration:none;font-weight:700;font-size:17px;padding:16px 30px;
+    border-radius:var(--r-md);transition:transform .15s}
+  .cta:hover{transform:translateY(-2px)}
+  .sotto{position:relative;margin-top:16px;color:var(--faint);font-size:13px}
+
+  /* Sezioni */
+  section{padding:64px 0}
+  h2{font-size:clamp(26px,3.4vw,34px);font-weight:700;letter-spacing:-.025em;margin:0 0 12px}
+  .intro{color:var(--muted);font-size:17px;max-width:640px;margin:0 0 36px}
+  .griglia{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:16px}
+  .scheda{background:var(--surface);border-radius:var(--r-lg);padding:26px;
+    box-shadow:0 6px 18px rgba(0,0,0,.5)}
+  .scheda .s{font-size:26px;line-height:1;display:block;margin-bottom:14px}
+  .scheda h3{margin:0 0 8px;font-size:19px;font-weight:600;letter-spacing:-.02em}
+  .scheda p{margin:0;color:var(--muted);font-size:15px}
+  .rosso{color:var(--accent)}
+
+  .voci{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:14px;margin-top:8px}
+  .voce{background:var(--surface);border-radius:var(--r-lg);padding:22px 24px}
+  .voce b{display:block;font-size:16px;font-weight:600;margin-bottom:6px;letter-spacing:-.01em}
+  .voce span{color:var(--muted);font-size:14.5px}
+
+  .chiudi{background:var(--surface);border-radius:var(--r-xl);padding:56px 32px;text-align:center;margin:24px 0 8px}
+  .chiudi h2{margin-bottom:10px}
+  .chiudi p{color:var(--muted);margin:0 0 28px;font-size:17px}
+
+  footer{padding:40px 0 64px;color:var(--faint);font-size:13px;text-align:center;line-height:1.7}
+  footer .legale{max-width:680px;margin:0 auto 18px}
+
+  @media (max-width:600px){
+    header{padding:64px 0 52px}
+    section{padding:48px 0}
+    .chiudi{padding:40px 22px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="semi" aria-hidden="true"><span>&spades;</span><span>&hearts;</span><span>&diams;</span><span>&clubs;</span></div>
+    <p class="kicker">Winning Dream Team</p>
+    <h1>Invisionary</h1>
+    <p class="sub">Il posto dove la rete tiene i contatti, impara, si confronta e vede a che punto
+      &egrave;. Quattro cose in un&rsquo;app sola, invece di quattro strumenti che non si parlano.</p>
+    <a class="cta" href="./app/">Entra nell&rsquo;app &rarr;</a>
+    <p class="sotto">Serve un account: te lo d&agrave; chi ti ha portato nella rete.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Quattro sezioni, quattro semi</h2>
+    <p class="intro">Non &egrave; una metafora appiccicata dopo: i quattro assi dell&rsquo;emblema sono
+      le quattro parti dell&rsquo;app, e sono anche i quattro pulsanti in fondo allo schermo.</p>
+    <div class="griglia">
+      <div class="scheda">
+        <span class="s">&spades;</span>
+        <h3>Trading</h3>
+        <p>Conti MT5 collegati in <b>sola lettura</b>, andamento in percentuale, classifica sulla
+          quota di operazioni chiuse in utile. Mai importi, mai rendimenti.</p>
+      </div>
+      <div class="scheda">
+        <span class="s rosso">&hearts;</span>
+        <h3>Network</h3>
+        <p>Il CRM: contatti, fasi della trattativa, storico dei passaggi, rinnovi con le scadenze
+          e consensi registrati canale per canale.</p>
+      </div>
+      <div class="scheda">
+        <span class="s rosso">&diams;</span>
+        <h3>Formazione</h3>
+        <p>Corsi e lezioni con l&rsquo;avanzamento che si vede, calendario degli appuntamenti, e per
+          chi guida la rete lo stato di chi la compone.</p>
+      </div>
+      <div class="scheda">
+        <span class="s">&clubs;</span>
+        <h3>Community</h3>
+        <p>Quello che la squadra condivide: traguardi, pensieri, foto. Con la possibilit&agrave; di
+          togliere quello che hai pubblicato, quando vuoi.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>E poi le cose che fanno la differenza</h2>
+    <div class="voci">
+      <div class="voce"><b>Da fare adesso</b><span>All&rsquo;apertura non trovi un menu: trovi cosa
+        richiede attenzione oggi, in ordine di urgenza. Se non c&rsquo;&egrave; niente, te lo dice.</span></div>
+      <div class="voce"><b>Rank a carte</b><span>Dal 2 all&rsquo;Asso. Il punteggio &egrave;
+        trasparente: lezioni, clienti seguiti, rinnovi mantenuti &mdash; e si vede come &egrave; calcolato.</span></div>
+      <div class="voce"><b>Assistente</b><span>Risponde su metodo, vendita, network e mercati
+        appoggiandosi ai materiali della rete. Ricorda quello che gli dici, e quegli appunti li vedi
+        solo tu.</span></div>
+      <div class="voce"><b>Appuntamenti</b><span>Prenoti scegliendo fra gli orari liberi del tuo
+        leader. Vedi solo quelli liberi: con chi sono gli altri non &egrave; affare di nessuno.</span></div>
+      <div class="voce"><b>Calcolatori</b><span>Lottaggio e interesse composto, con la conversione
+        della valuta mostrata invece che nascosta &mdash; &egrave; il punto in cui si sbaglia.</span></div>
+      <div class="voce"><b>La rete in Italia</b><span>Quante persone ci sono per regione. Le regioni
+        con pochi iscritti non mostrano il numero: uno non &egrave; una statistica, &egrave; una persona.</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>I dati sono di chi li ha dati</h2>
+    <p class="intro">I contatti di un CRM sono dati personali di persone vere. Il database sta in
+      <b>Europa</b>, ogni riga &egrave; protetta da regole scritte nel database e non
+      nell&rsquo;interfaccia, e il consenso si registra <b>canale per canale</b>: chi ha detto
+      s&igrave; all&rsquo;email non ha detto s&igrave; a WhatsApp. Di ogni consenso resta copia del
+      testo accettato, non un riferimento a un testo che domani potrebbe cambiare.</p>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="chiudi">
+    <h2>Hai gi&agrave; un account?</h2>
+    <p>Entra e riprendi da dove eri.</p>
+    <a class="cta" href="./app/">Entra nell&rsquo;app &rarr;</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p class="legale"><b>Contenuti a scopo educativo e informativo.</b> Invisionary non promette
+      rendimenti e non garantisce guadagni. Le sezioni su trading e mercati hanno finalit&agrave;
+      formative e non costituiscono consulenza finanziaria personalizzata. I risultati di altri non
+      sono risultati ottenibili.</p>
+    <p>Confini delle regioni nella mappa: @svg-maps/italy di Victor Cazanave &mdash; CC BY 4.0.</p>
+    <p>&copy; Invisionary &middot; Winning Dream Team</p>
+  </div>
+</footer>
+
+</body>
+</html>

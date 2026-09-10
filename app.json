@@ -56,7 +56,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true,
-      "baseUrl": "/invisionaryapp"
+      "baseUrl": "/invisionaryapp/app"
     }
   }
 }
