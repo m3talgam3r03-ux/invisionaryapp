@@ -270,8 +270,25 @@ describe('la riga sotto la mappa', () => {
       senzaRegione: 7,
     });
     expect(testo).toContain('138 iscritti in 12 regioni');
-    expect(testo).toContain('3 regioni hanno');
-    expect(testo).toContain('7 non ha indicato la regione');
+    expect(testo).toContain('3 regioni hanno troppo pochi iscritti per essere mostrate');
+    expect(testo).toContain('7 persone non hanno indicato la regione');
+  });
+
+  it('al singolare concorda tutto: verbo, participio e «troppo»', () => {
+    // Questo test nasce da un errore che si vedeva a schermo: «1 regione ha
+    // troppi pochi iscritti per essere mostrate». Tre concordanze sbagliate in
+    // sei parole. «Troppo» qui è avverbio e non si flette; il participio segue
+    // «regione», che è singolare.
+    const testo = testoRiepilogo({
+      totaleVisibile: 0,
+      regioniVisibili: 0,
+      regioniNascoste: 1,
+      senzaRegione: 1,
+    });
+    expect(testo).toContain('1 regione ha troppo pochi iscritti per essere mostrata');
+    expect(testo).toContain('1 persona non ha indicato la regione');
+    expect(testo).not.toContain('troppi pochi');
+    expect(testo).not.toContain('mostrate');
   });
 
   it('non parla di regioni nascoste quando non ce ne sono', () => {

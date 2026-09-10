@@ -296,13 +296,21 @@ export function testoRiepilogo(r: RiepilogoMappa): string {
       `in ${r.regioniVisibili} ${r.regioniVisibili === 1 ? 'regione' : 'regioni'}`,
   );
   if (r.regioniNascoste > 0) {
+    // Tre concordanze, non una: il verbo, il participio e «troppo», che qui è
+    // avverbio e resta invariato. «1 regione ha troppi pochi iscritti per
+    // essere mostrate» le sbagliava tutte e tre.
     parti.push(
-      `${r.regioniNascoste} ${r.regioniNascoste === 1 ? 'regione ha' : 'regioni hanno'} ` +
-        'troppi pochi iscritti per essere mostrate',
+      r.regioniNascoste === 1
+        ? '1 regione ha troppo pochi iscritti per essere mostrata'
+        : `${r.regioniNascoste} regioni hanno troppo pochi iscritti per essere mostrate`,
     );
   }
   if (r.senzaRegione > 0) {
-    parti.push(`${r.senzaRegione} non ha indicato la regione`);
+    parti.push(
+      r.senzaRegione === 1
+        ? '1 persona non ha indicato la regione'
+        : `${r.senzaRegione} persone non hanno indicato la regione`,
+    );
   }
   return parti.join(' · ') + '.';
 }
