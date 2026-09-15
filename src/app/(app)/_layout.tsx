@@ -66,9 +66,25 @@ export default function AppLayout() {
         // Etichette piccole sotto icone grandi: si naviga guardando le icone,
         // l'etichetta serve solo a togliere il dubbio la prima volta.
         // Di lato c'è spazio: l'etichetta diventa leggibile e sta accanto.
+        //
+        // Il lineHeight NON è decorativo: senza, react-navigation sul web dava
+        // alla riga una scatola da 9px con overflow nascosto, e Manrope a 10px
+        // ne vuole almeno 13. Risultato: «Formazione» e «Community» tagliate a
+        // metà sotto, su ogni schermata dell'app. Un numero esplicito toglie la
+        // scatola dalle mani del browser.
         tabBarLabelStyle: diLato
-          ? { fontSize: 14, letterSpacing: 0.2, fontFamily: fontFamilies.semibold }
-          : { fontSize: 10, letterSpacing: 0.2, fontFamily: fontFamilies.semibold },
+          ? {
+              fontSize: 14,
+              lineHeight: 18,
+              letterSpacing: 0.2,
+              fontFamily: fontFamilies.semibold,
+            }
+          : {
+              fontSize: 11,
+              lineHeight: 14,
+              letterSpacing: 0.2,
+              fontFamily: fontFamilies.semibold,
+            },
         tabBarItemStyle: diLato
           ? { paddingVertical: spacing.sm, justifyContent: 'flex-start' }
           : { paddingVertical: 2 },
