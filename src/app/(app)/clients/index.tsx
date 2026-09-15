@@ -153,11 +153,13 @@ export default function ClientsList() {
             ) : isError ? (
               <EmptyState
                 tone="error"
+                glifo="⚠"
                 title={t.crm.elenco.errore}
                 hint={messaggioErrore(error, t.comune.errore)}
               />
             ) : query ? (
               <EmptyState
+                glifo="♥"
                 title={t.crm.elenco.nessunRisultatoTitolo}
                 hint={t.crm.elenco.nessunRisultato(query)}
                 actionLabel={t.crm.elenco.cancellaRicerca}
@@ -165,6 +167,7 @@ export default function ClientsList() {
               />
             ) : (
               <EmptyState
+                glifo="♥"
                 title={t.crm.elenco.vuoto}
                 hint={t.crm.elenco.vuotoSuggerimento}
                 actionLabel={t.crm.elenco.aggiungi}

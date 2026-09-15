@@ -70,7 +70,7 @@ export default function FormazioneIndex() {
       )}
 
       {courses?.length === 0 && (
-        <EmptyState title={t.formazione.nessunCorso} hint={t.formazione.nessunCorsoSuggerimento} />
+        <EmptyState glifo="♦" title={t.formazione.nessunCorso} hint={t.formazione.nessunCorsoSuggerimento} />
       )}
 
       {courses?.map((c) => {

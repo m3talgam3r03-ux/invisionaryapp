@@ -1,4 +1,4 @@
-import { Card, Screen, ThemedText } from '@/components/ui';
+import { Card, EmptyState, Screen, ThemedText } from '@/components/ui';
 import { messaggioErrore } from '@/lib/errori';
 import { useEvents } from '@/lib/events';
 import { spacing } from '@/theme';
@@ -27,7 +27,7 @@ export default function Calendario() {
           {messaggioErrore(error, t.comune.errore)}
         </ThemedText>
       )}
-      {events?.length === 0 && <ThemedText tone="muted">{t.formazione.nessunEvento}</ThemedText>}
+      {events?.length === 0 && <EmptyState compatto title={t.formazione.nessunEvento} />}
 
       {events?.map((ev) => (
         <Card key={ev.id} style={{ gap: spacing.xs }}>

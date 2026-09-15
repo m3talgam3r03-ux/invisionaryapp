@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Button, Card, ThemedText, Sezione } from '@/components/ui';
+import { Button, Card, EmptyState, Sezione, ThemedText } from '@/components/ui';
 import { ProgressBar } from '@/components/ProgressBar';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
@@ -100,9 +100,7 @@ export function Premi() {
             {t.comune.caricamento}
           </ThemedText>
         ) : (catalogo ?? []).length === 0 ? (
-          <ThemedText tone="muted" variant="caption">
-            {t.premi.catalogoVuoto}
-          </ThemedText>
+          <EmptyState compatto title={t.premi.catalogoVuoto} />
         ) : (
           (catalogo ?? []).map((p) => {
             const blocco = impedimento(p, saldo);
@@ -150,9 +148,7 @@ export function Premi() {
       <View style={{ gap: spacing.sm }}>
         <Sezione titolo={t.premi.mieiRiscatti} />
         {(riscatti ?? []).length === 0 ? (
-          <ThemedText tone="muted" variant="caption">
-            {t.premi.nessunRiscatto}
-          </ThemedText>
+          <EmptyState compatto title={t.premi.nessunRiscatto} />
         ) : (
           (riscatti ?? []).map((r) => (
             <View
@@ -174,9 +170,7 @@ export function Premi() {
       <View style={{ gap: spacing.sm }}>
         <Sezione titolo={t.premi.movimenti} />
         {(registro ?? []).length === 0 ? (
-          <ThemedText tone="muted" variant="caption">
-            {t.premi.nessunMovimento}
-          </ThemedText>
+          <EmptyState compatto title={t.premi.nessunMovimento} />
         ) : (
           (registro ?? []).map((v) => (
             <View key={v.id} style={[styles.riga, { borderBottomColor: colors.border }]}>

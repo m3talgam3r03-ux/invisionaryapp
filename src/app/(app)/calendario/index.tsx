@@ -118,9 +118,7 @@ export default function Calendario() {
       <View style={{ gap: spacing.sm }}>
         <Sezione titolo={t.calendario.mieiAppuntamenti} />
         {attive.length === 0 ? (
-          <ThemedText tone="muted" variant="caption">
-            {t.calendario.nessunAppuntamento}
-          </ThemedText>
+          <EmptyState compatto title={t.calendario.nessunAppuntamento} />
         ) : (
           attive.map((p) => {
             const suo = p.guestId === profile?.id;
@@ -190,7 +188,7 @@ export default function Calendario() {
             ))}
           </ScrollView>
         ) : (
-          <EmptyState title={t.calendario.nessunHost} />
+          <EmptyState glifo="◴" title={t.calendario.nessunHost} />
         )}
       </View>
 

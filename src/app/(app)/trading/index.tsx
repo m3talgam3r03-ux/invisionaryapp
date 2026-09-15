@@ -50,6 +50,7 @@ export default function Trading() {
       )}
       {accounts?.length === 0 && (
         <EmptyState
+          glifo="♠"
           title={t.trading.nessunAccount}
           hint={t.trading.nessunAccountSuggerimento}
         />

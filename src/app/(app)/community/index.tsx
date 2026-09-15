@@ -45,11 +45,13 @@ export default function Community() {
             ) : isError ? (
               <EmptyState
                 tone="error"
+                glifo="⚠"
                 title={t.community.erroreElenco}
                 hint={messaggioErrore(error, t.comune.errore)}
               />
             ) : (
               <EmptyState
+                glifo="♣"
                 title={t.community.vuota}
                 hint={t.community.vuotaSuggerimento}
               />

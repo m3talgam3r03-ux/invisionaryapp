@@ -2,7 +2,7 @@ import { Redirect, useRouter } from 'expo-router';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Card, ThemedText, Colonna } from '@/components/ui';
+import { Card, Colonna, EmptyState, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { ROLE_LABEL, t } from '@/i18n/it';
 import { useAllProfiles } from '@/lib/admin';
@@ -50,7 +50,7 @@ export default function AdminUsers() {
                 {messaggioErrore(error, t.comune.errore)}
               </ThemedText>
             ) : (
-              <ThemedText tone="muted">{t.admin.nessunUtente}</ThemedText>
+              <EmptyState compatto title={t.admin.nessunUtente} />
             )
           }
           renderItem={({ item }) => (

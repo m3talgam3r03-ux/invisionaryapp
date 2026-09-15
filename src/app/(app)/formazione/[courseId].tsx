@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
-import { Card, Screen, ThemedText } from '@/components/ui';
+import { Card, EmptyState, Screen, ThemedText } from '@/components/ui';
 import { useCourse, useLessons } from '@/lib/courses';
 import { messaggioErrore } from '@/lib/errori';
 import { useLessonProgress } from '@/lib/progress';
@@ -37,7 +37,7 @@ export default function CourseDetail() {
           {messaggioErrore(error, t.comune.errore)}
         </ThemedText>
       )}
-      {lessons?.length === 0 && <ThemedText tone="muted">{t.formazione.nessunaLezione}</ThemedText>}
+      {lessons?.length === 0 && <EmptyState compatto title={t.formazione.nessunaLezione} />}
 
       {lessons?.map((lesson, i) => {
         const isDone = completed?.has(lesson.id) ?? false;

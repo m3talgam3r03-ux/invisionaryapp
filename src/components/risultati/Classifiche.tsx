@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { Podio } from '@/components/Podio';
 import { RankBadge } from '@/components/RankBadge';
-import { Card, Sezione, ThemedText } from '@/components/ui';
+import { Card, EmptyState, Sezione, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { ROLE_LABEL, t } from '@/i18n/it';
 import { messaggioErrore } from '@/lib/errori';
@@ -68,9 +68,7 @@ function ClassificaRete() {
       )}
 
       {!board.isLoading && !board.isError && forma === 'vuota' && (
-        <ThemedText tone="muted" variant="caption">
-          {t.rank.classificaVuota}
-        </ThemedText>
+        <EmptyState compatto title={t.rank.classificaVuota} />
       )}
 
       {forma === 'solo-io' && (
@@ -175,11 +173,7 @@ function ClassificaTrader() {
           {messaggioErrore(error, t.comune.errore)}
         </ThemedText>
       )}
-      {data?.length === 0 && (
-        <ThemedText tone="muted" variant="caption">
-          {t.trading.classifica.vuota}
-        </ThemedText>
-      )}
+      {data?.length === 0 && <EmptyState compatto title={t.trading.classifica.vuota} />}
 
       {classificati.map((r, i) => (
         <RigaTrader

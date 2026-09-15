@@ -2,7 +2,7 @@ import { Redirect } from 'expo-router';
 import { View } from 'react-native';
 
 import { ProgressBar } from '@/components/ProgressBar';
-import { Card, Screen, ThemedText } from '@/components/ui';
+import { Card, EmptyState, Screen, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { ROLE_LABEL, t } from '@/i18n/it';
 import { messaggioErrore } from '@/lib/errori';
@@ -40,7 +40,7 @@ export default function Rete() {
         </ThemedText>
       )}
       {data?.members.length === 0 && (
-        <ThemedText tone="muted">{t.formazione.rete.nessunMembro}</ThemedText>
+        <EmptyState compatto title={t.formazione.rete.nessunMembro} />
       )}
 
       {data?.members.map((m) => {
