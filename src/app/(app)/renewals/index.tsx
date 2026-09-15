@@ -87,12 +87,13 @@ export default function RenewalsList() {
           {isError && (
             <EmptyState
               tone="error"
+              glifo="⚠"
               title={t.rinnovi.erroreElenco}
               hint={messaggioErrore(error, t.comune.errore)}
             />
           )}
   
-          {vuoto && <EmptyState title={t.rinnovi.nessuno} hint={t.rinnovi.nessunoSuggerimento} />}
+          {vuoto && <EmptyState glifo="◷" title={t.rinnovi.nessuno} hint={t.rinnovi.nessunoSuggerimento} />}
   
           <Sezione
             titolo={t.rinnovi.daApprovare}

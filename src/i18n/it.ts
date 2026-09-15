@@ -144,11 +144,7 @@ export const t = {
     calendarioDettaglio: 'Prenota una call scegliendo fra gli orari liberi',
 
     comeVai: 'Come stai andando',
-    /** Il chiarimento va QUI, non dentro le schermate: è qui che si sceglie. */
-    comeVaiSpiega:
-      'Due misure diverse: il rank è un livello e si ricalcola da solo, i punti sono una valuta che si spende.',
-    rankDettaglio: 'Il tuo livello, dal 2 all’Asso',
-    premiDettaglio: 'I punti vinti in classifica, e cosa ci si prende',
+    risultatiDettaglio: 'Il tuo livello, le classifiche e i premi',
 
     strumenti: 'Strumenti',
     calcolatoriDettaglio: 'Lottaggio e interesse composto',
@@ -156,6 +152,18 @@ export const t = {
 
     amministrazione: 'Amministrazione',
     adminDettaglio: 'Ruoli, gerarchia e base di conoscenza',
+  },
+
+  risultati: {
+    titolo: 'Risultati',
+    livello: 'Livello',
+    classifiche: 'Classifiche',
+    premi: 'Premi',
+    /** Descrive il gruppo di segmenti a chi usa il lettore di schermo. */
+    segmenti: 'Cosa guardare dei tuoi risultati',
+    reteSpiega: 'Per punti rank: quanto hai costruito fra lezioni, clienti e rinnovi.',
+    /** Il ponte fra le due metà: i punti nascono in classifica e si spendono nei premi. */
+    puntiVannoNeiPremi: 'Quei punti si spendono qui accanto, in Premi.',
   },
 
   admin: {
@@ -228,7 +236,8 @@ export const t = {
       aggiungiEtichetta: 'Aggiungi cliente',
       contatti: (n: number) => (n === 1 ? '1 contatto' : `${n} contatti`),
       diTotali: (mostrati: number, totali: number) => `${mostrati} di ${totali}`,
-      file: 'File ›',
+      /** Le due vie stanno sempre accanto: si leggono come una coppia, non come due cose diverse. */
+      file: 'Da un file',
     },
     /** Il selettore cliente nelle altre schermate. */
     selettore: {
@@ -293,7 +302,7 @@ export const t = {
 
     rubrica: {
       titolo: 'Dalla rubrica',
-      apri: 'Aggiungi dalla rubrica',
+      apri: 'Dalla rubrica',
       tornaAiContatti: 'Torna ai contatti',
       /** Il pulsante è un glifo: senza etichetta annuncia solo «pulsante». */
       chiamaEtichetta: (nome: string) => `Chiama ${nome}`,
@@ -492,6 +501,7 @@ export const t = {
 
   trading: {
     collegaMt5: '+ Collega MT5',
+    collegaAltro: 'Collega un altro conto',
     classificaAzione: 'Classifica',
     sincronizza: 'Sincronizza ora',
     sincronizzaQuesto: 'Sincronizza questo account',
@@ -846,6 +856,9 @@ export const t = {
   formazione: {
     calendario: 'Calendario',
     avanzamentoRete: 'Avanzamento rete',
+    corsi: 'Corsi',
+    /** Descrive il gruppo di segmenti a chi usa il lettore di schermo. */
+    segmenti: 'Cosa guardare della formazione',
     caricamentoCorsi: 'Caricamento corsi…',
     erroreCorsi: 'Impossibile caricare i corsi.',
     // Qui c'era «— verifica .env e la migrazione 0004», stessa cosa che stava
@@ -861,6 +874,8 @@ export const t = {
     nessunCorsoSuggerimento:
       'I corsi vengono gestiti dall’amministratore. Puoi caricare il seed dimostrativo.',
     rete: {
+      /** Corto, perche' sta dentro un segmento accanto ad altri due. */
+      breve: 'Rete',
       intro: 'Avanzamento formazione della tua rete.',
       nessunMembro: 'Nessun membro della rete da mostrare.',
     },

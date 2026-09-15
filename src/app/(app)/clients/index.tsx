@@ -58,9 +58,20 @@ export default function ClientsList() {
 
   const total = data?.length ?? 0;
 
+  // Gli strumenti in cima — ricerca, filtri, conteggio — servono a RESTRINGERE
+  // un elenco. Sopra un elenco che non esiste ancora non restringono niente:
+  // sono solo quattro righe di comandi spenti fra il titolo e il vuoto. Un
+  // cassetto vuoto non ha bisogno di divisori.
+  //
+  // Restano quando un filtro e' attivo, altrimenti chi ha cercato qualcosa che
+  // non c'e' si ritroverebbe senza il campo per disdirsi.
+  const filtrando = query !== '' || stato !== null || proprietario !== null;
+  const mostraStrumenti = total > 0 || filtrando;
+
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
       <Colonna>
+        {mostraStrumenti && (
         <View style={styles.header}>
           <SearchField value={query} onChangeText={setQuery} placeholder={t.crm.cerca} />
   
@@ -123,7 +134,7 @@ export default function ClientsList() {
                 hitSlop={8}
               >
                 <ThemedText tone="accent" variant="caption">
-                  ☎ {t.crm.rubrica.apri}
+                  {t.crm.rubrica.apri}
                 </ThemedText>
               </Pressable>
               <Pressable
@@ -131,13 +142,14 @@ export default function ClientsList() {
                 accessibilityRole="button"
                 hitSlop={8}
               >
-                <ThemedText tone="muted" variant="caption">
+                <ThemedText tone="accent" variant="caption">
                   {t.crm.elenco.file}
                 </ThemedText>
               </Pressable>
             </View>
           </View>
         </View>
+        )}
   
         <FlatList
           data={clients}
@@ -153,11 +165,13 @@ export default function ClientsList() {
             ) : isError ? (
               <EmptyState
                 tone="error"
+                glifo="⚠"
                 title={t.crm.elenco.errore}
                 hint={messaggioErrore(error, t.comune.errore)}
               />
             ) : query ? (
               <EmptyState
+                glifo="♥"
                 title={t.crm.elenco.nessunRisultatoTitolo}
                 hint={t.crm.elenco.nessunRisultato(query)}
                 actionLabel={t.crm.elenco.cancellaRicerca}
@@ -165,10 +179,15 @@ export default function ClientsList() {
               />
             ) : (
               <EmptyState
+                glifo="♥"
                 title={t.crm.elenco.vuoto}
                 hint={t.crm.elenco.vuotoSuggerimento}
                 actionLabel={t.crm.elenco.aggiungi}
                 onAction={() => router.push('/clients/new')}
+                altreAzioni={[
+                  { etichetta: t.crm.rubrica.apri, onPress: () => router.push('/clients/rubrica') },
+                  { etichetta: t.crm.elenco.file, onPress: () => router.push('/clients/import') },
+                ]}
               />
             )
           }
@@ -188,7 +207,12 @@ export default function ClientsList() {
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         />
   
-        {/* Azione primaria unica e sempre raggiungibile col pollice. */}
+        {/* Azione primaria, sempre raggiungibile col pollice — ma non quando
+            lo stato vuoto sta gia' offrendo lo stesso pulsante al centro dello
+            schermo. Due pulsanti identici a venti centimetri l'uno dall'altro
+            non danno una scelta in piu': fanno dubitare che facciano la stessa
+            cosa. */}
+        {mostraStrumenti && (
         <Pressable
           onPress={() => router.push('/clients/new')}
           accessibilityRole="button"
@@ -200,6 +224,7 @@ export default function ClientsList() {
         >
           <ThemedText style={styles.fabGlyph}>+</ThemedText>
         </Pressable>
+        )}
       </Colonna>
     </SafeAreaView>
   );

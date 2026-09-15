@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Button, Card, Screen, ThemedText, Sezione } from '@/components/ui';
+import { Button, Card, EmptyState, Screen, Sezione, ThemedText } from '@/components/ui';
 import { t } from '@/i18n/it';
 import { domandeRimaste, statoBudget } from '@/lib/agente';
 import { messaggioErrore } from '@/lib/errori';
@@ -71,9 +71,7 @@ export default function MemoriaAgente() {
       {isLoading ? (
         <ThemedText tone="muted">{t.comune.caricamento}</ThemedText>
       ) : (memorie ?? []).length === 0 ? (
-        <ThemedText tone="muted" variant="caption">
-          {t.agente.memoriaVuota}
-        </ThemedText>
+        <EmptyState compatto title={t.agente.memoriaVuota} />
       ) : (
         <>
           {(memorie ?? []).map((m) => (

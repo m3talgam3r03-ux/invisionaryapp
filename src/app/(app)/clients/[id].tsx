@@ -47,7 +47,7 @@ export default function ClientDetail() {
   if (isError || !client) {
     return (
       <Screen>
-        <EmptyState tone="error" title={t.crm.scheda.nonTrovato} hint={t.crm.scheda.nonTrovatoSuggerimento} />
+        <EmptyState tone="error" glifo="⚠" title={t.crm.scheda.nonTrovato} hint={t.crm.scheda.nonTrovatoSuggerimento} />
       </Screen>
     );
   }
@@ -178,9 +178,7 @@ function Storico({ righe }: { righe: ContactStatusHistoryEntry[] }) {
       <Sezione titolo={t.crm.storico.titolo} />
 
       {righe.length === 0 ? (
-        <ThemedText tone="muted" variant="caption">
-          {t.crm.storico.vuoto}
-        </ThemedText>
+        <EmptyState compatto title={t.crm.storico.vuoto} />
       ) : (
         righe.map((r) => (
           <Card key={r.id} style={{ gap: spacing.xs }}>

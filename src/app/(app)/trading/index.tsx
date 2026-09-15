@@ -12,26 +12,45 @@ export default function Trading() {
   const router = useRouter();
   const { data: accounts, isLoading, isError, error } = useTradingAccounts();
   const sync = useSyncAccounts();
+  const collegati = (accounts?.length ?? 0) > 0;
+
+  function vaiAllaClassifica() {
+    router.push({ pathname: '/risultati', params: { sezione: 'classifiche' } });
+  }
 
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
-      <View style={{ flexDirection: 'row', gap: spacing.md }}>
-        <Button title={t.trading.collegaMt5} style={{ flex: 1 }} onPress={() => router.push('/trading/connetti')} />
-        <Button
-          title={t.trading.classificaAzione}
-          variant="secondary"
-          style={{ flex: 1 }}
-          onPress={() => router.push('/trading/classifica')}
-        />
-      </View>
-
-      {accounts && accounts.length > 0 && (
-        <Button
-          title={t.trading.sincronizza}
-          variant="secondary"
-          loading={sync.isPending}
-          onPress={() => sync.mutate(undefined)}
-        />
+      {/* Con dei conti collegati: in alto quello che si fa spesso — aggiornare
+          i dati — e accanto la classifica. Collegare un ALTRO conto capita una
+          volta ogni tanto, quindi scende a collegamento sotto, dove non compete
+          con il resto. Tre pulsanti pieni in fila dicevano che le tre cose
+          contano uguale, e non e' vero. */}
+      {collegati && (
+        <View style={{ gap: spacing.sm }}>
+          <View style={{ flexDirection: 'row', gap: spacing.md }}>
+            <Button
+              title={t.trading.sincronizza}
+              style={{ flex: 1 }}
+              loading={sync.isPending}
+              onPress={() => sync.mutate(undefined)}
+            />
+            <Button
+              title={t.trading.classificaAzione}
+              variant="secondary"
+              onPress={vaiAllaClassifica}
+            />
+          </View>
+          <Pressable
+            onPress={() => router.push('/trading/connetti')}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={{ alignSelf: 'flex-start' }}
+          >
+            <ThemedText tone="accent" variant="caption">
+              {t.trading.collegaAltro}
+            </ThemedText>
+          </Pressable>
+        </View>
       )}
       {sync.isError && (
         <ThemedText tone="error" variant="caption">
@@ -50,8 +69,12 @@ export default function Trading() {
       )}
       {accounts?.length === 0 && (
         <EmptyState
+          glifo="♠"
           title={t.trading.nessunAccount}
           hint={t.trading.nessunAccountSuggerimento}
+          actionLabel={t.trading.collegaMt5}
+          onAction={() => router.push('/trading/connetti')}
+          altreAzioni={[{ etichetta: t.trading.classificaAzione, onPress: vaiAllaClassifica }]}
         />
       )}
 

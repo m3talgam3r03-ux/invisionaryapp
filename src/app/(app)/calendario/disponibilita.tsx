@@ -2,7 +2,7 @@ import { Redirect } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { Button, Card, Screen, TextField, ThemedText, Sezione } from '@/components/ui';
+import { Button, Card, EmptyState, Screen, Sezione, TextField, ThemedText } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { t } from '@/i18n/it';
 import { verificaRegola } from '@/lib/booking';
@@ -61,9 +61,7 @@ export default function Disponibilita() {
             {t.comune.caricamento}
           </ThemedText>
         ) : (regole ?? []).length === 0 ? (
-          <ThemedText tone="muted" variant="caption">
-            {t.calendario.nessunaFascia}
-          </ThemedText>
+          <EmptyState compatto title={t.calendario.nessunaFascia} />
         ) : (
           (regole ?? []).map((r) => (
             <Card key={r.id} style={{ gap: spacing.xs }}>

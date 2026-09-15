@@ -137,6 +137,7 @@ export default function Rubrica() {
 
         {fase.tipo === 'non_disponibile' && (
           <EmptyState
+            glifo="♥"
             title={t.crm.rubrica.nonDisponibile}
             hint={t.crm.rubrica.nonDisponibileSpiega}
           />
@@ -144,6 +145,7 @@ export default function Rubrica() {
         {fase.tipo === 'permesso_negato' && (
           <EmptyState
             tone="error"
+            glifo="⚠"
             title={t.crm.rubrica.permessoNegato}
             hint={t.crm.rubrica.permessoNegatoSpiega}
           />
@@ -162,7 +164,7 @@ export default function Rubrica() {
   if (voci.length === 0) {
     return (
       <Screen contentStyle={{ gap: spacing.lg }}>
-        <EmptyState title={t.crm.rubrica.vuota} hint={t.crm.rubrica.vuotaSpiega} />
+        <EmptyState glifo="♥" title={t.crm.rubrica.vuota} hint={t.crm.rubrica.vuotaSpiega} />
       </Screen>
     );
   }

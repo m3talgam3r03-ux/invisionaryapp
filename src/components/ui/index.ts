@@ -10,3 +10,5 @@ export { Avatar, initials } from './Avatar';
 export { SearchField } from './SearchField';
 export { EmptyState } from './EmptyState';
 export * from './Riga';
+export { Segmenti } from './Segmenti';
+export type { Segmento } from './Segmenti';

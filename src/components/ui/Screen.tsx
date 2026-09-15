@@ -16,6 +16,16 @@ type ScreenProps = {
    * contenuto lo rimpicciolirebbe e basta.
    */
   larga?: boolean;
+  /**
+   * Contenuto FISSO sopra la parte scorrevole: resta al suo posto mentre il
+   * resto scorre. Serve ai controlli che governano cio che si sta guardando —
+   * un controllo a segmenti, un filtro — perche un controllo che scorre via
+   * obbliga a tornare in cima ogni volta che si cambia idea.
+   *
+   * Incolonnato come il contenuto: se andasse a tutta larghezza, su un monitor
+   * il controllo starebbe agli angoli e il testo sotto al centro.
+   */
+  intestazione?: ReactNode;
 };
 
 /**
@@ -30,7 +40,13 @@ type ScreenProps = {
  *
  * Sul telefono non cambia niente: sotto la soglia il limite non si applica.
  */
-export function Screen({ children, scroll = false, contentStyle, larga = false }: ScreenProps) {
+export function Screen({
+  children,
+  scroll = false,
+  contentStyle,
+  larga = false,
+  intestazione,
+}: ScreenProps) {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const massima = larga ? undefined : larghezzaContenuto(width);
@@ -51,12 +67,29 @@ export function Screen({ children, scroll = false, contentStyle, larga = false }
       edges={['top', 'left', 'right']}
       style={{ flex: 1, backgroundColor: colors.background }}
     >
+      {intestazione ? (
+        <View style={{ alignItems: 'center' }}>
+          <View
+            style={{
+              width: '100%',
+              maxWidth: massima,
+              paddingHorizontal: spacing.xl,
+              paddingTop: spacing.xl,
+            }}
+          >
+            {intestazione}
+          </View>
+        </View>
+      ) : null}
+
       {scroll ? (
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}
           showsVerticalScrollIndicator={false}
         >
-          <View style={[inner, contentStyle]}>{children}</View>
+          <View style={[inner, intestazione ? { paddingTop: spacing.lg } : null, contentStyle]}>
+            {children}
+          </View>
         </ScrollView>
       ) : (
         <View style={[inner, contentStyle]}>{children}</View>
