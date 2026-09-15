@@ -75,21 +75,14 @@ export default function Altro() {
 
       {/* — Come stai andando — */}
       <View style={{ gap: spacing.sm }}>
-        <Sezione titolo={t.altro.comeVai} descrizione={t.altro.comeVaiSpiega} />
+        <Sezione titolo={t.altro.comeVai} />
         <Card style={{ padding: 0, overflow: 'hidden' }}>
           <Riga
             glifo="★"
             colore={colors.gold}
-            titolo={t.dashboard.breve.rank}
-            dettaglio={t.altro.rankDettaglio}
-            onPress={() => router.push('/rank')}
-          />
-          <Riga
-            glifo="◈"
-            colore={colors.gold}
-            titolo={t.dashboard.breve.premi}
-            dettaglio={t.altro.premiDettaglio}
-            onPress={() => router.push('/premi')}
+            titolo={t.risultati.titolo}
+            dettaglio={t.altro.risultatiDettaglio}
+            onPress={() => router.push('/risultati')}
             ultima
           />
         </Card>

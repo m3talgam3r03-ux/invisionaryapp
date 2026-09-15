@@ -21,7 +21,7 @@ export default function Trading() {
           title={t.trading.classificaAzione}
           variant="secondary"
           style={{ flex: 1 }}
-          onPress={() => router.push('/trading/classifica')}
+          onPress={() => router.push({ pathname: '/risultati', params: { sezione: 'classifiche' } })}
         />
       </View>
 

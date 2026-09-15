@@ -144,11 +144,7 @@ export const t = {
     calendarioDettaglio: 'Prenota una call scegliendo fra gli orari liberi',
 
     comeVai: 'Come stai andando',
-    /** Il chiarimento va QUI, non dentro le schermate: è qui che si sceglie. */
-    comeVaiSpiega:
-      'Due misure diverse: il rank è un livello e si ricalcola da solo, i punti sono una valuta che si spende.',
-    rankDettaglio: 'Il tuo livello, dal 2 all’Asso',
-    premiDettaglio: 'I punti vinti in classifica, e cosa ci si prende',
+    risultatiDettaglio: 'Il tuo livello, le classifiche e i premi',
 
     strumenti: 'Strumenti',
     calcolatoriDettaglio: 'Lottaggio e interesse composto',
@@ -156,6 +152,18 @@ export const t = {
 
     amministrazione: 'Amministrazione',
     adminDettaglio: 'Ruoli, gerarchia e base di conoscenza',
+  },
+
+  risultati: {
+    titolo: 'Risultati',
+    livello: 'Livello',
+    classifiche: 'Classifiche',
+    premi: 'Premi',
+    /** Descrive il gruppo di segmenti a chi usa il lettore di schermo. */
+    segmenti: 'Cosa guardare dei tuoi risultati',
+    reteSpiega: 'Per punti rank: quanto hai costruito fra lezioni, clienti e rinnovi.',
+    /** Il ponte fra le due metà: i punti nascono in classifica e si spendono nei premi. */
+    puntiVannoNeiPremi: 'Quei punti si spendono qui accanto, in Premi.',
   },
 
   admin: {
