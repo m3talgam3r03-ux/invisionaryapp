@@ -106,13 +106,10 @@ export default function Calendario() {
 
   return (
     <Screen scroll contentStyle={{ gap: spacing.lg }}>
-      {can(profile, 'calendar.host') && (
-        <Button
-          title={t.calendario.disponibilita}
-          variant="secondary"
-          onPress={() => router.push('/calendario/disponibilita')}
-        />
-      )}
+      {/* La propria disponibilita' si imposta una volta e poi si ritocca di
+          rado: non merita la prima riga sotto il titolo, che e' lo spazio dove
+          si guarda «cosa ho oggi». Scende a collegamento in fondo, dopo gli
+          orari — che e' anche il momento in cui viene in mente di cambiarla. */}
 
       {/* I propri appuntamenti, prima di tutto */}
       <View style={{ gap: spacing.sm }}>
@@ -247,6 +244,18 @@ export default function Calendario() {
             ))
           )}
         </View>
+      )}
+      {can(profile, 'calendar.host') && (
+        <Pressable
+          onPress={() => router.push('/calendario/disponibilita')}
+          accessibilityRole="button"
+          hitSlop={8}
+          style={{ alignSelf: 'center' }}
+        >
+          <ThemedText tone="accent" variant="caption">
+            {t.calendario.disponibilita}
+          </ThemedText>
+        </Pressable>
       )}
     </Screen>
   );

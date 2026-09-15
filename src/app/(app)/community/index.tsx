@@ -27,9 +27,19 @@ export default function Community() {
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
       <Colonna>
-        <View style={styles.actions}>
-          <Button title={t.community.nuovoFeedback} onPress={() => router.push('/community/nuovo')} style={{ flex: 1 }} />
-        </View>
+        {/* Con dei post in elenco il pulsante sta in cima, dove si torna a
+            scrivere. Con l'elenco vuoto sarebbe un pulsante pieno a dieci
+            centimetri da un altro pulsante pieno identico, quello dello stato
+            vuoto: due volte la stessa cosa non e' una scelta in piu'. */}
+        {(data?.length ?? 0) > 0 && (
+          <View style={styles.actions}>
+            <Button
+              title={t.community.nuovoFeedback}
+              onPress={() => router.push('/community/nuovo')}
+              style={{ flex: 1 }}
+            />
+          </View>
+        )}
   
         <FlatList
           data={data ?? []}
@@ -54,6 +64,8 @@ export default function Community() {
                 glifo="♣"
                 title={t.community.vuota}
                 hint={t.community.vuotaSuggerimento}
+                actionLabel={t.community.nuovoFeedback}
+                onAction={() => router.push('/community/nuovo')}
               />
             )
           }
