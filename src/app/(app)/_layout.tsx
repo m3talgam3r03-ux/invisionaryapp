@@ -59,19 +59,26 @@ export default function AppLayout() {
               borderTopColor: colors.border,
               borderTopWidth: StyleSheet.hairlineWidth,
               elevation: 0,
-              height: 68,
-              paddingTop: spacing.sm,
-              paddingBottom: spacing.sm,
+              // L'altezza deve contenere icona + etichetta, non contenderle lo
+              // spazio: 28 di glifo + 14 di riga + i margini che
+              // react-navigation mette per conto suo fanno 72 scarsi.
+              height: 80,
+              paddingTop: spacing.xs,
+              paddingBottom: spacing.xs,
             },
         // Etichette piccole sotto icone grandi: si naviga guardando le icone,
         // l'etichetta serve solo a togliere il dubbio la prima volta.
         // Di lato c'è spazio: l'etichetta diventa leggibile e sta accanto.
         //
-        // Il lineHeight NON è decorativo: senza, react-navigation sul web dava
-        // alla riga una scatola da 9px con overflow nascosto, e Manrope a 10px
-        // ne vuole almeno 13. Risultato: «Formazione» e «Community» tagliate a
-        // metà sotto, su ogni schermata dell'app. Un numero esplicito toglie la
-        // scatola dalle mani del browser.
+        // Il lineHeight e il flexShrink non sono decorativi. L'etichetta è un
+        // blocco con overflow nascosto, e per il flexbox un blocco che
+        // nasconde l'eccedenza ha dimensione minima ZERO: se la barra non
+        // basta, l'etichetta viene schiacciata invece di traboccare, e il
+        // browser le taglia le lettere. Succedeva: «Formazione» e «Community»
+        // perdevano la parte bassa, su ogni schermata dell'app.
+        //
+        // Quindi due cose: una riga alta abbastanza per Manrope, e il divieto
+        // di restringerla. Lo spazio glielo dà l'altezza della barra qui sopra.
         tabBarLabelStyle: diLato
           ? {
               fontSize: 14,
@@ -84,6 +91,7 @@ export default function AppLayout() {
               lineHeight: 14,
               letterSpacing: 0.2,
               fontFamily: fontFamilies.semibold,
+              flexShrink: 0,
             },
         tabBarItemStyle: diLato
           ? { paddingVertical: spacing.sm, justifyContent: 'flex-start' }
