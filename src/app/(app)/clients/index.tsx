@@ -207,7 +207,12 @@ export default function ClientsList() {
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         />
   
-        {/* Azione primaria unica e sempre raggiungibile col pollice. */}
+        {/* Azione primaria, sempre raggiungibile col pollice — ma non quando
+            lo stato vuoto sta gia' offrendo lo stesso pulsante al centro dello
+            schermo. Due pulsanti identici a venti centimetri l'uno dall'altro
+            non danno una scelta in piu': fanno dubitare che facciano la stessa
+            cosa. */}
+        {mostraStrumenti && (
         <Pressable
           onPress={() => router.push('/clients/new')}
           accessibilityRole="button"
@@ -219,6 +224,7 @@ export default function ClientsList() {
         >
           <ThemedText style={styles.fabGlyph}>+</ThemedText>
         </Pressable>
+        )}
       </Colonna>
     </SafeAreaView>
   );

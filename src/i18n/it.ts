@@ -501,6 +501,7 @@ export const t = {
 
   trading: {
     collegaMt5: '+ Collega MT5',
+    collegaAltro: 'Collega un altro conto',
     classificaAzione: 'Classifica',
     sincronizza: 'Sincronizza ora',
     sincronizzaQuesto: 'Sincronizza questo account',
@@ -855,6 +856,9 @@ export const t = {
   formazione: {
     calendario: 'Calendario',
     avanzamentoRete: 'Avanzamento rete',
+    corsi: 'Corsi',
+    /** Descrive il gruppo di segmenti a chi usa il lettore di schermo. */
+    segmenti: 'Cosa guardare della formazione',
     caricamentoCorsi: 'Caricamento corsi…',
     erroreCorsi: 'Impossibile caricare i corsi.',
     // Qui c'era «— verifica .env e la migrazione 0004», stessa cosa che stava
@@ -870,6 +874,8 @@ export const t = {
     nessunCorsoSuggerimento:
       'I corsi vengono gestiti dall’amministratore. Puoi caricare il seed dimostrativo.',
     rete: {
+      /** Corto, perche' sta dentro un segmento accanto ad altri due. */
+      breve: 'Rete',
       intro: 'Avanzamento formazione della tua rete.',
       nessunMembro: 'Nessun membro della rete da mostrare.',
     },
