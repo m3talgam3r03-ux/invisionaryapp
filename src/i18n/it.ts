@@ -236,7 +236,8 @@ export const t = {
       aggiungiEtichetta: 'Aggiungi cliente',
       contatti: (n: number) => (n === 1 ? '1 contatto' : `${n} contatti`),
       diTotali: (mostrati: number, totali: number) => `${mostrati} di ${totali}`,
-      file: 'File ›',
+      /** Le due vie stanno sempre accanto: si leggono come una coppia, non come due cose diverse. */
+      file: 'Da un file',
     },
     /** Il selettore cliente nelle altre schermate. */
     selettore: {
@@ -301,7 +302,7 @@ export const t = {
 
     rubrica: {
       titolo: 'Dalla rubrica',
-      apri: 'Aggiungi dalla rubrica',
+      apri: 'Dalla rubrica',
       tornaAiContatti: 'Torna ai contatti',
       /** Il pulsante è un glifo: senza etichetta annuncia solo «pulsante». */
       chiamaEtichetta: (nome: string) => `Chiama ${nome}`,

@@ -58,9 +58,20 @@ export default function ClientsList() {
 
   const total = data?.length ?? 0;
 
+  // Gli strumenti in cima — ricerca, filtri, conteggio — servono a RESTRINGERE
+  // un elenco. Sopra un elenco che non esiste ancora non restringono niente:
+  // sono solo quattro righe di comandi spenti fra il titolo e il vuoto. Un
+  // cassetto vuoto non ha bisogno di divisori.
+  //
+  // Restano quando un filtro e' attivo, altrimenti chi ha cercato qualcosa che
+  // non c'e' si ritroverebbe senza il campo per disdirsi.
+  const filtrando = query !== '' || stato !== null || proprietario !== null;
+  const mostraStrumenti = total > 0 || filtrando;
+
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
       <Colonna>
+        {mostraStrumenti && (
         <View style={styles.header}>
           <SearchField value={query} onChangeText={setQuery} placeholder={t.crm.cerca} />
   
@@ -123,7 +134,7 @@ export default function ClientsList() {
                 hitSlop={8}
               >
                 <ThemedText tone="accent" variant="caption">
-                  ☎ {t.crm.rubrica.apri}
+                  {t.crm.rubrica.apri}
                 </ThemedText>
               </Pressable>
               <Pressable
@@ -131,13 +142,14 @@ export default function ClientsList() {
                 accessibilityRole="button"
                 hitSlop={8}
               >
-                <ThemedText tone="muted" variant="caption">
+                <ThemedText tone="accent" variant="caption">
                   {t.crm.elenco.file}
                 </ThemedText>
               </Pressable>
             </View>
           </View>
         </View>
+        )}
   
         <FlatList
           data={clients}
@@ -172,6 +184,10 @@ export default function ClientsList() {
                 hint={t.crm.elenco.vuotoSuggerimento}
                 actionLabel={t.crm.elenco.aggiungi}
                 onAction={() => router.push('/clients/new')}
+                altreAzioni={[
+                  { etichetta: t.crm.rubrica.apri, onPress: () => router.push('/clients/rubrica') },
+                  { etichetta: t.crm.elenco.file, onPress: () => router.push('/clients/import') },
+                ]}
               />
             )
           }

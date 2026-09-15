@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -11,6 +11,15 @@ type Props = {
   hint?: string;
   actionLabel?: string;
   onAction?: () => void;
+  /**
+   * Altre strade per uscire dal vuoto, sotto a quella principale.
+   *
+   * Servono qui e non altrove: chi ha la lista vuota e' esattamente la persona
+   * che deve importare qualcosa, e tenere quelle vie in un angolo della
+   * schermata — magari in due caratteri piccoli accanto al conteggio, come
+   * facevamo — vuol dire nasconderle proprio a chi ne ha bisogno.
+   */
+  altreAzioni?: readonly { etichetta: string; onPress: () => void }[];
   tone?: 'neutral' | 'error';
   /**
    * Il segno sopra al titolo. Apple non lascia mai una schermata vuota al solo
@@ -45,6 +54,7 @@ export function EmptyState({
   tone = 'neutral',
   glifo,
   compatto = false,
+  altreAzioni,
 }: Props) {
   const { colors } = useTheme();
 
@@ -108,6 +118,18 @@ export function EmptyState({
       {actionLabel && onAction && (
         <Button title={actionLabel} onPress={onAction} style={{ marginTop: spacing.sm }} />
       )}
+
+      {altreAzioni?.length ? (
+        <View style={{ flexDirection: 'row', gap: spacing.lg, marginTop: spacing.xs }}>
+          {altreAzioni.map((a) => (
+            <Pressable key={a.etichetta} onPress={a.onPress} accessibilityRole="button" hitSlop={10}>
+              <ThemedText tone="accent" variant="label">
+                {a.etichetta}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
